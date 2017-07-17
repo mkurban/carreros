@@ -1,0 +1,5 @@
+django==1.11.3
+django-model-utils==3.0.0
+django-annoying==0.10.3
+django-attachments==1.1.1
+# psycopg2==2.7.1
