@@ -13,6 +13,9 @@ class Lista(models.Model):
     nombre = models.CharField(max_length=50, unique=True)
     numero = models.PositiveIntegerField(null=True, blank=True)
 
+    def __str__(self):
+        return self.nombre
+
 
 class Candidato(models.Model):
     CARGOS = Choices('Diputado Nacional', 'Senador Nacional')
@@ -23,6 +26,9 @@ class Candidato(models.Model):
     candidatura_a = models.CharField(choices=CARGOS, max_length=50, default='Diputado Nacional')
     tipo = models.CharField(choices=TIPO, max_length=20)
     posicion = models.PositiveIntegerField()
+
+    def __str__(self):
+        return f'{self.nombres} {self.apellido}'
 
     class Meta:
         unique_together = (('lista', 'candidatura_a', 'posicion'),)

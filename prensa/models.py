@@ -23,9 +23,6 @@ class DatoDeContacto(models.Model):
     def __str__(self):
         return f'{self.tipo}: {self.valor}'
 
-    class Meta:
-        unique_together = (('tipo', 'valor'),)
-
 
 class Persona(models.Model):
     RELACIONES = Choices('AMIGX', 'COMPAÑERX', 'INDIFERENTE', 'OPOSITXR')

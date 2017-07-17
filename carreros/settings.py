@@ -31,19 +31,26 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
-    'django.contrib.admin',
+    # 'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+
+    'custom_templates',
+    'material',
+    'material.admin',
+    'django.contrib.admin',
+    'material.frontend',
+
     'taggit',
     'attachments',
 
     # nuestras apps
     'candidatos',
     'geo',
-    'prensa'
+    'prensa.apps.PrensaConfig'
 ]
 
 MIDDLEWARE = [

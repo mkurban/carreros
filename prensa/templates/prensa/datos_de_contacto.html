@@ -1,0 +1,6 @@
+    {% for contacto in object.datos_de_contacto.all %}
+    <tr>
+        <th>{{ contacto.tipo }}</th>
+        <td>{{ contacto.valor }}</td>
+    </tr>
+    {% endfor %}
