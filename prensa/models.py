@@ -10,11 +10,13 @@ class DatoDeContacto(models.Model):
     """Modelo generérico para guardar datos de contacto de personas o medios"""
 
     TIPOS = Choices(
-        'email', 'telefono', 'web', 'twitter', 'facebook',
-        'radiocut', 'instagram', 'youtube', 'skype'
+        'email', 'teléfono', 'web', 'twitter', 'facebook',
+        'instagram', 'youtube', 'skype'
     )
+
+
     tipo = models.CharField(choices=TIPOS, max_length=20)
-    valor = models.CharField(max_length=20)
+    valor = models.CharField(max_length=100)
     # generic relation
     content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
     object_id = models.PositiveIntegerField()
@@ -31,6 +33,7 @@ class Persona(models.Model):
     nombres = models.CharField(max_length=100)
     relacion = models.CharField(choices=RELACIONES, max_length=20)
     datos_de_contacto = GenericRelation('DatoDeContacto', related_query_name='personas')
+    localidad = models.ForeignKey('geo.Localidad', null=True, blank=True)
     fuente = models.ForeignKey('auth.User', null=True, blank=True)
 
     def __str__(self):

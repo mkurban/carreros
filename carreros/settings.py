@@ -49,7 +49,7 @@ INSTALLED_APPS = [
 
     # nuestras apps
     'candidatos',
-    'geo',
+    'geo.apps.GeoConfig',
     'prensa.apps.PrensaConfig'
 ]
 
