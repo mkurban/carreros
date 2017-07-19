@@ -10,6 +10,7 @@ from . import views
 urlpatterns = [
     url('^$', generic.RedirectView.as_view(url='./personas/'), name="index"),
     url('^personas/', include(views.PersonaViewSet().urls)),
-    url('^dato-contacto/', include(views.MedioViewSet().urls)),
     url('^medios/', include(views.MedioViewSet().urls)),
+    url('^programas/', include(views.ProgramaViewSet().urls)),
+
 ]

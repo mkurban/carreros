@@ -46,7 +46,7 @@ class DatoDeContactoModelForm(forms.ModelForm):
             self.add_error('valor', f'No es un nombre de usuario de {tipo} válido')
 
     def clean_url(self, valor):
-        validator = URLValidator(verify_exists=True)
+        validator = URLValidator()
         try:
             validator(valor)
         except ValidationError:

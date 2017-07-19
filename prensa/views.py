@@ -52,6 +52,11 @@ class MedioViewSet(ModelViewSet):
     list_display = ('nombre', 'tipo', 'localidad')
 
 
+class ProgramaViewSet(ModelViewSet):
+    model = models.Programa
+    list_display = ('nombre', 'medio', 'localidad')
+
+
 class PersonaViewSet(ConContactosModelViewSet):
     model = models.Persona
     list_display = ('apellido', 'nombres', 'relacion')

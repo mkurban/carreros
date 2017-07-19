@@ -38,7 +38,8 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
 
-    'custom_templates',
+    'django_extensions',
+    'custom_templates',   # our hack to override templates
     'material',
     'material.admin',
     'django.contrib.admin',

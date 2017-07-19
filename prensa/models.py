@@ -29,26 +29,29 @@ class DatoDeContacto(models.Model):
 class Persona(models.Model):
     RELACIONES = Choices('AMIGX', 'COMPAÑERX', 'INDIFERENTE', 'OPOSITXR')
 
-    apellido = models.CharField(max_length=100)
+    apellido = models.CharField(max_length=100, blank=True)
     nombres = models.CharField(max_length=100)
     relacion = models.CharField(choices=RELACIONES, max_length=20)
     datos_de_contacto = GenericRelation('DatoDeContacto', related_query_name='personas')
     localidad = models.ForeignKey('geo.Localidad', null=True, blank=True)
-    fuente = models.ForeignKey('auth.User', null=True, blank=True)
+    comentarios = models.TextField(blank=True)
+    fuente = models.CharField(max_length=50, blank=True)
 
     def __str__(self):
         return f'{self.nombres} {self.apellido}'
 
 
 class Medio(models.Model):
-    TIPO_DE_MEDIO = Choices('Radio', 'Televisión', 'Gráfica', 'Via Publica', 'Web', 'Redes sociales')
+    TIPO_DE_MEDIO = Choices(
+        'RADIO', 'TELEVISION', 'GRAGICA', 'VIA PUBLICA', 'PORTAL WEB', 'REDES SOCIALES'
+    )
     nombre = models.CharField('Nombre del medio', max_length=50)
     tipo = models.CharField(choices=TIPO_DE_MEDIO, max_length=50)
-    direccion = models.CharField('Dirección', max_length=50)
-    localidad = models.ForeignKey('geo.Localidad')
+    direccion = models.CharField('Dirección', max_length=50, blank=True)
+    localidad = models.ForeignKey('geo.Localidad', blank=True, null=True)
     datos_de_contacto = GenericRelation(DatoDeContacto, related_query_name='medios')
-    detalles_tecnicos = models.TextField(blank=True, null=True)
-    fuente = models.ForeignKey('auth.User', null=True, blank=True)
+    detalles_tecnicos = models.TextField(blank=True)
+    fuente = models.CharField(max_length=50, blank=True)
 
     def __str__(self):
         return f'{self.nombre} ({self.tipo})'
@@ -69,7 +72,11 @@ class Programa(models.Model):
 
     # TODO ver django-scheduler u otra app para modelar la recurrencia
     # y poder filtrar programas en un periodo de tiempo
-    detalles = models.TextField(help_text='Dias, horarios, comentarios, etc')
+    detalles = models.TextField(help_text='Dias, horarios, comentarios, etc', blank=True)
+
+    @property
+    def localidad(self):
+        return self.medio.localidad
 
     def __str__(self):
         return f'{self.nombre} - {self.medio}'
