@@ -31,7 +31,7 @@ class Persona(models.Model):
 
     apellido = models.CharField(max_length=100, blank=True)
     nombres = models.CharField(max_length=100)
-    relacion = models.CharField(choices=RELACIONES, max_length=20)
+    relacion = models.CharField(choices=RELACIONES, max_length=20, blank=True)
     datos_de_contacto = GenericRelation('DatoDeContacto', related_query_name='personas')
     localidad = models.ForeignKey('geo.Localidad', null=True, blank=True)
     comentarios = models.TextField(blank=True)
@@ -73,6 +73,7 @@ class Programa(models.Model):
     # TODO ver django-scheduler u otra app para modelar la recurrencia
     # y poder filtrar programas en un periodo de tiempo
     detalles = models.TextField(help_text='Dias, horarios, comentarios, etc', blank=True)
+    fuente = models.CharField(max_length=50, blank=True)
 
     @property
     def localidad(self):

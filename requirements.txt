@@ -4,5 +4,6 @@ django-annoying==0.10.3
 django-attachments==1.1.1
 django-material==1.0.0
 django-extensions==1.8.1
-
+nameparser-0.5.3
+pyexcel-xlsx==0.4.1
 # psycopg2==2.7.1

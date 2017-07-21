@@ -23,8 +23,8 @@ class ConContactosMixin(ContextMixin):
         context = self.get_context_data()
         valid = all(formset.is_valid() for formset in context['formsets'].values())
         if valid:
+            self.object = form.save()
             for formset in context['formsets'].values():
-                self.object = form.save()
                 formset.instance = self.object
                 formset.save()
             # ok, redirect

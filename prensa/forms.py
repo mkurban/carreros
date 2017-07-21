@@ -30,14 +30,17 @@ class DatoDeContactoModelForm(forms.ModelForm):
     def clean_telefono(self, valor):
         try:
             valor = valor.strip()
-            if valor.startwith(('15', '4')):
-                valor = CARACTERISTICA_DEFAULT + valor
+            if valor.startswith(('15', '4')):
+                valor = f'{CARACTERISTICA_DEFAULT} {valor}'
+            elif valor.startswith('35') and 9 <= len(valor) <= 11:
+                valor = f'9 {valor}'
             valor = phonenumbers.parse(valor, 'AR')
         except phonenumbers.NumberParseException:
             self.add_error('valor', 'No es un teléfono válido')
 
         formato = phonenumbers.PhoneNumberFormat.INTERNATIONAL
-        return phonenumbers.format_number(valor, formato)
+        telefono = phonenumbers.format_number(valor, formato)
+        return telefono
 
     def clean_username(self, tipo, valor):
         try:
@@ -50,7 +53,7 @@ class DatoDeContactoModelForm(forms.ModelForm):
         try:
             validator(valor)
         except ValidationError:
-            self.add_error('valor', f'No es una dirección web válida')
+            self.add_error('valor', 'No es una dirección web válida')
 
     def clean(self):
         tipo = self.cleaned_data.get("tipo")
@@ -58,7 +61,7 @@ class DatoDeContactoModelForm(forms.ModelForm):
 
         if tipo == 'email':
             self.clean_email(valor)
-        elif tipo == 'telefono':
+        elif tipo == 'teléfono':
             valor = self.clean_telefono(valor)
         elif tipo in USERNAME_PATTERNS:
             valor = self.clean_username(tipo, valor)
