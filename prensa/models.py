@@ -44,11 +44,11 @@ class Persona(models.Model):
     def __str__(self):
         return f'{self.nombres} {self.apellido}'
 
-    def get_localidad(localidad):
+    def get_localidad(self):
         if self.localidad:
             return self.localidad
         elif self.programas_realizados.first():
-            self.programas_realizados.first().localidad
+            return self.programas_realizados.first().localidad
 
 
     def get_absolute_url(self):
@@ -85,7 +85,7 @@ class Rol(models.Model):
 
 class Programa(models.Model):
     nombre = models.CharField('Nombre del programa o sección', max_length=150)
-    medio = models.ForeignKey('Medio')
+    medio = models.ForeignKey('Medio', related_name='programas')
     staff = models.ManyToManyField('Persona', related_name='programas_realizados', through='Rol')
 
     # TODO ver django-scheduler u otra app para modelar la recurrencia

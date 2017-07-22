@@ -40,6 +40,7 @@ INSTALLED_APPS = [
 
     'django_extensions',
     'custom_templates',   # our hack to override templates
+    'material.theme.lightblue',
     'material',
     'material.admin',
     'django.contrib.admin',
@@ -133,6 +134,10 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/1.11/howto/static-files/
 
 STATIC_URL = '/static/'
+
+
+LOGIN_REDIRECT_URL = 'home'
+LOGOUT_REDIRECT_URL = 'home'
 
 
 try:

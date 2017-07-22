@@ -1,0 +1,18 @@
+{% extends "material/frontend/views/detail.html" %}
+
+
+{% block card %}
+    {{ block.super }}
+
+    {% if object.programas.all %}
+
+        <br>
+        <div class="card-title">Programas</div>
+
+        {% include "prensa/table_programas.html" with programas=object.programas.all %}
+
+    {% endif %}
+
+{% endblock %}
+
+

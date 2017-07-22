@@ -1,0 +1,26 @@
+
+    <table class="table bordered">
+
+    <tr>
+        <th>Programa</th>
+        <th>Medio</th>
+        <th>Localidad</th>
+    </tr>
+
+    {% for programa in programas %}
+
+    <tr>
+        <td>
+            <a href="{{ programa.get_absolute_url }}">{{ programa.nombre }}</a>
+        </td>
+        <td>
+            {{ programa.medio }}
+        </td>
+        <td>
+            {{ programa.localidad }}
+        </td>
+    </tr>
+
+    {% endfor %}
+
+    </table>
