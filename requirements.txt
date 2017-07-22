@@ -6,4 +6,5 @@ git+https://github.com/mgaitan/django-material#egg=django-material
 django-extensions==1.8.1
 django-taggit==0.22.1
 nameparser==0.5.3
+phonenumbers==8.6.0
 pyexcel-xlsx==0.4.1
