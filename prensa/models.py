@@ -1,4 +1,5 @@
 from django.db import models
+from django.urls import reverse
 from model_utils import Choices
 from taggit.managers import TaggableManager
 
@@ -37,8 +38,21 @@ class Persona(models.Model):
     comentarios = models.TextField(blank=True)
     fuente = models.CharField(max_length=50, blank=True)
 
+    class Meta:
+        ordering = ('apellido',)
+
     def __str__(self):
         return f'{self.nombres} {self.apellido}'
+
+    def get_localidad(localidad):
+        if self.localidad:
+            return self.localidad
+        elif self.programas_realizados.first():
+            self.programas_realizados.first().localidad
+
+
+    def get_absolute_url(self):
+        return reverse('prensa:persona_detail', args=(self.id,))
 
 
 class Medio(models.Model):
@@ -55,6 +69,10 @@ class Medio(models.Model):
 
     def __str__(self):
         return f'{self.nombre} ({self.tipo})'
+
+    def get_absolute_url(self):
+        return reverse('prensa:medio_detail', args=(self.id,))
+
 
 
 class Rol(models.Model):
@@ -81,6 +99,9 @@ class Programa(models.Model):
 
     def __str__(self):
         return f'{self.nombre} - {self.medio}'
+
+    def get_absolute_url(self):
+        return reverse('prensa:programa_detail', args=(self.id,))
 
 
 class Aparicion(models.Model):

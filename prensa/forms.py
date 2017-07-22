@@ -2,7 +2,7 @@ import re
 from django import forms
 from django.core.validators import validate_email, URLValidator
 from django.contrib.contenttypes.forms import generic_inlineformset_factory
-from .models import DatoDeContacto
+from .models import DatoDeContacto, Programa, Rol
 import phonenumbers
 
 
@@ -72,3 +72,27 @@ class DatoDeContactoModelForm(forms.ModelForm):
 
 
 ContactoInlineFormset = generic_inlineformset_factory(DatoDeContacto, form=DatoDeContactoModelForm)
+
+
+class ProgramaModelForm(forms.ModelForm):
+
+    class Meta:
+        model = Programa
+        exclude = []
+
+    def save(self, *args, **kwargs):
+        if 'staff' not in self.cleaned_data:
+            return self.instance
+        m2m = self.cleaned_data.pop('staff')
+        instance = super().save(*args, **kwargs)
+        old_staff = set(Rol.objects.filter(programa=instance))
+        new_staff = set()
+        for persona in m2m:
+            rol, created = Rol.objects.get_or_create(
+                persona=persona, programa=instance, defaults={'rol': 'Contacto'}
+            )
+            new_staff.add(rol)
+        for viejo in (old_staff - new_staff):
+            viejo.delete()
+
+        return instance

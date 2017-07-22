@@ -1,4 +1,5 @@
 from django.db import models
+from django.urls import reverse
 from model_utils import Choices
 
 
@@ -19,3 +20,8 @@ class Localidad(models.Model):
 
     def __str__(self):
         return f'{self.nombre} ({self.departamento})'
+
+
+    def get_absolute_url(self):
+        return reverse('geo:localidad_detail', args=(self.id,))
+

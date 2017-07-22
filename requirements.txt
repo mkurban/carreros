@@ -2,7 +2,7 @@ django==1.11.3
 django-model-utils==3.0.0
 django-annoying==0.10.3
 django-attachments==1.1.1
-django-material==1.0.0
+git+https://github.com/mgaitan/django-material#egg=django-material
 django-extensions==1.8.1
 nameparser-0.5.3
 pyexcel-xlsx==0.4.1

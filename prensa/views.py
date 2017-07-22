@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 from django.views.generic.base import ContextMixin
+from django.forms.models import ModelForm
 from material.frontend.views import ModelViewSet, UpdateModelView, CreateModelView
 
-from .forms import ContactoInlineFormset
+from .forms import ContactoInlineFormset, ProgramaModelForm
 from . import models
 
 
@@ -47,20 +48,23 @@ class ConContactosModelViewSet(ModelViewSet):
     create_view_class = ConContactosCreateModelView
 
 
-class MedioViewSet(ModelViewSet):
+class MedioViewSet(ConContactosModelViewSet):
     model = models.Medio
     list_display = ('nombre', 'tipo', 'localidad')
 
 
-class ProgramaViewSet(ModelViewSet):
+class ProgramaViewSet(ConContactosModelViewSet):
+
     model = models.Programa
+    form_class = ProgramaModelForm
     list_display = ('nombre', 'medio', 'localidad')
+    list_display_links = list_display[:2]
 
 
 class PersonaViewSet(ConContactosModelViewSet):
     model = models.Persona
-    list_display = ('apellido', 'nombres', 'relacion')
-
+    list_display = ('apellido', 'nombres', 'relacion', 'get_localidad')
+    list_display_links = list_display[:2]
 
 
 class DatoDeContactoViewSet(ModelViewSet):
