@@ -1,0 +1,13 @@
+{% extends "layout.html" %}
+{% block container %}
+	<div class="row">
+		<div class="page-header"><h1>Seleccione una seccion en el menu superior o de la lista</h1></div>
+			<ul class="list-group">
+                {% for section_nro, section_name in sections %}
+                <li class="list-group-item"><a href="/seccion/{{section_nro}}">{{section_name}}</a></li>			
+                {% endfor %}    
+			</ul>
+
+	</div>
+
+{% endblock container %}
