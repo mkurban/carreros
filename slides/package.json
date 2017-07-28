@@ -1,0 +1,23 @@
+{
+  "name": "slides",
+  "version": "1.0.0",
+  "description": "Presentaciones, instructivos, charlas. Hechas en formato de texto Markdown y exportadas a pdf y html.",
+  "main": "index.js",
+  "scripts": {
+    "start": "bs serve",
+    "build": "bs export"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/concristina/carreros.git"
+  },
+  "author": "concristina",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/concristina/carreros/issues"
+  },
+  "homepage": "https://github.com/concristina/carreros#readme",
+  "dependencies": {
+    "backslide": "^1.2.1"
+  }
+}

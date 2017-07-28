@@ -10,6 +10,10 @@ fixtures/*
 # C extensions
 *.so
 
+# Javascript / node
+node_modules
+package-lock.json
+
 # Distribution / packaging
 .Python
 build/
