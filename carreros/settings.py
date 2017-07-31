@@ -50,6 +50,7 @@ INSTALLED_APPS = [
     'attachments',
 
     # nuestras apps
+    'elecciones',
     'candidatos',
     'geo.apps.GeoConfig',
     'prensa.apps.PrensaConfig'
