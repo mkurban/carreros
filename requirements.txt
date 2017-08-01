@@ -11,3 +11,4 @@ jsonfield==2.0.2
 nameparser==0.5.3
 phonenumbers==8.6.0
 pyexcel-xlsx==0.4.1
+fabric3
