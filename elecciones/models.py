@@ -66,11 +66,6 @@ class LugarVotacion(models.Model):
         return render_to_string('elecciones/detalle_escuela.html', {'o': self})
 
 
-    @property
-    def admin_url(self):
-        return reverse('admin:elecciones_lugarvotacion_change', args=(self.id,))
-
-
     def __str__(self):
         return f"{self.nombre} - {self.circuito}"
 

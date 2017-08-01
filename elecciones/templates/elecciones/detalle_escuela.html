@@ -7,4 +7,4 @@
     <tr><th>Electores</th><td>{{ o.electores }}</td></tr>
 </table>
 
-<a href="${props.admin_url}">Editar</a>
+<a href="{% url 'admin:elecciones_lugarvotacion_change' o.id %}">Editar</a>
