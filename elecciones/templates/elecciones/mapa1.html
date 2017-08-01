@@ -1,6 +1,7 @@
 {% load leaflet_tags %}
 <html>
   <head>
+<script data-require="jquery@3.1.1" data-semver="3.1.1" src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
     {% leaflet_js %}
     {% leaflet_css %}
     <style>
@@ -19,8 +20,9 @@
             L.geoJson(data, {
               onEachFeature: function onEachFeature(feature, layer) {
                 var props = feature.properties;
-                var content = `${props.popup_html}`;
-                layer.bindPopup(content);
+                $.get(`/elecciones/escuelas/${props.id}`, function(data){
+                  layer.bindPopup(data);
+                });
             }
           }).addTo(map);
           });

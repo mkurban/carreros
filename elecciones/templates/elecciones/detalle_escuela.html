@@ -1,10 +1,10 @@
-<h3>{{o.nombre}}</h3>
+<h3>{{object.nombre}}</h3>
 <table>
-    <tr><th>seccion</th><td>{{ o.circuito.seccion }}</td></tr>
-    <tr><th>circuito</th><td>{{ o.circuito.numero }} {{ o.circuito.nombre}} </td></tr>
-    <tr><th>direccion</th><td>{{ o.direccion }}</td></tr>
-    <tr><th>ciudad</th><td>{{ o.ciudad }}</td></tr>
-    <tr><th>Electores</th><td>{{ o.electores }}</td></tr>
+    <tr><th>seccion</th><td>{{ object.circuitobject.seccion }}</td></tr>
+    <tr><th>circuito</th><td>{{ object.circuitobject.numero }} {{ object.circuito.nombre}} </td></tr>
+    <tr><th>direccion</th><td>{{ object.direccion }}</td></tr>
+    <tr><th>ciudad</th><td>{{ object.ciudad }}</td></tr>
+    <tr><th>Electores</th><td>{{ object.electores }}</td></tr>
 </table>
 
-<a href="{% url 'admin:elecciones_lugarvotacion_change' o.id %}">Editar</a>
+<a href="{% url 'admin:elecciones_lugarvotacion_change' object.id %}">Editar</a>
