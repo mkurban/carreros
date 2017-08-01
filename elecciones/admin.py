@@ -35,7 +35,7 @@ class HasLatLongListFilter(admin.SimpleListFilter):
         # to decide how to filter the queryset.
         value = self.value()
         if value:
-            isnull = value is 'no'
+            isnull = value == 'no'
             queryset = queryset.filter(geom__isnull=isnull)
         return queryset
 
