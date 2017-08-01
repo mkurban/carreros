@@ -1,8 +1,11 @@
 from django.contrib.auth.models import User
+from django.urls import reverse
 from django.db import models
 from django.db.models import Sum
 from django.conf import settings
-
+from djgeojson.fields import PointField
+from django.template.loader import render_to_string
+from django.utils.safestring import mark_safe
 
 class Seccion(models.Model):
     numero = models.PositiveIntegerField()
@@ -39,25 +42,37 @@ class LugarVotacion(models.Model):
     geo = models.CharField(max_length=200, blank=True)
     calidad = models.CharField(max_length=20, help_text='calidad de la geolocalizacion', editable=False, blank=True)
     electores = models.PositiveIntegerField()
-    latitud = models.DecimalField(null=True, decimal_places=7, max_digits=10)
-    longitud = models.DecimalField(null=True, decimal_places=7, max_digits=10)
+    geom = PointField(null=True)
+
+    # denormalizacion para hacer queries más simples
+    latitud = models.FloatField(null=True, editable=False)
+    longitud = models.FloatField(null=True, editable=False)
 
     class Meta:
         verbose_name = 'Lugar de votación'
         verbose_name_plural = "Lugares de votación"
 
-    def __str__(self):
-        return f"{self.nombre} - {self.circuito}"
+    def save(self, *args, **kwargs):
+
+        if self.geom:
+            self.longitud, self.latitud = self.geom['coordinates']
+        else:
+            self.longitud, self.latitud = None, None
+        super().save(*args, **kwargs)
+
 
     @property
-    def geom(self):
-        return {
-            'type': 'Point',
-            'coordinates': [
-                float(self.longitud),
-                float(self.latitud)
-            ]
-        }
+    def popup_html(self):
+        return render_to_string('elecciones/detalle_escuela.html', {'o': self})
+
+
+    @property
+    def admin_url(self):
+        return reverse('admin:elecciones_lugarvotacion_change', args=(self.id,))
+
+
+    def __str__(self):
+        return f"{self.nombre} - {self.circuito}"
 
 
 

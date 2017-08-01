@@ -1,5 +1,6 @@
 from django.db.models import Q
 from django.contrib import admin
+from leaflet.admin import LeafletGeoAdmin
 from .models import Seccion, Circuito, LugarVotacion, Mesa, Partido, Opcion, Eleccion, VotoMesaReportado
 
 
@@ -32,15 +33,14 @@ class HasLatLongListFilter(admin.SimpleListFilter):
         """
         # Compare the requested value (either '80s' or '90s')
         # to decide how to filter the queryset.
-        import ipdb; ipdb.set_trace()
-        if self.value() == 'no':
-            return queryset.filter(Q(longitud__isnull=True) | Q(latitud__isnull=True))
+        value = self.value()
+        if value:
+            isnull = value is 'no'
+            queryset = queryset.filter(geom__isnull=isnull)
+        return queryset
 
-        if self.value() == 'sí':
-            return queryset.filter(Q(longitud__isnull=False) & Q(latitud__isnull=False))
 
-
-class LugarVotacionAdmin(admin.ModelAdmin):
+class LugarVotacionAdmin(LeafletGeoAdmin):
     list_display = ('nombre', 'direccion', 'ciudad', 'circuito')
     list_display_links = ('nombre',)
     list_filter = (HasLatLongListFilter, 'circuito', 'circuito__seccion')

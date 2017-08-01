@@ -8,9 +8,9 @@ from elecciones.models import Seccion, Circuito, LugarVotacion, Mesa
 
 CSV = Path(settings.BASE_DIR) / 'elecciones/data/escuelas-elecciones-2017-cordoba-Geolocalizada.csv'
 
-def to_decimal(val):
+def to_float(val):
     try:
-        return Decimal(val.replace(',', '.'))
+        return float(val.replace(',', '.'))
     except:
         return None
 
@@ -43,14 +43,19 @@ class Command(BaseCommand):
             )
             self.log(circuito, created)
 
+            coordenadas = [to_float(row['Longitud']), to_float(row['Latitud'])]
+            if coordenadas[0] and coordenadas[1]:
+                geom = {'type': 'Point', 'coordinates': coordenadas}
+            else:
+                geom = None
+
             escuela, created = LugarVotacion.objects.get_or_create(
                 circuito=circuito,
                 nombre=row['escuela'],
                 direccion=row['direccion'],
                 ciudad=row['ciudad'] or '',
                 barrio=row['barrio'] or '',
-                latitud=to_decimal(row['Latitud']),
-                longitud=to_decimal(row['Longitud']),
+                geom=geom,
                 electores=int(row['electores'])
             )
             self.log(escuela, created)

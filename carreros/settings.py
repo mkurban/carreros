@@ -31,7 +31,7 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
-    # 'django.contrib.admin',
+    'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
@@ -42,8 +42,8 @@ INSTALLED_APPS = [
     'custom_templates',   # our hack to override templates
     'material.theme.lightblue',
     'material',
-    'material.admin',
-    'django.contrib.admin',
+    # 'material.admin',
+    # 'django.contrib.admin',
     'material.frontend',
 
     'taggit',
@@ -150,7 +150,7 @@ LOGOUT_REDIRECT_URL = 'home'
 LEAFLET_CONFIG = {
     'DEFAULT_CENTER': (-32.3108144, -63.7066957),
     'DEFAULT_ZOOM': 7,
-    'MIN_ZOOM': 8,
+    'MIN_ZOOM': 4,
     'MAX_ZOOM': 18,
     'PLUGINS': {
     }

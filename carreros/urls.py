@@ -15,14 +15,15 @@ Including another URLconf
 """
 from django.conf.urls import url, include
 from django.views import generic
+from django.contrib import admin
 from material.frontend import urls as frontend_urls
 from elecciones import urls as elecciones_urls
 
 
 urlpatterns = [
-    # url(r'^admin/', admin.site.urls),
     url(r'^$', generic.RedirectView.as_view(url='./prensa/'), name="home"),
     url(r'', include(frontend_urls)),
+    url(r'^admin/', admin.site.urls),
     url(r'^elecciones/', include(elecciones_urls)),
     url(r'^attachments/', include('attachments.urls', namespace='attachments')),
 

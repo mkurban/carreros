@@ -5,6 +5,7 @@ from .models import LugarVotacion
 
 class LugaresVotacionGeoJSON(GeoJSONLayerView):
     model = LugarVotacion
+    properties = ('popup_html',)
 
     def get_queryset(self):
         qs = super().get_queryset()
