@@ -48,6 +48,8 @@ INSTALLED_APPS = [
 
     'taggit',
     'attachments',
+    'djgeojson',
+    'leaflet',
 
     # nuestras apps
     'elecciones',
@@ -143,6 +145,17 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 LOGIN_REDIRECT_URL = 'home'
 LOGOUT_REDIRECT_URL = 'home'
+
+
+LEAFLET_CONFIG = {
+    'DEFAULT_CENTER': (-32.3108144, -63.7066957),
+    'DEFAULT_ZOOM': 7,
+    'MIN_ZOOM': 8,
+    'MAX_ZOOM': 18,
+    'PLUGINS': {
+    }
+}
+
 
 
 try:

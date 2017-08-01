@@ -8,6 +8,10 @@ class Seccion(models.Model):
     numero = models.PositiveIntegerField()
     nombre = models.CharField(max_length=100)
 
+    class Meta:
+        verbose_name = 'Sección electoral'
+        verbose_name_plural = 'Secciones electorales'
+
     def __str__(self):
         return self.nombre
 
@@ -16,6 +20,11 @@ class Circuito(models.Model):
     seccion = models.ForeignKey(Seccion)
     numero = models.CharField(max_length=10)
     nombre = models.CharField(max_length=100)
+
+
+    class Meta:
+        verbose_name = 'Circuito electoral'
+        verbose_name_plural = 'Circuitos electorales'
 
     def __str__(self):
         return f"Circuito {self.numero} - {self.nombre}"
@@ -33,9 +42,23 @@ class LugarVotacion(models.Model):
     latitud = models.DecimalField(null=True, decimal_places=7, max_digits=10)
     longitud = models.DecimalField(null=True, decimal_places=7, max_digits=10)
 
+    class Meta:
+        verbose_name = 'Lugar de votación'
+        verbose_name_plural = "Lugares de votación"
 
     def __str__(self):
         return f"{self.nombre} - {self.circuito}"
+
+    @property
+    def geom(self):
+        return {
+            'type': 'Point',
+            'coordinates': [
+                float(self.longitud),
+                float(self.latitud)
+            ]
+        }
+
 
 
 class Mesa(models.Model):
