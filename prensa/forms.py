@@ -35,12 +35,12 @@ class DatoDeContactoModelForm(forms.ModelForm):
             elif valor.startswith('35') and 9 <= len(valor) <= 11:
                 valor = f'9 {valor}'
             valor = phonenumbers.parse(valor, 'AR')
-        except phonenumbers.NumberParseException:
+            formato = phonenumbers.PhoneNumberFormat.INTERNATIONAL
+            valor = phonenumbers.format_number(valor, formato)
+        except (AttributeError, phonenumbers.NumberParseException):
             self.add_error('valor', 'No es un teléfono válido')
 
-        formato = phonenumbers.PhoneNumberFormat.INTERNATIONAL
-        telefono = phonenumbers.format_number(valor, formato)
-        return telefono
+        return valor
 
     def clean_username(self, tipo, valor):
         try:

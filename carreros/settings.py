@@ -38,6 +38,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
 
+    'localflavor',
     'django_extensions',
     'custom_templates',   # our hack to override templates
     'material.theme.lightblue',
@@ -53,6 +54,7 @@ INSTALLED_APPS = [
 
     # nuestras apps
     'elecciones',
+    'fiscales',
     'candidatos',
     'geo.apps.GeoConfig',
     'prensa.apps.PrensaConfig'

@@ -6,6 +6,17 @@ from django.conf import settings
 from djgeojson.fields import PointField
 from django.template.loader import render_to_string
 from django.utils.safestring import mark_safe
+from model_utils.fields import StatusField, MonitorField
+from model_utils import Choices
+
+
+def desde_hasta(qs):
+    qs = qs.values_list('numero', flat=True).order_by('numero')
+    inicio, fin = qs.first(), qs.last()
+    if inicio == fin:
+        return inicio
+    return f'{inicio} - {fin}'
+
 
 class Seccion(models.Model):
     numero = models.PositiveIntegerField()
@@ -28,9 +39,10 @@ class Circuito(models.Model):
     class Meta:
         verbose_name = 'Circuito electoral'
         verbose_name_plural = 'Circuitos electorales'
+        ordering = ('numero',)
 
     def __str__(self):
-        return f"Circuito {self.numero} - {self.nombre}"
+        return f"{self.numero} - {self.nombre}"
 
 
 class LugarVotacion(models.Model):
@@ -60,11 +72,9 @@ class LugarVotacion(models.Model):
             self.longitud, self.latitud = None, None
         super().save(*args, **kwargs)
 
-
     @property
-    def popup_html(self):
-        return render_to_string('elecciones/detalle_escuela.html', {'o': self})
-
+    def mesas_desde_hasta(self):
+        return desde_hasta(self.mesas)
 
     def __str__(self):
         return f"{self.nombre} - {self.circuito}"
@@ -72,9 +82,16 @@ class LugarVotacion(models.Model):
 
 
 class Mesa(models.Model):
+    ESTADOS = Choices('EN ESPERA', 'ABIERTA', 'CERRADA', 'ESCRUTADA')
+
+    estado = StatusField(choices_name='ESTADOS', default='EN ESPERA')
+    hora_abierta = MonitorField(monitor='estado', when=['ABIERTA'])
+    hora_cerrada = MonitorField(monitor='estado', when=['CERRADA'])
+    hora_escrutada = MonitorField(monitor='estado', when=['ESCRUTADA'])
+
     numero = models.PositiveIntegerField()
     circuito = models.ForeignKey(Circuito)  #
-    lugar_votacion = models.ForeignKey(LugarVotacion, verbose_name='Lugar de votacion', null=True)
+    lugar_votacion = models.ForeignKey(LugarVotacion, verbose_name='Lugar de votacion', null=True, related_name='mesas')
     url = models.URLField(blank=True, help_text='url al telegrama')
 
     @property
@@ -126,7 +143,7 @@ class AbstractVotoMesa(models.Model):
 
 
 class VotoMesaReportado(AbstractVotoMesa):
-    usuario = models.ForeignKey(User)
+    fiscal = models.ForeignKey('fiscales.Fiscal')
 
 
 class VotoMesaOficial(AbstractVotoMesa):
