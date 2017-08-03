@@ -24,6 +24,7 @@ from fiscales.views import choice_home
 urlpatterns = [
     url(r'^$', choice_home, name="home"),
     url(r'', include(frontend_urls)),
+    url('^', include('django.contrib.auth.urls')),
     url(r'^api-auth/', include('rest_framework.urls', namespace='rest_framework')),
     url(r'^api/v1/', include('api.urls', namespace='api_v1')),
     url(r'^admin/', admin.site.urls),

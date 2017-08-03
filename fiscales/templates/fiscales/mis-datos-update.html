@@ -23,12 +23,15 @@
                 {% else %}
                 {% form %}{% endform %}
 
-                <h5>Datos de contacto</h5>
-                {% for name, formset in formsets.items %}
-                <table>
-                    {{ formset.as_table }}
-                </table>
-                {% endfor %}
+                {% if formsets.items %}
+                    <h5>Datos de contacto</h5>
+                    {% for name, formset in formsets.items %}
+                    <table>
+                        {{ formset.as_table }}
+                    </table>
+                    {% endfor %}
+                {% endif %}
+
                 {% endif %}
                 {% endblock %}
 
