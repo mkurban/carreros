@@ -22,6 +22,8 @@ from elecciones import urls as elecciones_urls
 
 urlpatterns = [
     url(r'^$', generic.RedirectView.as_view(url='./prensa/'), name="home"),
+    url(r'^api-auth/', include('rest_framework.urls', namespace='rest_framework')),
+    url(r'^api/v1/', include('api.urls', namespace='api_v1')),
     url(r'', include(frontend_urls)),
     url(r'^admin/', admin.site.urls),
     url(r'^elecciones/', include(elecciones_urls)),

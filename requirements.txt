@@ -8,6 +8,7 @@ django-taggit==0.22.1
 django-geojson==2.10.0
 django-leaflet==0.22.0
 django-localflavor==1.5.2
+djangorestframework==3.6.3
 jsonfield==2.0.2
 nameparser==0.5.3
 phonenumbers==8.6.0
