@@ -1,7 +1,11 @@
 from django.http import Http404
 from django.shortcuts import redirect
+from django.urls import reverse
 from django.views.generic.detail import DetailView
+from django.views.generic.edit import UpdateView
 from .models import Fiscal
+from .forms import MisDatosForm
+from prensa.views import ConContactosMixin
 
 
 def choice_home(request):
@@ -34,3 +38,13 @@ class MisContactos(DetailView):
 class MisDatos(MisContactos):
     """muestras los contactos para un fiscal"""
     template_name = "fiscales/mis-datos.html"
+
+
+class MisDatosUpdate(ConContactosMixin, UpdateView, MisContactos):
+    """muestras los contactos para un fiscal"""
+    form_class = MisDatosForm
+
+    template_name = "fiscales/mis-datos-update.html"
+
+    def get_success_url(self):
+        return reverse('mis-datos')

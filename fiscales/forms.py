@@ -9,3 +9,15 @@ class FiscalForm(forms.ModelForm):
     class Meta:
         model = Fiscal
         exclude = []
+
+
+class MisDatosForm(FiscalForm):
+    class Meta:
+        model = Fiscal
+        fields = [
+            'nombres', 'apellido',
+            'direccion', 'localidad',
+            'barrio',
+            'tipo_dni', 'dni',
+            'organizacion'
+        ]

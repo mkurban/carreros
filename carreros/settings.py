@@ -167,6 +167,8 @@ REST_FRAMEWORK = {
     'PAGE_SIZE': 10
 }
 
+DEFAULT_PASS_PREFIX = 'CFK'
+
 try:
     from .local_settings import *
 except ImportError:

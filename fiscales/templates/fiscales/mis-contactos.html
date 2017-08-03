@@ -16,45 +16,30 @@
               {% endif %}
               </div>
 
+              {% include "fiscales/tabla_contacto.html" %}
 
-              <table class="table bordered">
-
-
-              <tr>
-                  <th>Nombre </th>
-                  <td>{{ fiscal }}</td>
-              </tr>
-
-              <tr>
-                  <th>Mesas </th>
-                  <td>{{ fiscal.mesas_desde_hasta }}</td>
-              </tr>
-
-              <tr>
-                  <th>Teléfono</th>
-                  <td>
-                    {% for tel in fiscal.telefonos %}
-                      <a href="tel:{{ tel }}">{{ tel }}</a>
-                    {% if not forloop.last %}<br>{% endif %}
-                    {% endfor %}
-                  </td>
-              </tr>
-              {% if fiscal.emails %}
-              <tr>
-                  <th>Email</th>
-                  <td>
-                    {% for email in fiscal.emails %}
-                      <a href="mailto:{{ email }}">{{ email }}</a>
-                    {% if not forloop.last %}<br>{% endif %}
-                    {% endfor %}
-                  </td>
-              </tr>
-              {% endif %}
-
-              </table>
 
         </div>
       </div>
     {% endfor %}
+
+
+  {% if object.organizacion %}
+
+  {% for fiscal in object.organizacion.referentes.all %}
+
+    <div class="card">
+        <div class="card-content">
+
+              <div class="card-title">
+                  Referente de {{ object.organizacion }}
+              </div>
+
+          {% include "fiscales/tabla_contacto.html" %}
+
+        </div>
+      </div>
+ {% endfor %}
+ {% endif %}
 
 {% endblock left-panel %}

@@ -1,19 +1,27 @@
 from django.db import models
+from django.conf import settings
 from django.db.models import Q
 from django.contrib.contenttypes.fields import GenericRelation
 from model_utils import Choices
 from model_utils.models import TimeStampedModel
 from django.utils import timezone
+from django.contrib.auth.models import User
+from django.dispatch import receiver
+from django.db.models.signals import post_save, pre_delete
 from elecciones.models import desde_hasta, Mesa
 
 
 class Organizacion(models.Model):
     nombre = models.CharField(max_length=100)
-    referentes = models.ManyToManyField('Fiscal', 'referentes_de_la_orga')
+    referentes = models.ManyToManyField('Fiscal', related_name='es_referente_de', blank=True)
 
     class Meta:
         verbose_name = 'Organización'
         verbose_name_plural = 'Organizaciones'
+
+    def __str__(self):
+        return self.nombre
+
 
 
 class Fiscal(models.Model):
@@ -24,12 +32,15 @@ class Fiscal(models.Model):
     apellido = models.CharField(max_length=50)
     nombres = models.CharField(max_length=100)
     direccion = models.CharField(max_length=200, blank=True)
+    barrio = models.CharField(max_length=200, blank=True)
     localidad = models.CharField(max_length=200, blank=True)
     tipo_dni = models.CharField(choices=TIPO_DNI, max_length=3, default='DNI')
     dni = models.CharField(max_length=15)
     datos_de_contacto = GenericRelation('prensa.DatoDeContacto', related_query_name='fiscales')
     organizacion = models.ForeignKey('Organizacion', null=True, blank=True)
-    user = models.OneToOneField('auth.User', null=True, blank=True, related_name='fiscal')
+    user = models.OneToOneField('auth.User', null=True,
+                    blank=True, related_name='fiscal',
+                    on_delete=models.SET_NULL)
 
     class Meta:
         verbose_name_plural = 'Fiscales'
@@ -58,6 +69,12 @@ class Fiscal(models.Model):
         if mesa:
             return mesa.lugar_votacion
 
+
+    @property
+    def direccion_completa(self):
+        return f'{self.direccion} {self.barrio}, {self.localidad}'
+
+
     def fiscales_colegas(self):
         """fiscales en la misma escuela"""
         if self.escuela:
@@ -65,6 +82,7 @@ class Fiscal(models.Model):
             de_mesa = Q(tipo='de_mesa') & Q(asignacion_mesa__mesa__lugar_votacion=self.escuela)
             return Fiscal.objects.exclude(id=self.id).filter(general | de_mesa).order_by('-tipo')
         return Fiscal.objects.none()
+
 
     @property
     def mesas_desde_hasta(self):
@@ -121,3 +139,26 @@ class AsignacionFiscalGeneral(AsignacionFiscal):
     class Meta:
         verbose_name = 'Asignación de Fiscal General'
         verbose_name_plural = 'Asignaciones de Fiscal General'
+
+
+
+@receiver(post_save, sender=Fiscal)
+def crear_user_para_fiscal(sender, instance=None, created=False, **kwargs):
+    if created and not instance.user:
+        user = User(
+            username=instance.dni,
+            first_name=instance.nombres,
+            last_name=instance.apellido,
+            is_active=True,
+        )
+        user.set_password(settings.DEFAULT_PASS_PREFIX + instance.dni[-3:])
+        user.save()
+        instance.user = user
+        instance.save(update_fields=['user'])
+
+
+
+@receiver(pre_delete, sender=Fiscal)
+def borrar_user_para_fiscal(sender, instance=None, **kwargs):
+    if instance.user:
+        instance.user.delete()

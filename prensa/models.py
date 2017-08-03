@@ -11,7 +11,7 @@ class DatoDeContacto(models.Model):
     """Modelo generérico para guardar datos de contacto de personas o medios"""
 
     TIPOS = Choices(
-        'email', 'teléfono', 'web', 'twitter', 'facebook',
+        'teléfono', 'email', 'web', 'twitter', 'facebook',
         'instagram', 'youtube', 'skype'
     )
 
