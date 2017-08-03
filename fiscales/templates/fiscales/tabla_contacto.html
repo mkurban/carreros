@@ -8,6 +8,17 @@
                   <td>{{ fiscal }}</td>
               </tr>
 
+
+              <tr>
+                  <th>Establecimiento{{ fiscal.escuelas.all|pluralize }} </th>
+                  <td>
+                     {% for escuela in fiscal.escuelas.all %}
+                      {{ escuela.nombre }}
+                    {% if not forloop.last %}<br>{% endif %}
+                    {% endfor %}
+                  </td>
+              </tr>
+
               <tr>
                   <th>Mesas </th>
                   <td>{{ fiscal.mesas_desde_hasta }}</td>

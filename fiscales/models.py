@@ -8,7 +8,7 @@ from django.utils import timezone
 from django.contrib.auth.models import User
 from django.dispatch import receiver
 from django.db.models.signals import post_save, pre_delete
-from elecciones.models import desde_hasta, Mesa
+from elecciones.models import desde_hasta, Mesa, LugarVotacion
 
 
 class Organizacion(models.Model):
@@ -64,10 +64,20 @@ class Fiscal(models.Model):
         return Mesa.objects.filter(asignacion_fiscales__fiscal=self).order_by('numero')
 
     @property
-    def escuela(self):
-        mesa = self.mesas_asignadas().first()
-        if mesa:
-            return mesa.lugar_votacion
+    def escuelas(self):
+        if self.es_general:
+            return LugarVotacion.objects.filter(fiscal_general__fiscal=self)
+        else:
+            return LugarVotacion.objects.filter(mesas__asignacion_fiscales__fiscal=self).distinct()
+
+    @property
+    def asignacion(self):
+        if self.es_general:
+            qs = AsignacionFiscalGeneral.objects.filter(fiscal=self)
+        else:
+            qs = AsignacionFiscal.objects.filter(fiscal=self)
+        return qs.last()
+
 
 
     @property
@@ -77,9 +87,10 @@ class Fiscal(models.Model):
 
     def fiscales_colegas(self):
         """fiscales en la misma escuela"""
-        if self.escuela:
-            general = Q(tipo='general') & Q(asignacion_escuela__lugar_votacion=self.escuela)
-            de_mesa = Q(tipo='de_mesa') & Q(asignacion_mesa__mesa__lugar_votacion=self.escuela)
+        if self.escuelas.exists():
+            escuelas = self.escuelas.all()
+            general = Q(tipo='general') & Q(asignacion_escuela__lugar_votacion__in=escuelas)
+            de_mesa = Q(tipo='de_mesa') & Q(asignacion_mesa__mesa__lugar_votacion__in=escuelas)
             return Fiscal.objects.exclude(id=self.id).filter(general | de_mesa).order_by('-tipo')
         return Fiscal.objects.none()
 
@@ -98,14 +109,6 @@ class AsignacionFiscal(TimeStampedModel):
 
     class Meta:
         abstract = True
-
-    @property
-    def esta_presente(self):
-        if self.ingreso and not self.egreso:
-            return False
-        if ingreso <  timezone.now():
-            return True
-        return False
 
 
 class AsignacionFiscalDeMesa(AsignacionFiscal):

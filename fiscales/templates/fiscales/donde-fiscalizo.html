@@ -1,0 +1,66 @@
+{% extends "fiscales/base.html" %}
+
+
+{% block page_title %}Dónde fiscalizo{% endblock %}
+
+{% block left-panel %}
+
+
+    {% for escuela in object.escuelas.all %}
+
+        <div class="card">
+        <div class="card-content">
+            <div class="card-title">{{ escuela.nombre }}</div>
+             <table class="table bordered">
+               <tr>
+                  <th>Sección</th>
+                  <td>{{ escuela.circuito.seccion }}</td>
+              </tr>
+               <tr>
+                  <th>Circuito</th>
+                  <td>{{ escuela.circuito }}</td>
+              </tr>
+              <tr>
+                  <th>Dirección</th>
+                  <td>{{ escuela.direccion_completa }} <br>
+                  <a href="http://maps.google.com/maps?q={{escuela.coordenadas}}">Ver en el mapa</a></td>
+              </tr>
+
+              <tr>
+                  <th>{% if object.es_general %}
+                    Mesas en la escuela
+                    {% else %}
+                    Mesa asignada
+                  {% endif %} </th>
+                  <td>
+                  {% for mesa in object.mesas_asignadas %}
+                    <a href="#">Nº{{ mesa.numero }}</a>
+                     {% if not forloop.last %} | {% endif %}
+                  {% endfor %}
+                  </td>
+              </tr>
+
+               <tr>
+                  <th>Último registro</th>
+                  <td>{{ object.escuela.circuito }}</td>
+              </tr>
+
+
+            </table>
+       </div>
+
+        <div class="card-action">
+
+            <div class="right-align">
+
+              <a class="waves-light btn white-text" href="{% url 'cambiar-password' %}">Ya estoy presente!</a>
+              <a class="waves-effect waves-light btn white-text" href="{% url 'mis-datos-update' %}">Editar mis datos</a>
+            </div>
+
+        </div>
+
+
+    </div>
+
+    {% endfor %}
+{% endblock left-panel %}

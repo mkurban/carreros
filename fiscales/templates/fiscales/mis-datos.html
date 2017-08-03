@@ -4,8 +4,11 @@
 
 {% block left-panel %}
     <div class="card">
+        {% block card-content %}
         <div class="card-content">
-            <div class="card-title"> {{ object }}</div>
+
+            <div class="card-title">{{ object }}</div>
+
 
             <table class="table bordered">
               <tr>
@@ -40,60 +43,23 @@
 
 
             </table>
+
         </div>
+        {% endblock card-content %}
 
-
+        {% block card-action %}
 
         <div class="card-action">
+
             <div class="right-align">
 
               <a class="waves-light btn white-text" href="{% url 'cambiar-password' %}">Cambiar contraseña</a>
               <a class="waves-effect waves-light btn white-text" href="{% url 'mis-datos-update' %}">Editar mis datos</a>
             </div>
+
         </div>
+        {% endblock card-action %}
     </div>
-
-
-    <div class="card">
-        <div class="card-content">
-            <div class="card-title">Lugar de fiscalización</div>
-             <table class="table bordered">
-              <tr>
-                  <th>Establecimiento</th>
-                  <td>{{ object.escuela.nombre }}</td>
-              </tr>
-              <tr>
-                  <th>Dirección</th>
-                  <td>{{ object.escuela.direccion_completa }} <br>
-                  <a href="http://maps.google.com/maps?q={{object.escuela.coordenadas}}">Ver en el mapa</a></td>
-              </tr>
-               <tr>
-                  <th>Sección</th>
-                  <td>{{ object.escuela.circuito.seccion }}</td>
-              </tr>
-               <tr>
-                  <th>Circuito</th>
-                  <td>{{ object.escuela.circuito }}</td>
-              </tr>
-              <tr>
-                  <th>{% if object.es_general %}
-                    Mesas en la escuela
-                    {% else %}
-                    Mesa asignada
-                  {% endif %} </th>
-                  <td>
-                  {% for mesa in object.mesas_asignadas %}
-                    <a href="#">Nº{{ mesa.numero }}</a>
-                     {% if not forloop.last %} | {% endif %}
-                  {% endfor %}
-                  </td>
-              </tr>
-
-            </table>
-
-       </div>
-    </div>
-
 
 
 {% endblock left-panel %}

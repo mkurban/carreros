@@ -47,6 +47,10 @@ class MisContactos(BaseFiscal):
     template_name = "fiscales/mis-contactos.html"
 
 
+class DondeFiscalizo(BaseFiscal):
+    template_name = "fiscales/donde-fiscalizo.html"
+
+
 class MisDatosUpdate(ConContactosMixin, UpdateView, BaseFiscal):
     """muestras los contactos para un fiscal"""
     form_class = MisDatosForm

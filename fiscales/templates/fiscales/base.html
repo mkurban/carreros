@@ -18,13 +18,18 @@
         </li>
 
         {% endcomment %}
+        {% url 'donde-fiscalizo' as url %}
+        <li {% if url in request.path %} class="active"{% endif %}>
+            <a href="{{ url }}" class="collapsible-header" data-turbolinks="false">Dónde fiscalizo<i class="material-icons">place</i></a>
+        </li>
+
         {% url 'mis-datos' as url %}
-        <li {% if request.path == url %} class="active"{% endif %}>
+        <li {% if url in request.path %} class="active"{% endif %}>
             <a href="{{ url }}" class="collapsible-header" data-turbolinks="false">Mis datos<i class="material-icons">tag_faces</i></a>
         </li>
 
         {% url 'mis-contactos' as url %}
-        <li {% if request.path == url %} class="active"{% endif %}>
+        <li {% if url in request.path %} class="active"{% endif %}>
            <a href="{{ url }}" class="collapsible-header" data-turbolinks="false">Mis Contactos<i class="material-icons">contacts</i></a>
         </li>
 
