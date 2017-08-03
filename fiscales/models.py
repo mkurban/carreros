@@ -1,4 +1,5 @@
 from django.db import models
+from django.db.models import Q
 from django.contrib.contenttypes.fields import GenericRelation
 from model_utils import Choices
 from model_utils.models import TimeStampedModel
@@ -28,7 +29,7 @@ class Fiscal(models.Model):
     dni = models.CharField(max_length=15)
     datos_de_contacto = GenericRelation('prensa.DatoDeContacto', related_query_name='fiscales')
     organizacion = models.ForeignKey('Organizacion', null=True, blank=True)
-    user = models.ForeignKey('auth.User', null=True, blank=True)
+    user = models.OneToOneField('auth.User', null=True, blank=True, related_name='fiscal')
 
     class Meta:
         verbose_name_plural = 'Fiscales'
@@ -40,11 +41,11 @@ class Fiscal(models.Model):
 
     @property
     def telefonos(self):
-        return ' / '.join(self.datos_de_contacto.filter(tipo='teléfono').values_list('valor', flat=True))
+        return self.datos_de_contacto.filter(tipo='teléfono').values_list('valor', flat=True)
 
     @property
     def emails(self):
-        return ' / '.join(self.datos_de_contacto.filter(tipo='email').values_list('valor', flat=True))
+        return self.datos_de_contacto.filter(tipo='email').values_list('valor', flat=True)
 
     def mesas_asignadas(self):
         if self.es_general:
@@ -52,8 +53,22 @@ class Fiscal(models.Model):
         return Mesa.objects.filter(asignacion_fiscales__fiscal=self).order_by('numero')
 
     @property
+    def escuela(self):
+        mesa = self.mesas_asignadas().first()
+        if mesa:
+            return mesa.lugar_votacion
+
+    def fiscales_colegas(self):
+        """fiscales en la misma escuela"""
+        if self.escuela:
+            general = Q(tipo='general') & Q(asignacion_escuela__lugar_votacion=self.escuela)
+            de_mesa = Q(tipo='de_mesa') & Q(asignacion_mesa__mesa__lugar_votacion=self.escuela)
+            return Fiscal.objects.exclude(id=self.id).filter(general | de_mesa).order_by('-tipo')
+        return Fiscal.objects.none()
+
+    @property
     def mesas_desde_hasta(self):
-        return desde_hasta(self.mesas_asignadas)
+        return desde_hasta(self.mesas_asignadas())
 
     def __str__(self):
         return f'{self.nombres} {self.apellido}'

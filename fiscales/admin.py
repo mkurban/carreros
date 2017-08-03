@@ -33,8 +33,12 @@ class AsignadoFilter(admin.SimpleListFilter):
 
 
 class FiscalAdmin(admin.ModelAdmin):
+
+    def telefonos(o):
+        return ' / '.join(o.telefonos)
+
     form = FiscalForm
-    list_display = ('__str__', 'direccion', 'organizacion', 'dni', 'telefonos')
+    list_display = ('__str__', 'direccion', 'organizacion', 'dni', telefonos)
     search_fields = (
         'apellido', 'direccion', 'dni',
         'asignacion_escuela__lugar_votacion__nombre',

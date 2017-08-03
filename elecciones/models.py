@@ -27,7 +27,7 @@ class Seccion(models.Model):
         verbose_name_plural = 'Secciones electorales'
 
     def __str__(self):
-        return self.nombre
+        return f"{self.numero} - {self.nombre}"
 
 
 class Circuito(models.Model):
@@ -71,6 +71,14 @@ class LugarVotacion(models.Model):
         else:
             self.longitud, self.latitud = None, None
         super().save(*args, **kwargs)
+
+    @property
+    def coordenadas(self):
+        return f'{self.latitud},{self.longitud}'
+
+    @property
+    def direccion_completa(self):
+        return f'{self.direccion} {self.barrio} {self.ciudad}'
 
     @property
     def mesas_desde_hasta(self):

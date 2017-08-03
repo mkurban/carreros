@@ -1,0 +1,60 @@
+{% extends "fiscales/base.html" %}
+
+{% block page_title %}Mis Contactos{% endblock %}
+
+{% block left-panel %}
+
+   {% for fiscal in object.fiscales_colegas %}
+
+    <div class="card">
+        <div class="card-content">
+              <div class="card-title">
+              {% if fiscal.es_general %}
+                  Fiscal general
+                {% else %}
+                  Fiscal de mesa Nº {{ fiscal.mesas_desde_hasta }}
+              {% endif %}
+              </div>
+
+
+              <table class="table bordered">
+
+
+              <tr>
+                  <th>Nombre </th>
+                  <td>{{ fiscal }}</td>
+              </tr>
+
+              <tr>
+                  <th>Mesas </th>
+                  <td>{{ fiscal.mesas_desde_hasta }}</td>
+              </tr>
+
+              <tr>
+                  <th>Teléfono</th>
+                  <td>
+                    {% for tel in fiscal.telefonos %}
+                      <a href="tel:{{ tel }}">{{ tel }}</a>
+                    {% if not forloop.last %}<br>{% endif %}
+                    {% endfor %}
+                  </td>
+              </tr>
+              {% if fiscal.emails %}
+              <tr>
+                  <th>Email</th>
+                  <td>
+                    {% for email in fiscal.emails %}
+                      <a href="mailto:{{ email }}">{{ email }}</a>
+                    {% if not forloop.last %}<br>{% endif %}
+                    {% endfor %}
+                  </td>
+              </tr>
+              {% endif %}
+
+              </table>
+
+        </div>
+      </div>
+    {% endfor %}
+
+{% endblock left-panel %}

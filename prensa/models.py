@@ -15,7 +15,6 @@ class DatoDeContacto(models.Model):
         'instagram', 'youtube', 'skype'
     )
 
-
     tipo = models.CharField(choices=TIPOS, max_length=20)
     valor = models.CharField(max_length=100)
     # generic relation

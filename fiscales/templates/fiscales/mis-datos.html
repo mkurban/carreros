@@ -1,0 +1,65 @@
+{% extends "fiscales/base.html" %}
+
+{% block page_title %}Mis Datos{% endblock %}
+
+{% block left-panel %}
+    <div class="card">
+        <div class="card-content">
+            <div class="card-title"> {{ object }}</div>
+
+            <table class="table bordered">
+              <tr>
+                  <th>Tipo de fiscal</th>
+                  <td>{{ object.get_tipo_display }}</td>
+              </tr>
+
+              <tr>
+                  <th>Lugar de fiscalización</th>
+                  <td>{{ object.escuela.nombre }}</td>
+              </tr>
+              <tr>
+                  <th>Dirección</th>
+                  <td>{{ object.escuela.direccion_completa }} <br>
+                  <a href="http://maps.google.com/maps?q={{object.escuela.coordenadas}}">Ver en el mapa</a></td>
+              </tr>
+               <tr>
+                  <th>Sección</th>
+                  <td>{{ object.escuela.circuito.seccion }}</td>
+              </tr>
+               <tr>
+                  <th>Circuito</th>
+                  <td>{{ object.escuela.circuito }}</td>
+              </tr>
+              <tr>
+                  <th>Mesa/s</th>
+                  <td>
+                  {% for mesa in object.mesas_asignadas %}
+                    <a href="#">{{ mesa.numero }}</a>
+                     {% if not forloop.last %} | {% endif %}
+                  {% endfor %}
+                  </td>
+              </tr>
+
+             {% for contacto in object.datos_de_contacto.all %}
+                <tr>
+                    <th>{{ contacto.tipo|title }}</th>
+                    <td>{{ contacto.valor }}</td>
+
+                </tr>
+                {% endfor %}
+
+
+            </table>
+        </div>
+
+
+
+        <div class="card-action">
+            <div class="right-align">
+              <a class="waves-effect waves-light btn white-text" href="#">Editar mis datos</a>
+            </div>
+        </div>
+
+
+    </div>
+{% endblock left-panel %}
