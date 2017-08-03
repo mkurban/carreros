@@ -75,10 +75,8 @@ class Fiscal(models.Model):
         if self.es_general:
             qs = AsignacionFiscalGeneral.objects.filter(fiscal=self)
         else:
-            qs = AsignacionFiscal.objects.filter(fiscal=self)
+            qs = AsignacionFiscalDeMesa.objects.filter(fiscal=self)
         return qs.last()
-
-
 
     @property
     def direccion_completa(self):
@@ -106,6 +104,14 @@ class Fiscal(models.Model):
 class AsignacionFiscal(TimeStampedModel):
     ingreso = models.DateTimeField(null=True, editable=False)
     egreso = models.DateTimeField(null=True, editable=False)
+
+
+    @property
+    def esta_presente(self):
+        if self.ingreso and not self.egreso:
+            return True
+        return False
+
 
     class Meta:
         abstract = True

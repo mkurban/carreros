@@ -18,10 +18,13 @@
         </li>
 
         {% endcomment %}
+        {% block donde %}
+
         {% url 'donde-fiscalizo' as url %}
         <li {% if url in request.path %} class="active"{% endif %}>
             <a href="{{ url }}" class="collapsible-header" data-turbolinks="false">Dónde fiscalizo<i class="material-icons">place</i></a>
         </li>
+        {% endblock donde %}
 
         {% url 'mis-datos' as url %}
         <li {% if url in request.path %} class="active"{% endif %}>

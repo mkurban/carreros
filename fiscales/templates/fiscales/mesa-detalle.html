@@ -1,0 +1,45 @@
+{% extends "fiscales/donde-fiscalizo.html" %}
+
+{% block page_title %}Mesa Nº {{ object.numero }} {% endblock %}
+
+{% block left-panel %}
+    <div class="card">
+        {% block card-content %}
+        <div class="card-content">
+
+            <div class="card-title">{{ object }}</div>
+
+
+            <table class="table bordered">
+              <tr>
+                  <th>Estado</th>
+                  <td>{{ object.get_estado_display }}
+
+                   <form method="POST" enctype="multipart/form-data">
+                    {% csrf_token %}
+
+                    {{ form }}
+
+                    <button type="submit" class="waves-effect waves-light btn white-text right-align">Reportar como {{ object.proximo_estado|title }}</button>
+
+                    </form>
+
+                  </td>
+              </tr>
+
+
+              <tr>
+                  <th>Escuela</th>
+                  <td>{{ object.lugar_votacion }}</td>
+              </tr>
+
+
+            </table>
+
+        </div>
+        {% endblock card-content %}
+
+    </div>
+
+
+{% endblock left-panel %}

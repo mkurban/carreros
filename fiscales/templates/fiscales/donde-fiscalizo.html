@@ -3,6 +3,29 @@
 
 {% block page_title %}Dónde fiscalizo{% endblock %}
 
+
+{% block donde %}
+
+    {% url 'donde-fiscalizo' as url %}
+    <li {% if url in request.path %} class="active"{% endif %}>
+         <ul class="collapsible collapsible-accordion">
+            <li>
+              <a href="{{ url }}" class="collapsible-header active" data-turbolinks="false">Dónde fiscalizo<i class="material-icons">place</i></a>
+              <div class="collapsible-body" style="display:block">
+                <ul>
+                  {% for mesa in object.mesas_asignadas %}
+                      <li><a href="{% url 'detalle-mesa' mesa.numero %}">Mesa Nº {{ mesa.numero }}</a></li>
+                  {% endfor %}
+                  </ul>
+              </div>
+            </li>
+          </ul>
+    </li>
+{% endblock donde %}
+
+
+
+
 {% block left-panel %}
 
 
@@ -34,31 +57,39 @@
                   {% endif %} </th>
                   <td>
                   {% for mesa in object.mesas_asignadas %}
-                    <a href="#">Nº{{ mesa.numero }}</a>
+                    <a href="{% url 'detalle-mesa' mesa.numero %}">Nº {{ mesa.numero }}</a>
                      {% if not forloop.last %} | {% endif %}
                   {% endfor %}
                   </td>
               </tr>
 
                <tr>
-                  <th>Último registro</th>
-                  <td>{{ object.escuela.circuito }}</td>
+                  <th>Hora a la que ingresaste</th>
+                  <td> {{ object.asignacion.ingreso|time|default:"-" }} </td>
               </tr>
+
+              <tr>
+                  <th>Hora a la que te retiraste</th>
+                  <td> {{ object.asignacion.ingreso|time|default:"-" }} </td>
+              </tr>
+
 
 
             </table>
        </div>
 
+       {% if not object.asignacion.esta_presente %}
+
         <div class="card-action">
 
-            <div class="right-align">
+            <div class="center-align">
 
-              <a class="waves-light btn white-text" href="{% url 'cambiar-password' %}">Ya estoy presente!</a>
-              <a class="waves-effect waves-light btn white-text" href="{% url 'mis-datos-update' %}">Editar mis datos</a>
+              <a class="waves-light btn white-text" href="#">¡Avisar que estoy acá!</a>
             </div>
 
         </div>
 
+        {% endif %}
 
     </div>
 

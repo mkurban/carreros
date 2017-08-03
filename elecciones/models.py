@@ -90,7 +90,8 @@ class LugarVotacion(models.Model):
 
 
 class Mesa(models.Model):
-    ESTADOS = Choices('EN ESPERA', 'ABIERTA', 'CERRADA', 'ESCRUTADA')
+    ESTADOS_ = ('EN ESPERA', 'ABIERTA', 'CERRADA', 'ESCRUTADA')
+    ESTADOS = Choices(*ESTADOS_)
 
     estado = StatusField(choices_name='ESTADOS', default='EN ESPERA')
     hora_abierta = MonitorField(monitor='estado', when=['ABIERTA'])
@@ -105,6 +106,15 @@ class Mesa(models.Model):
     @property
     def computados(self):
         return self.votomesaoficial_set.aggregate(Sum('votos'))['votos__sum']
+
+    @property
+    def proximo_estado(self):
+        if self.estado == 'ESCRUTADA':
+            return self.estado
+        list(Mesa.ESTADOS)
+        pos = Mesa.ESTADOS_.index(self.estado)
+        return Mesa.ESTADOS_[pos + 1]
+
 
     def __str__(self):
         return f"Mesa {self.numero} - {self.circuito}"
