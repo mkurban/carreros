@@ -171,7 +171,9 @@ class Eleccion(models.Model):
 
     @classmethod
     def opciones_actuales(cls):
-        return cls.objects.last().opciones.all()
+        if cls.objects.last():
+            return cls.objects.last().opciones.all()
+        return Opcion.objects.none()
 
     class Meta:
         verbose_name = 'Elección'
