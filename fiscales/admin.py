@@ -71,10 +71,11 @@ class AsignacionFiscalDeMesaAdmin(admin.ModelAdmin):
     list_filter = ('ingreso', 'egreso')
     search_fields = (
         'fiscal__apellido', 'fiscal__direccion', 'fiscal__dni',
-        'lugar_votacion__nombre',
-        'lugar_votacion__direccion',
-        'lugar_votacion__barrio',
-        'lugar_votacion__ciudad',
+        'mesa__numero',
+        'mesa__lugar_votacion__nombre',
+        'mesa__lugar_votacion__direccion',
+        'mesa__lugar_votacion__barrio',
+        'mesa__lugar_votacion__ciudad',
     )
 
 

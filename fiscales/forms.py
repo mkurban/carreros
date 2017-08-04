@@ -40,13 +40,10 @@ class VotoMesaModelForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields['opcion'].label = ''
-        # self.fields['opcion'].required = False
         self.fields['votos'].label = ''
         # self.fields['opcion'].widget.attrs['disabled'] = 'disabled'
 
-    # opcion_ = forms.ModelChoiceField(queryset=OPCIONES(), widget=forms.HiddenInput)
-
-    layout = Layout(Row('opcion', 'votos'))
+    # layout = Layout(Row('opcion', 'votos'))
 
     class Meta:
         model = VotoMesaReportado

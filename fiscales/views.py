@@ -6,6 +6,7 @@ from django.views.generic.detail import DetailView
 from django.views.generic.edit import UpdateView
 from django.contrib import messages
 from django.http import HttpResponseForbidden
+from django.contrib.auth.decorators import login_required
 
 from .models import Fiscal
 from elecciones.models import Mesa, Eleccion, VotoMesaReportado
@@ -73,19 +74,27 @@ class MesaDetalle(LoginRequiredMixin, UpdateView):
         return reverse('detalle-mesa', args=(self.object.numero,))
 
 
+@login_required
 def cargar_mesa(request, mesa_numero):
+    def fix_opciones(formset):
+        # hack para dejar sólo la opcion correspondiente a cada fila
+        # se podria hacer "disabled" pero ese caso quita el valor del
+        # cleaned_data y luego lo exige por ser requerido.
+        for opcion, form in zip(Eleccion.opciones_actuales(), formset):
+            form.fields['opcion'].choices = [(opcion.id, str(opcion))]
+
     mesa = get_object_or_404(Mesa, numero=mesa_numero)
     fiscal = request.user.fiscal
     if mesa not in fiscal.mesas_asignadas():
-        raise HttpResponseForbidden()
+        return HttpResponseForbidden()
 
     data = request.POST if request.method == 'POST' else None
     qs = VotoMesaReportado.objects.filter(mesa=mesa, fiscal=fiscal)
-    if qs.exists():
-        formset = VotoMesaReportadoFormset(data, queryset=qs)
-    else:
-        initial = [{'opcion': o, 'opcion_': o} for o in Eleccion.opciones_actuales()]
-        formset = VotoMesaReportadoFormset(data, initial=initial)
+
+    initial = [{'opcion': o} for o in Eleccion.opciones_actuales()]
+    formset = VotoMesaReportadoFormset(data, queryset=qs, initial=initial)
+
+    fix_opciones(formset)
 
     if formset.is_valid():
         for form in formset:
@@ -95,7 +104,7 @@ def cargar_mesa(request, mesa_numero):
             vmr.eleccion = Eleccion.objects.last()
             vmr.save()
         messages.success(request, 'Los resultados se cargaron correctamente')
-        return redirect('detalle-mesa', args=(mesa.numero,))
+        return redirect(reverse('detalle-mesa', args=(mesa.numero,)))
 
     return render(request, "fiscales/carga.html",
         {'formset': formset, 'object': mesa})
