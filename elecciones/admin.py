@@ -74,12 +74,16 @@ class MesaAdmin(admin.ModelAdmin):
     )
 
 
+class PartidoAdmin(admin.ModelAdmin):
+    list_display = ('numero', 'nombre')
+    list_display_links = list_display
 
+admin.site.register(Partido, PartidoAdmin)
 admin.site.register(LugarVotacion, LugarVotacionAdmin)
 admin.site.register(Mesa, MesaAdmin)
 
 
-for model in (Seccion, Circuito, Partido, Opcion, Eleccion, VotoMesaReportado):
+for model in (Seccion, Circuito, Opcion, Eleccion, VotoMesaReportado):
     admin.site.register(model)
 
 

@@ -1,3 +1,4 @@
+import os
 from django.contrib.auth.models import User
 from django.urls import reverse
 from django.db import models
@@ -88,6 +89,16 @@ class LugarVotacion(models.Model):
         return f"{self.nombre} - {self.circuito}"
 
 
+def path_foto_acta(instance, filename):
+    # file will be uploaded to MEDIA_ROOT/user_<id>/<filename>
+    _, ext = os.path.splitext(filename)
+    return '{}/{}/{}{}'.format(
+        instance.circuito.seccion.numero,
+        instance.circuito.numero,
+        instance.numero,
+        ext
+    )
+
 
 class Mesa(models.Model):
     ESTADOS_ = ('EN ESPERA', 'ABIERTA', 'CERRADA', 'ESCRUTADA')
@@ -102,6 +113,8 @@ class Mesa(models.Model):
     circuito = models.ForeignKey(Circuito)  #
     lugar_votacion = models.ForeignKey(LugarVotacion, verbose_name='Lugar de votacion', null=True, related_name='mesas')
     url = models.URLField(blank=True, help_text='url al telegrama')
+    foto_del_acta = models.ImageField(upload_to=path_foto_acta, null=True, blank=True)
+
 
     @property
     def computados(self):
@@ -121,27 +134,50 @@ class Mesa(models.Model):
 
 
 class Partido(models.Model):
+    orden = models.PositiveIntegerField(help_text='Orden opcion')
+    numero = models.PositiveIntegerField()
     nombre = models.CharField(max_length=100)
+    ordering = ['orden']
+
 
     def __str__(self):
         return self.nombre
 
 
 class Opcion(models.Model):
-    dne_id = models.PositiveIntegerField(primary_key=True)
+    orden = models.PositiveIntegerField(help_text='Orden en el acta')
     nombre = models.CharField(max_length=100)
-    partido = models.ForeignKey(Partido, null=True)   # blanco, / recurrido / etc
+    partido = models.ForeignKey(Partido, null=True, blank=True)   # blanco, / recurrido / etc
+    orden = models.PositiveIntegerField(
+        help_text='Orden en la boleta', null=True, blank=True)
+
+
+    class Meta:
+        verbose_name = 'Opción'
+        verbose_name_plural = 'Opciones'
+        ordering = ['orden']
+
+
 
     def __str__(self):
-        return f'{self.partido} - {self.nombre}'
-
+        if self.partido:
+            return f'{self.partido} - {self.nombre}'
+        return self.nombre
 
 class Eleccion(models.Model):
     nombre = models.CharField(max_length=50)
     fecha = models.DateTimeField(blank=True, null=True)
     opciones = models.ManyToManyField(Opcion)
 
-    def __unicode__(self):
+    @classmethod
+    def opciones_actuales(cls):
+        return cls.objects.last().opciones.all()
+
+    class Meta:
+        verbose_name = 'Elección'
+        verbose_name_plural = 'Elecciones'
+
+    def __str__(self):
         return self.nombre
 
 
@@ -162,6 +198,7 @@ class AbstractVotoMesa(models.Model):
 
 class VotoMesaReportado(AbstractVotoMesa):
     fiscal = models.ForeignKey('fiscales.Fiscal')
+
 
 
 class VotoMesaOficial(AbstractVotoMesa):

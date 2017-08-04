@@ -15,14 +15,19 @@
                   <th>Estado</th>
                   <td>{{ object.get_estado_display }}
 
+                    {% if object.estado == 'ESCRUTADA' %}
+                          <a href="{% url 'cargar-resultados' object.numero %}"  class="waves-effect waves-light btn white-text">Cargar resultados</a>
+
+
+                    {% else %}
                    <form method="POST" enctype="multipart/form-data">
                     {% csrf_token %}
 
                     {{ form }}
 
-                    <button type="submit" class="waves-effect waves-light btn white-text right-align">Reportar como {{ object.proximo_estado|title }}</button>
-
+                    <button type="submit" class="waves-effect waves-light btn white-text">Reportar como {{ object.proximo_estado|title }}</button>
                     </form>
+                    {% endif %}
 
                   </td>
               </tr>
