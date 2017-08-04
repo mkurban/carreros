@@ -1,19 +1,19 @@
-from django.http import Http404
+from django.http import Http404, HttpResponseForbidden
 from django.shortcuts import redirect, get_object_or_404, render
 from django.urls import reverse, reverse_lazy
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.generic.detail import DetailView
-from django.views.generic.edit import UpdateView
+from django.views.generic.edit import UpdateView, FormView
 from django.contrib import messages
-from django.http import HttpResponseForbidden
 from django.contrib.auth.decorators import login_required
-
-from .models import Fiscal
-from elecciones.models import Mesa, Eleccion, VotoMesaReportado
+from django.contrib.auth.views import PasswordChangeView
+from django.utils import timezone
+from .models import Fiscal, AsignacionFiscalGeneral, AsignacionFiscalDeMesa
+from elecciones.models import Mesa, Eleccion, VotoMesaReportado, LugarVotacion
 
 from .forms import MisDatosForm, EstadoMesaModelForm, VotoMesaReportadoFormset
 from prensa.views import ConContactosMixin
-from django.contrib.auth.views import PasswordChangeView
+
 
 
 def choice_home(request):
@@ -52,8 +52,39 @@ class MisContactos(BaseFiscal):
     template_name = "fiscales/mis-contactos.html"
 
 
+@login_required
+def asignacion_estado(request, id_escuela):
+    try:
+        fiscal = request.user.fiscal
+    except Fiscal.DoesNotExist:
+        raise Http404()
+
+    if fiscal.es_general:
+        asignacion = get_object_or_404(AsignacionFiscalGeneral, fiscal=fiscal, lugar_votacion__id=id_escuela)
+    else:
+        asignacion = get_object_or_404(AsignacionFiscalDeMesa, fiscal=fiscal, mesa__lugar_votacion__id=id_escuela)
+
+    if request.method == 'POST':
+        if not asignacion.ingreso:
+            # llega por primera vez
+            asignacion.ingreso = timezone.now()
+            asignacion.egreso = None
+            messages.info(request, 'Tu presencia se registró ¡Gracias!')
+        elif asignacion.ingreso and not asignacion.egreso:
+            asignacion.egreso = timezone.now()
+            messages.info(request, '¡Gracias por haber fiscalizado!')
+        elif asignacion.ingreso and asignacion.egreso:
+            asignacion.ingreso = timezone.now()
+            asignacion.egreso = None
+            messages.info(request, '¡Gracias por volver!')
+        asignacion.save()
+    return redirect('donde-fiscalizo')
+
+
+
 class DondeFiscalizo(BaseFiscal):
     template_name = "fiscales/donde-fiscalizo.html"
+
 
 
 class MesaDetalle(LoginRequiredMixin, UpdateView):
@@ -84,13 +115,16 @@ def cargar_mesa(request, mesa_numero):
             form.fields['opcion'].choices = [(opcion.id, str(opcion))]
 
     mesa = get_object_or_404(Mesa, numero=mesa_numero)
-    fiscal = request.user.fiscal
+    try:
+        fiscal = request.user.fiscal
+    except Fiscal.DoesNotExist:
+        raise Http404()
+
     if mesa not in fiscal.mesas_asignadas():
         return HttpResponseForbidden()
 
     data = request.POST if request.method == 'POST' else None
     qs = VotoMesaReportado.objects.filter(mesa=mesa, fiscal=fiscal)
-
     initial = [{'opcion': o} for o in Eleccion.opciones_actuales()]
     formset = VotoMesaReportadoFormset(data, queryset=qs, initial=initial)
 

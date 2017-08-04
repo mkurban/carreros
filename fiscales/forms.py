@@ -94,6 +94,3 @@ EstadoMesaModelForm = modelform_factory(
     fields=['estado'],
     widgets={"estado": forms.HiddenInput}
 )
-
-
-

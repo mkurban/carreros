@@ -34,6 +34,11 @@
         <div class="card">
         <div class="card-content">
             <div class="card-title">{{ escuela.nombre }}</div>
+
+            <form method="POST" action="{% url 'asignacion-estado' escuela.id %}" enctype="multipart/form-data">
+            {% csrf_token %}
+
+
              <table class="table bordered">
                <tr>
                   <th>Sección</th>
@@ -64,32 +69,44 @@
               </tr>
 
                <tr>
-                  <th>Hora a la que ingresaste</th>
-                  <td> {{ object.asignacion.ingreso|time|default:"-" }} </td>
+                  <th>Hora a la que llegaste</th>
+                  <td> {{ object.asignacion.ingreso|time }}
+                    {% if not object.asignacion.esta_presente %}
+
+
+                    <button  type="submit" class="waves-effect waves-light btn white-text">
+                        {% if not object.asignacion.egreso %}
+                            Avisar que llegué    {# todavia no estuvo nunca #}
+                        {% else %}
+                            Avisar que volví
+                        {% endif %}
+                    </button>
+
+                    {% endif %}
+
+                  </td>
               </tr>
 
               <tr>
-                  <th>Hora a la que te retiraste</th>
-                  <td> {{ object.asignacion.ingreso|time|default:"-" }} </td>
+                  <th>Hora a la que te fuiste</th>
+                  <td> {{ object.asignacion.egreso|time }}
+
+                  {% if object.asignacion.esta_presente  %}
+
+                    <button  type="submit" class="waves-effect waves-light btn white-text">
+                      Tengo que retirarme
+                      </button>
+                  {% endif %}
+
+                  </td>
               </tr>
 
 
 
             </table>
+            </form>
        </div>
 
-       {% if not object.asignacion.esta_presente %}
-
-        <div class="card-action">
-
-            <div class="center-align">
-
-              <a class="waves-light btn white-text" href="#">¡Avisar que estoy acá!</a>
-            </div>
-
-        </div>
-
-        {% endif %}
 
     </div>
 
