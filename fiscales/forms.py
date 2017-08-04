@@ -12,7 +12,7 @@ OPCION_HAN_VOTADO = 21
 OPCION_DIFERENCIA = 23
 OPCION_TOTAL_VOTOS = 20
 
-OPCIONES = lambda: Eleccion.opciones_actuales()
+OPCIONES = Eleccion.opciones_actuales
 
 
 class FiscalForm(forms.ModelForm):
