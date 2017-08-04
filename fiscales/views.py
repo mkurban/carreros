@@ -1,12 +1,14 @@
 from django.http import Http404
-from django.shortcuts import redirect, get_object_or_404
+from django.shortcuts import redirect, get_object_or_404, render
 from django.urls import reverse, reverse_lazy
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.generic.detail import DetailView
 from django.views.generic.edit import UpdateView
 from django.contrib import messages
+from django.http import HttpResponseForbidden
+
 from .models import Fiscal
-from elecciones.models import Mesa, Eleccion
+from elecciones.models import Mesa, Eleccion, VotoMesaReportado
 
 from .forms import MisDatosForm, EstadoMesaModelForm, VotoMesaReportadoFormset
 from prensa.views import ConContactosMixin
@@ -71,49 +73,32 @@ class MesaDetalle(LoginRequiredMixin, UpdateView):
         return reverse('detalle-mesa', args=(self.object.numero,))
 
 
-class MesaCargarResultados(MesaDetalle):
-    success_msg = "Los resultados se cargaron correctamente"
-    template_name = "fiscales/cargar-mesa.html"
-    form_class = VotoMesaReportadoFormset
+def cargar_mesa(request, mesa_numero):
+    mesa = get_object_or_404(Mesa, numero=mesa_numero)
+    fiscal = request.user.fiscal
+    if mesa not in fiscal.mesas_asignadas():
+        raise HttpResponseForbidden()
 
-    def get_initial(self):
-        initial = []
-        for opcion in Eleccion.opciones_actuales():
-            initial.append({'opcion': opcion, 'opcion_': opcion})
-        return initial
+    data = request.POST if request.method == 'POST' else None
+    qs = VotoMesaReportado.objects.filter(mesa=mesa, fiscal=fiscal)
+    if qs.exists():
+        formset = VotoMesaReportadoFormset(data, queryset=qs)
+    else:
+        initial = [{'opcion': o, 'opcion_': o} for o in Eleccion.opciones_actuales()]
+        formset = VotoMesaReportadoFormset(data, initial=initial)
 
+    if formset.is_valid():
+        for form in formset:
+            vmr = form.save(commit=False)
+            vmr.mesa = mesa
+            vmr.fiscal = fiscal
+            vmr.eleccion = Eleccion.objects.last()
+            vmr.save()
+        messages.success(request, 'Los resultados se cargaron correctamente')
+        return redirect('detalle-mesa', args=(mesa.numero,))
 
-    def get_context_data(self, **kwargs):
-
-        context = super().get_context_data(**kwargs)
-
-        form_class = self.form_class
-        if self.request.POST:
-             formset = form_class(
-                self.request.POST,
-                instance=self.object
-            )
-        else:
-            formset = form_class(
-                instance=self.object,
-                initial=self.get_initial()
-            )
-        context['formset'] = formset
-        return context
-
-    def form_valid(self, form):
-        context = self.get_context_data()
-        valid = all(formset.is_valid() for formset in context['formsets'].values())
-        if valid:
-            self.object = form.save()
-            for formset in context['formsets'].values():
-                formset.instance = self.object
-                formset.save()
-            # ok, redirect
-            return super().form_valid(form)
-
-        # invalid formset
-        return self.render_to_response(self.get_context_data(form=form))
+    return render(request, "fiscales/carga.html",
+        {'formset': formset, 'object': mesa})
 
 
 

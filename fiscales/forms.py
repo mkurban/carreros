@@ -1,6 +1,6 @@
 from django import forms
 from django.forms.models import modelform_factory
-from django.forms import inlineformset_factory, BaseInlineFormSet
+from django.forms import modelformset_factory, BaseModelFormSet
 from material import Layout, Row
 from .models import Fiscal
 from elecciones.models import Mesa, VotoMesaReportado, Eleccion
@@ -42,9 +42,9 @@ class VotoMesaModelForm(forms.ModelForm):
         self.fields['opcion'].label = ''
         # self.fields['opcion'].required = False
         self.fields['votos'].label = ''
-        self.fields['opcion'].widget.attrs['disabled'] = 'disabled'
+        # self.fields['opcion'].widget.attrs['disabled'] = 'disabled'
 
-    opcion_ = forms.ModelChoiceField(queryset=OPCIONES(), widget=forms.HiddenInput)
+    # opcion_ = forms.ModelChoiceField(queryset=OPCIONES(), widget=forms.HiddenInput)
 
     layout = Layout(Row('opcion', 'votos'))
 
@@ -53,14 +53,12 @@ class VotoMesaModelForm(forms.ModelForm):
         fields = ('opcion', 'votos')
 
 
-class VotoMesaInlineFormSet(BaseInlineFormSet):
+class BaseVotoMesaReportadoFormSet(BaseModelFormSet):
     def clean(self):
-        result = super().clean()
-        import ipdb; ipdb.set_trace()
+        super().clean()
         suma = 0
-
         for form in self.forms:
-            opcion = form.cleaned_data['opcion_']
+            opcion = form.cleaned_data['opcion']
             if opcion.id == OPCION_CANTIDAD_DE_SOBRES:
                 cantidad_sobres = form.cleaned_data['votos']
             elif opcion.id == OPCION_HAN_VOTADO:
@@ -79,20 +77,17 @@ class VotoMesaInlineFormSet(BaseInlineFormSet):
 
         if suma != total_en_acta:
             form_opcion_total.add_error(
-                'votos', 'La suma no coincide con el total reportado'
+                'votos', 'La sumatoria no se corresponde con el total'
             )
-
-
-        if total_en_acta != suma:
+        if cantidad_sobres != total_en_acta:
             form_opcion_total.add_error(
-                'votos', 'La suma de votos no coincide con el total reportado'
+                'votos', 'El total no corresponde a la cantidad de sobres'
             )
 
 
-
-VotoMesaReportadoFormset = inlineformset_factory(
-    Mesa, VotoMesaReportado, form=VotoMesaModelForm,
-    formset=VotoMesaInlineFormSet,
+VotoMesaReportadoFormset = modelformset_factory(
+    VotoMesaReportado, form=VotoMesaModelForm,
+    formset=BaseVotoMesaReportadoFormSet,
     min_num=OPCIONES().count(), extra=0, can_delete=False
 )
 

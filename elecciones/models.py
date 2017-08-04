@@ -130,7 +130,7 @@ class Mesa(models.Model):
 
 
     def __str__(self):
-        return f"Mesa {self.numero} - {self.circuito}"
+        return f"Mesa {self.numero}"
 
 
 class Partido(models.Model):
@@ -187,7 +187,7 @@ class AbstractVotoMesa(models.Model):
     eleccion = models.ForeignKey(Eleccion)
     mesa = models.ForeignKey(Mesa)
     opcion = models.ForeignKey(Opcion)
-    votos = models.IntegerField()
+    votos = models.PositiveIntegerField()
 
     class Meta:
         abstract = True
