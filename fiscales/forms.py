@@ -12,7 +12,7 @@ OPCION_HAN_VOTADO = 21
 OPCION_DIFERENCIA = 23
 OPCION_TOTAL_VOTOS = 20
 
-OPCIONES = Eleccion.opciones_actuales()
+OPCIONES = lambda: Eleccion.opciones_actuales()
 
 
 class FiscalForm(forms.ModelForm):
@@ -44,7 +44,7 @@ class VotoMesaModelForm(forms.ModelForm):
         self.fields['votos'].label = ''
         self.fields['opcion'].widget.attrs['disabled'] = 'disabled'
 
-    opcion_ = forms.ModelChoiceField(queryset=OPCIONES, widget=forms.HiddenInput)
+    opcion_ = forms.ModelChoiceField(queryset=OPCIONES(), widget=forms.HiddenInput)
 
     layout = Layout(Row('opcion', 'votos'))
 
@@ -93,7 +93,7 @@ class VotoMesaInlineFormSet(BaseInlineFormSet):
 VotoMesaReportadoFormset = inlineformset_factory(
     Mesa, VotoMesaReportado, form=VotoMesaModelForm,
     formset=VotoMesaInlineFormSet,
-    min_num=OPCIONES.count(), extra=0, can_delete=False
+    min_num=OPCIONES().count(), extra=0, can_delete=False
 )
 
 
