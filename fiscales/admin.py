@@ -5,6 +5,7 @@ from .models import Fiscal, AsignacionFiscalGeneral, AsignacionFiscalDeMesa, Org
 from .forms import FiscalForm
 from prensa.models import DatoDeContacto
 from prensa.forms import DatoDeContactoModelForm
+from django_admin_row_actions import AdminRowActionsMixin
 
 
 class ContactoAdminInline(GenericTabularInline):
@@ -32,7 +33,18 @@ class AsignadoFilter(admin.SimpleListFilter):
         return queryset
 
 
-class FiscalAdmin(admin.ModelAdmin):
+class FiscalAdmin(AdminRowActionsMixin, admin.ModelAdmin):
+
+    def get_row_actions(self, obj):
+        row_actions = [
+            {
+                'label': f'Loguearse como {obj.nombres}',
+                'url': f'/hijack/{obj.user.id}/',
+                'enabled': True,
+            }
+        ]
+        row_actions += super().get_row_actions(obj)
+        return row_actions
 
     def telefonos(o):
         return ' / '.join(o.telefonos)

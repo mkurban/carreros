@@ -48,6 +48,9 @@ INSTALLED_APPS = [
     # 'django.contrib.admin',
     'material.frontend',
 
+    'django_admin_row_actions',
+    'hijack',
+    'compat',
     'taggit',
     'attachments',
     'djgeojson',
@@ -150,6 +153,10 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 LOGIN_REDIRECT_URL = 'home'
 LOGOUT_REDIRECT_URL = 'home'
 
+HIJACK_LOGIN_REDIRECT_URL = 'home'  # Where admins are redirected to after hijacking a user
+HIJACK_ALLOW_GET_REQUESTS = True
+HIJACK_LOGOUT_REDIRECT_URL = 'admin:fiscales_fiscal_changelist'
+
 
 LEAFLET_CONFIG = {
     'DEFAULT_CENTER': (-32.3108144, -63.7066957),
@@ -166,6 +173,8 @@ REST_FRAMEWORK = {
     ],
     'PAGE_SIZE': 10
 }
+
+DEFAULT_PASS_PREFIX = 'cfk'
 
 try:
     from .local_settings import *
