@@ -40,6 +40,7 @@ INSTALLED_APPS = [
 
     'rest_framework',
     'anymail',
+    'raven.contrib.django.raven_compat',
     'localflavor',
     'django_extensions',
     'custom_templates',   # our hack to override templates
@@ -177,7 +178,7 @@ REST_FRAMEWORK = {
 
 ANYMAIL = {
     # (exact settings here depend on your ESP...)
-    "MAILGUN_API_KEY": "<***REMOVED***",
+    "MAILGUN_API_KEY": "***REMOVED***",
     "MAILGUN_SENDER_DOMAIN": '***REMOVED***',  # your Mailgun domain, if needed
 }
 EMAIL_BACKEND = "anymail.backends.mailgun.EmailBackend"  # or sendgrid.EmailBackend, or...
