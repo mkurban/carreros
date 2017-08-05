@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
 
     'rest_framework',
+    'anymail',
     'localflavor',
     'django_extensions',
     'custom_templates',   # our hack to override templates
@@ -174,7 +175,14 @@ REST_FRAMEWORK = {
     'PAGE_SIZE': 10
 }
 
-DEFAULT_PASS_PREFIX = 'cfk'
+ANYMAIL = {
+    # (exact settings here depend on your ESP...)
+    "MAILGUN_API_KEY": "<***REMOVED***",
+    "MAILGUN_SENDER_DOMAIN": '***REMOVED***',  # your Mailgun domain, if needed
+}
+EMAIL_BACKEND = "anymail.backends.mailgun.EmailBackend"  # or sendgrid.EmailBackend, or...
+DEFAULT_FROM_EMAIL = "info@cordobaciudadana.org"         # if you don't already have this in settings
+
 
 try:
     from .local_settings import *

@@ -2,6 +2,7 @@ django==1.11.3
 django-model-utils==3.0.0
 git+https://github.com/mgaitan/django-admin-row-actions#egg=django-admin-row-actions
 django-annoying==0.10.3
+django-anymail==0.11.1
 django-attachments==1.1.1
 git+https://github.com/mgaitan/django-material#egg=django-material
 django-extensions==1.8.1
