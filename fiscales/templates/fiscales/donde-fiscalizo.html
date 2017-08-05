@@ -111,4 +111,17 @@
     </div>
 
     {% endfor %}
+
+    {% if not object.escuelas.exists %}
+
+      <div class="card">
+        <div class="card-content">
+            <div class="card-title">Todavía no tenés asignada ninguna {% if object.es_general %}escuela{% else %}mesa{% endif %}</div>
+
+            <p>Por favor, hablá con tu <a href="{% url 'mis-contactos' %}#referentes %}">referente</a></p>
+
+        </div>
+      </div>
+    {% endif %}
+
 {% endblock left-panel %}
