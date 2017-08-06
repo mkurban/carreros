@@ -9,21 +9,6 @@
     </style>
     <script type="text/javascript">
       var dataurl = '{% url "geojson" %}';
-
-      // function onSpotClick(ev) {
-          
-      //     var popup = ev.target.getPopup();
-      //     // alert(popup);
-      //     // var props = feature.properties;
-      //     // $.get(`/elecciones/escuelas/${props.id}`, function(data){
-      //       // layer.bindPopup(data);
-
-      //       popup.setContent('hola');
-      //       // popup.setContent( data );
-      //       popup.update();
-      //     // });
-      // };
-
       window.addEventListener("map:init", function (event) {
         var map = event.detail.map;
         // Download GeoJSON data with Ajax
@@ -37,46 +22,19 @@
 
                 function onSpotClick(ev) {
                     var popup = ev.target.getPopup();
-                    // alert(popup);
-                    // var props = feature.properties;
-                    // $.get(`/elecciones/escuelas/${props.id}`, function(data){
-                      // layer.bindPopup(data);
                     var props = feature.properties;
-                
-                $.get(`/elecciones/escuelas/${props.id}`, function(data){
-
-                      // popup.setContent('hola');
-                      popup.setContent( data );
-                      popup.update();
-                    });
-                };
-
-            //     // alert(data);
-            //     alert(feature.properties);
-            //     $.get(`/elecciones/escuelas/${props.id}`, function(data){
-                  layer.bindPopup();
-                  layer.on('click', onSpotClick);
-            //     });
-              // },
-              // pointToLayer: function (feature, latlng) {
-              //     return L.circleMarker(latlng, data);
+                    $.get(`/elecciones/escuelas/${props.id}`, function(data){
+                          popup.setContent( data );
+                          popup.update();
+                        });
+                    };
+                    layer.bindPopup();
+                    layer.on('click', onSpotClick);
               }
             }).addTo(map);
           });
       });
 
-
-            // L.geoJson(data, {
-            //   onEachFeature: function onEachFeature(feature, layer) {
-            //     // alert(data);
-            //     alert(feature.properties);
-            //     var props = feature.properties;
-            //     $.get(`/elecciones/escuelas/${props.id}`, function(data){
-            //       layer.bindPopup(data);
-            //     });
-            //   }
-            // }).addTo(map);
-      
     </script>
   </head>
   <body>
