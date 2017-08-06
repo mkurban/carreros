@@ -38,6 +38,9 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
 
+    'rest_framework',
+    'anymail',
+    'raven.contrib.django.raven_compat',
     'localflavor',
     'django_extensions',
     'custom_templates',   # our hack to override templates
@@ -47,6 +50,9 @@ INSTALLED_APPS = [
     # 'django.contrib.admin',
     'material.frontend',
 
+    'django_admin_row_actions',
+    'hijack',
+    'compat',
     'taggit',
     'attachments',
     'djgeojson',
@@ -55,6 +61,7 @@ INSTALLED_APPS = [
     # nuestras apps
     'elecciones',
     'fiscales',
+    'api',
     'candidatos',
     'geo.apps.GeoConfig',
     'prensa.apps.PrensaConfig'
@@ -148,6 +155,10 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 LOGIN_REDIRECT_URL = 'home'
 LOGOUT_REDIRECT_URL = 'home'
 
+HIJACK_LOGIN_REDIRECT_URL = 'home'  # Where admins are redirected to after hijacking a user
+HIJACK_ALLOW_GET_REQUESTS = True
+HIJACK_LOGOUT_REDIRECT_URL = 'admin:fiscales_fiscal_changelist'
+
 
 LEAFLET_CONFIG = {
     'DEFAULT_CENTER': (-32.3108144, -63.7066957),
@@ -158,6 +169,20 @@ LEAFLET_CONFIG = {
     }
 }
 
+REST_FRAMEWORK = {
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAdminUser',
+    ],
+    'PAGE_SIZE': 10
+}
+
+ANYMAIL = {
+    # (exact settings here depend on your ESP...)
+    "MAILGUN_API_KEY": "***REMOVED***",
+    "MAILGUN_SENDER_DOMAIN": '***REMOVED***',  # your Mailgun domain, if needed
+}
+EMAIL_BACKEND = "anymail.backends.mailgun.EmailBackend"  # or sendgrid.EmailBackend, or...
+DEFAULT_FROM_EMAIL = "info@cordobaciudadana.org"         # if you don't already have this in settings
 
 
 try:

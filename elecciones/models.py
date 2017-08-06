@@ -1,3 +1,4 @@
+import os
 from django.contrib.auth.models import User
 from django.urls import reverse
 from django.db import models
@@ -27,7 +28,7 @@ class Seccion(models.Model):
         verbose_name_plural = 'Secciones electorales'
 
     def __str__(self):
-        return self.nombre
+        return f"{self.numero} - {self.nombre}"
 
 
 class Circuito(models.Model):
@@ -73,16 +74,42 @@ class LugarVotacion(models.Model):
         super().save(*args, **kwargs)
 
     @property
+    def coordenadas(self):
+        return f'{self.latitud},{self.longitud}'
+
+    @property
+    def direccion_completa(self):
+        return f'{self.direccion} {self.barrio} {self.ciudad}'
+
+    @property
     def mesas_desde_hasta(self):
         return desde_hasta(self.mesas)
+
+    @property
+    def fiscal_general(self):
+        asignacion =  self.asignacion.order_by('-ingreso').last()
+        if asignacion:
+            return asignacion.fiscal
+
 
     def __str__(self):
         return f"{self.nombre} - {self.circuito}"
 
 
+def path_foto_acta(instance, filename):
+    # file will be uploaded to MEDIA_ROOT/user_<id>/<filename>
+    _, ext = os.path.splitext(filename)
+    return '{}/{}/{}{}'.format(
+        instance.circuito.seccion.numero,
+        instance.circuito.numero,
+        instance.numero,
+        ext
+    )
+
 
 class Mesa(models.Model):
-    ESTADOS = Choices('EN ESPERA', 'ABIERTA', 'CERRADA', 'ESCRUTADA')
+    ESTADOS_ = ('EN ESPERA', 'ABIERTA', 'CERRADA', 'ESCRUTADA')
+    ESTADOS = Choices(*ESTADOS_)
 
     estado = StatusField(choices_name='ESTADOS', default='EN ESPERA')
     hora_abierta = MonitorField(monitor='estado', when=['ABIERTA'])
@@ -93,37 +120,80 @@ class Mesa(models.Model):
     circuito = models.ForeignKey(Circuito)  #
     lugar_votacion = models.ForeignKey(LugarVotacion, verbose_name='Lugar de votacion', null=True, related_name='mesas')
     url = models.URLField(blank=True, help_text='url al telegrama')
+    foto_del_acta = models.ImageField(upload_to=path_foto_acta, null=True, blank=True)
+
+
+    @property
+    def fiscal(self):
+        asignacion =  self.asignacion.order_by('-ingreso').last()
+        if asignacion:
+            return asignacion.fiscal
+
 
     @property
     def computados(self):
         return self.votomesaoficial_set.aggregate(Sum('votos'))['votos__sum']
 
+    @property
+    def proximo_estado(self):
+        if self.estado == 'ESCRUTADA':
+            return self.estado
+        list(Mesa.ESTADOS)
+        pos = Mesa.ESTADOS_.index(self.estado)
+        return Mesa.ESTADOS_[pos + 1]
+
+
     def __str__(self):
-        return f"Mesa {self.numero} - {self.circuito}"
+        return f"Mesa {self.numero}"
 
 
 class Partido(models.Model):
+    orden = models.PositiveIntegerField(help_text='Orden opcion')
+    numero = models.PositiveIntegerField()
     nombre = models.CharField(max_length=100)
+    ordering = ['orden']
+
 
     def __str__(self):
         return self.nombre
 
 
 class Opcion(models.Model):
-    dne_id = models.PositiveIntegerField(primary_key=True)
+    orden = models.PositiveIntegerField(help_text='Orden en el acta')
     nombre = models.CharField(max_length=100)
-    partido = models.ForeignKey(Partido, null=True)   # blanco, / recurrido / etc
+    partido = models.ForeignKey(Partido, null=True, blank=True)   # blanco, / recurrido / etc
+    orden = models.PositiveIntegerField(
+        help_text='Orden en la boleta', null=True, blank=True)
+
+
+    class Meta:
+        verbose_name = 'Opción'
+        verbose_name_plural = 'Opciones'
+        ordering = ['orden']
+
+
 
     def __str__(self):
-        return f'{self.partido} - {self.nombre}'
-
+        if self.partido:
+            return f'{self.partido} - {self.nombre}'
+        return self.nombre
 
 class Eleccion(models.Model):
     nombre = models.CharField(max_length=50)
     fecha = models.DateTimeField(blank=True, null=True)
     opciones = models.ManyToManyField(Opcion)
 
-    def __unicode__(self):
+    @classmethod
+    def opciones_actuales(cls):
+        if cls.objects.last():
+            return cls.objects.last().opciones.all()
+        return Opcion.objects.none()
+
+    class Meta:
+        verbose_name = 'Elección'
+        verbose_name_plural = 'Elecciones'
+
+    def __str__(self):
         return self.nombre
 
 
@@ -131,7 +201,7 @@ class AbstractVotoMesa(models.Model):
     eleccion = models.ForeignKey(Eleccion)
     mesa = models.ForeignKey(Mesa)
     opcion = models.ForeignKey(Opcion)
-    votos = models.IntegerField()
+    votos = models.PositiveIntegerField()
 
     class Meta:
         abstract = True
@@ -144,6 +214,7 @@ class AbstractVotoMesa(models.Model):
 
 class VotoMesaReportado(AbstractVotoMesa):
     fiscal = models.ForeignKey('fiscales.Fiscal')
+
 
 
 class VotoMesaOficial(AbstractVotoMesa):

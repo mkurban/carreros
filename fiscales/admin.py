@@ -5,6 +5,7 @@ from .models import Fiscal, AsignacionFiscalGeneral, AsignacionFiscalDeMesa, Org
 from .forms import FiscalForm
 from prensa.models import DatoDeContacto
 from prensa.forms import DatoDeContactoModelForm
+from django_admin_row_actions import AdminRowActionsMixin
 
 
 class ContactoAdminInline(GenericTabularInline):
@@ -32,9 +33,24 @@ class AsignadoFilter(admin.SimpleListFilter):
         return queryset
 
 
-class FiscalAdmin(admin.ModelAdmin):
+class FiscalAdmin(AdminRowActionsMixin, admin.ModelAdmin):
+
+    def get_row_actions(self, obj):
+        row_actions = [
+            {
+                'label': f'Loguearse como {obj.nombres}',
+                'url': f'/hijack/{obj.user.id}/',
+                'enabled': True,
+            }
+        ]
+        row_actions += super().get_row_actions(obj)
+        return row_actions
+
+    def telefonos(o):
+        return ' / '.join(o.telefonos)
+
     form = FiscalForm
-    list_display = ('__str__', 'direccion', 'organizacion', 'dni', 'telefonos')
+    list_display = ('__str__', 'tipo', 'direccion', 'organizacion', 'dni', telefonos)
     search_fields = (
         'apellido', 'direccion', 'dni',
         'asignacion_escuela__lugar_votacion__nombre',
@@ -67,10 +83,11 @@ class AsignacionFiscalDeMesaAdmin(admin.ModelAdmin):
     list_filter = ('ingreso', 'egreso')
     search_fields = (
         'fiscal__apellido', 'fiscal__direccion', 'fiscal__dni',
-        'lugar_votacion__nombre',
-        'lugar_votacion__direccion',
-        'lugar_votacion__barrio',
-        'lugar_votacion__ciudad',
+        'mesa__numero',
+        'mesa__lugar_votacion__nombre',
+        'mesa__lugar_votacion__direccion',
+        'mesa__lugar_votacion__barrio',
+        'mesa__lugar_votacion__ciudad',
     )
 
 

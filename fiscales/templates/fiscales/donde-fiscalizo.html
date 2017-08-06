@@ -1,0 +1,127 @@
+{% extends "fiscales/base.html" %}
+
+
+{% block page_title %}Dónde fiscalizo{% endblock %}
+
+
+{% block donde %}
+
+    {% url 'donde-fiscalizo' as url %}
+    <li {% if url in request.path %} class="active"{% endif %}>
+         <ul class="collapsible collapsible-accordion">
+            <li>
+              <a href="{{ url }}" class="collapsible-header active" data-turbolinks="false">Dónde fiscalizo<i class="material-icons">place</i></a>
+              <div class="collapsible-body" style="display:block">
+                <ul>
+                  {% for mesa in object.mesas_asignadas %}
+                      <li><a href="{% url 'detalle-mesa' mesa.numero %}">Mesa Nº {{ mesa.numero }}</a></li>
+                  {% endfor %}
+                  </ul>
+              </div>
+            </li>
+          </ul>
+    </li>
+{% endblock donde %}
+
+
+
+
+{% block left-panel %}
+
+
+    {% for escuela in object.escuelas.all %}
+
+        <div class="card">
+        <div class="card-content">
+            <div class="card-title">{{ escuela.nombre }}</div>
+
+            <form method="POST" action="{% url 'asignacion-estado' escuela.id %}" enctype="multipart/form-data">
+            {% csrf_token %}
+
+
+             <table class="table bordered">
+               <tr>
+                  <th>Sección</th>
+                  <td>{{ escuela.circuito.seccion }}</td>
+              </tr>
+               <tr>
+                  <th>Circuito</th>
+                  <td>{{ escuela.circuito }}</td>
+              </tr>
+              <tr>
+                  <th>Dirección</th>
+                  <td>{{ escuela.direccion_completa }} <br>
+                  <a href="http://maps.google.com/maps?q={{escuela.coordenadas}}">Ver en el mapa</a></td>
+              </tr>
+
+              <tr>
+                  <th>{% if object.es_general %}
+                    Mesas en la escuela
+                    {% else %}
+                    Mesa asignada
+                  {% endif %} </th>
+                  <td>
+                  {% for mesa in object.mesas_asignadas %}
+                    <a href="{% url 'detalle-mesa' mesa.numero %}">Nº {{ mesa.numero }}</a>
+                     {% if not forloop.last %} | {% endif %}
+                  {% endfor %}
+                  </td>
+              </tr>
+
+               <tr>
+                  <th>Hora a la que llegaste</th>
+                  <td> {{ object.asignacion.ingreso|time }}
+                    {% if not object.asignacion.esta_presente %}
+
+
+                    <button  type="submit" class="waves-effect waves-light btn white-text">
+                        {% if not object.asignacion.egreso %}
+                            Avisar que llegué    {# todavia no estuvo nunca #}
+                        {% else %}
+                            Avisar que volví
+                        {% endif %}
+                    </button>
+
+                    {% endif %}
+
+                  </td>
+              </tr>
+
+              <tr>
+                  <th>Hora a la que te fuiste</th>
+                  <td> {{ object.asignacion.egreso|time }}
+
+                  {% if object.asignacion.esta_presente  %}
+
+                    <button  type="submit" class="waves-effect waves-light btn white-text">
+                      Tengo que retirarme
+                      </button>
+                  {% endif %}
+
+                  </td>
+              </tr>
+
+
+
+            </table>
+            </form>
+       </div>
+
+
+    </div>
+
+    {% endfor %}
+
+    {% if not object.escuelas.exists %}
+
+      <div class="card">
+        <div class="card-content">
+            <div class="card-title">Todavía no tenés asignada ninguna {% if object.es_general %}escuela{% else %}mesa{% endif %}</div>
+
+            <p>Por favor, hablá con tus <a href="{% url 'mis-contactos' %}#referentes %}">referentes</a></p>
+
+        </div>
+      </div>
+    {% endif %}
+
+{% endblock left-panel %}

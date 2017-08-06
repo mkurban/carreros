@@ -1,5 +1,22 @@
 {% extends 'material/frontend/base.html' %}
-{% load i18n %}
+{% load staticfiles %}
+{% load hijack_tags %}
 
-{% block title %}Campaña 2017{% endblock %}
-{% block page_title %}Campaña 2017{% endblock %}
+
+
+ {% block head %}
+    {{ block.super }}
+    <link rel="stylesheet" type="text/css" href="{% static 'hijack/hijack-styles.css' %}" />
+ {% endblock %}
+
+ {% block body %}
+ {% hijack_notification %}
+ {{ block.super }}
+ {% endblock %}
+
+{% load i18n static %}
+
+{% block title %}Frente Córdoba Ciudadana - Bunker Web{% endblock %}
+{% block page_title %}Elecciones 2017{% endblock %}
+
+{% block favicon %}<link href="{% static 'img/favicon.png' %}" rel="shortcut icon">{% endblock %}

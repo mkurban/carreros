@@ -1,0 +1,324 @@
+[
+{
+  "model": "elecciones.partido",
+  "pk": 1,
+  "fields": {
+    "orden": 1,
+    "numero": 22,
+    "nombre": "Partido Humanista"
+  }
+},
+{
+  "model": "elecciones.partido",
+  "pk": 2,
+  "fields": {
+    "orden": 2,
+    "numero": 69,
+    "nombre": "Partido GEN"
+  }
+},
+{
+  "model": "elecciones.partido",
+  "pk": 3,
+  "fields": {
+    "orden": 3,
+    "numero": 201,
+    "nombre": "Partido Primero La Gente"
+  }
+},
+{
+  "model": "elecciones.partido",
+  "pk": 4,
+  "fields": {
+    "orden": 4,
+    "numero": 217,
+    "nombre": "Partido Encuentro Vecinal C\u00f3rdoba"
+  }
+},
+{
+  "model": "elecciones.partido",
+  "pk": 5,
+  "fields": {
+    "orden": 5,
+    "numero": 231,
+    "nombre": "Partido Pol\u00edtica Abierta para la Integraci\u00f3n Social - P.A.I.S."
+  }
+},
+{
+  "model": "elecciones.partido",
+  "pk": 6,
+  "fields": {
+    "orden": 6,
+    "numero": 501,
+    "nombre": "Alianza Frente de Izquierda y de los Trabajadores"
+  }
+},
+{
+  "model": "elecciones.partido",
+  "pk": 7,
+  "fields": {
+    "orden": 7,
+    "numero": 502,
+    "nombre": "Alianza Somos"
+  }
+},
+{
+  "model": "elecciones.partido",
+  "pk": 8,
+  "fields": {
+    "orden": 8,
+    "numero": 503,
+    "nombre": "Alianza Uni\u00f3n por C\u00f3rdoba"
+  }
+},
+{
+  "model": "elecciones.partido",
+  "pk": 9,
+  "fields": {
+    "orden": 9,
+    "numero": 504,
+    "nombre": "Alianza Frente C\u00f3rdoba Ciudadana"
+  }
+},
+{
+  "model": "elecciones.partido",
+  "pk": 10,
+  "fields": {
+    "orden": 10,
+    "numero": 505,
+    "nombre": "Alianza Izquierda al Frente por el Socialismo"
+  }
+},
+{
+  "model": "elecciones.partido",
+  "pk": 11,
+  "fields": {
+    "orden": 11,
+    "numero": 506,
+    "nombre": "Alianza Cambiemos"
+  }
+},
+{
+  "model": "elecciones.opcion",
+  "pk": 1,
+  "fields": {
+    "nombre": "Lista Naranja 22H",
+    "partido": 1,
+    "orden": 4
+  }
+},
+{
+  "model": "elecciones.opcion",
+  "pk": 2,
+  "fields": {
+    "nombre": "Lista 1A Margarita",
+    "partido": 2,
+    "orden": 5
+  }
+},
+{
+  "model": "elecciones.opcion",
+  "pk": 3,
+  "fields": {
+    "nombre": "Lista 1A - C\u00f3rdoba Cambia",
+    "partido": 3,
+    "orden": 6
+  }
+},
+{
+  "model": "elecciones.opcion",
+  "pk": 4,
+  "fields": {
+    "nombre": "Lista 1A - Valores en Acci\u00f3n",
+    "partido": 4,
+    "orden": 7
+  }
+},
+{
+  "model": "elecciones.opcion",
+  "pk": 5,
+  "fields": {
+    "nombre": "Lista 1A - Nuevo Pais",
+    "partido": 5,
+    "orden": 8
+  }
+},
+{
+  "model": "elecciones.opcion",
+  "pk": 6,
+  "fields": {
+    "nombre": "Lista 2B - Por un Nuevo Pais",
+    "partido": 5,
+    "orden": 9
+  }
+},
+{
+  "model": "elecciones.opcion",
+  "pk": 7,
+  "fields": {
+    "nombre": "Lista 3C - Por un Pais Mejor",
+    "partido": 5,
+    "orden": 10
+  }
+},
+{
+  "model": "elecciones.opcion",
+  "pk": 8,
+  "fields": {
+    "nombre": "Lista 4D - Juntos por Pais",
+    "partido": 5,
+    "orden": 11
+  }
+},
+{
+  "model": "elecciones.opcion",
+  "pk": 9,
+  "fields": {
+    "nombre": "Lista 1A - Roja",
+    "partido": 6,
+    "orden": 12
+  }
+},
+{
+  "model": "elecciones.opcion",
+  "pk": 10,
+  "fields": {
+    "nombre": "Lista Compromiso - A1",
+    "partido": 7,
+    "orden": 13
+  }
+},
+{
+  "model": "elecciones.opcion",
+  "pk": 11,
+  "fields": {
+    "nombre": "Lista Movimiento de Unidad Peronista - 2M",
+    "partido": 8,
+    "orden": 14
+  }
+},
+{
+  "model": "elecciones.opcion",
+  "pk": 12,
+  "fields": {
+    "nombre": "Lista Unidad - N\u00ba 5K",
+    "partido": 9,
+    "orden": 15
+  }
+},
+{
+  "model": "elecciones.opcion",
+  "pk": 13,
+  "fields": {
+    "nombre": "Lista Unidad de la Izquierda - 1A",
+    "partido": 9,
+    "orden": 16
+  }
+},
+{
+  "model": "elecciones.opcion",
+  "pk": 14,
+  "fields": {
+    "nombre": "Lista Cambiando Juntos - 506 M",
+    "partido": 11,
+    "orden": 17
+  }
+},
+{
+  "model": "elecciones.opcion",
+  "pk": 15,
+  "fields": {
+    "nombre": "Lista Para la Democracia Social - 506 R",
+    "partido": 11,
+    "orden": 18
+  }
+},
+{
+  "model": "elecciones.opcion",
+  "pk": 16,
+  "fields": {
+    "nombre": "VOTOS NULOS",
+    "partido": null,
+    "orden": 19
+  }
+},
+{
+  "model": "elecciones.opcion",
+  "pk": 17,
+  "fields": {
+    "nombre": "VOTOS RECURRIDOS",
+    "partido": null,
+    "orden": 20
+  }
+},
+{
+  "model": "elecciones.opcion",
+  "pk": 18,
+  "fields": {
+    "nombre": "VOTOS DE IDENTIDAD IMPUGNADA",
+    "partido": null,
+    "orden": 21
+  }
+},
+{
+  "model": "elecciones.opcion",
+  "pk": 19,
+  "fields": {
+    "nombre": "VOTOS EN BLANCO",
+    "partido": null,
+    "orden": 22
+  }
+},
+{
+  "model": "elecciones.opcion",
+  "pk": 20,
+  "fields": {
+    "nombre": "TOTAL DE VOTOS",
+    "partido": null,
+    "orden": 23
+  }
+},
+{
+  "model": "elecciones.opcion",
+  "pk": 21,
+  "fields": {
+    "nombre": "CANTIDAD DE CIUDADANOS QUE HAN VOTADO",
+    "partido": null,
+    "orden": 3
+  }
+},
+{
+  "model": "elecciones.opcion",
+  "pk": 22,
+  "fields": {
+    "nombre": "CANTIDAD DE SOBRES DENTRO DE LA URNA",
+    "partido": null,
+    "orden": 2
+  }
+},
+{
+  "model": "elecciones.opcion",
+  "pk": 23,
+  "fields": {
+    "nombre": "DIFERENCIA",
+    "partido": null,
+    "orden": 3
+  }
+},
+{
+  "model": "elecciones.eleccion",
+  "pk": 1,
+  "fields": {
+    "nombre": "PASO Legislativas C\u00f3rdoba 2017",
+    "fecha": "2017-08-13T11:00:00Z",
+    "opciones": [
+      22,
+      21,
+      23,
+      1,
+      2,
+      20
+    ]
+  }
+}
+]
