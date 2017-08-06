@@ -85,6 +85,13 @@ class LugarVotacion(models.Model):
     def mesas_desde_hasta(self):
         return desde_hasta(self.mesas)
 
+    @property
+    def fiscal_general(self):
+        asignacion =  self.asignacion.order_by('-ingreso').last()
+        if asignacion:
+            return asignacion.fiscal
+
+
     def __str__(self):
         return f"{self.nombre} - {self.circuito}"
 
@@ -114,6 +121,13 @@ class Mesa(models.Model):
     lugar_votacion = models.ForeignKey(LugarVotacion, verbose_name='Lugar de votacion', null=True, related_name='mesas')
     url = models.URLField(blank=True, help_text='url al telegrama')
     foto_del_acta = models.ImageField(upload_to=path_foto_acta, null=True, blank=True)
+
+
+    @property
+    def fiscal(self):
+        asignacion =  self.asignacion.order_by('-ingreso').last()
+        if asignacion:
+            return asignacion.fiscal
 
 
     @property

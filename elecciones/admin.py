@@ -30,7 +30,7 @@ class HasLatLongListFilter(admin.SimpleListFilter):
 class TieneFiscal(admin.SimpleListFilter):
     title = 'Tiene fiscal'
     parameter_name = 'fiscal'
-    lookup = 'asignacion_fiscales__isnull'
+    lookup = 'asignacion__isnull'
 
     def lookups(self, request, model_admin):
         return (

@@ -50,7 +50,7 @@ class FiscalAdmin(AdminRowActionsMixin, admin.ModelAdmin):
         return ' / '.join(o.telefonos)
 
     form = FiscalForm
-    list_display = ('__str__', 'direccion', 'organizacion', 'dni', telefonos)
+    list_display = ('__str__', 'tipo', 'direccion', 'organizacion', 'dni', telefonos)
     search_fields = (
         'apellido', 'direccion', 'dni',
         'asignacion_escuela__lugar_votacion__nombre',

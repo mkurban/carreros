@@ -60,15 +60,15 @@ class Fiscal(models.Model):
 
     def mesas_asignadas(self):
         if self.es_general:
-            return Mesa.objects.filter(lugar_votacion__fiscal_general__fiscal=self).order_by('numero')
-        return Mesa.objects.filter(asignacion_fiscales__fiscal=self).order_by('numero')
+            return Mesa.objects.filter(lugar_votacion__asignacion__fiscal=self).order_by('numero')
+        return Mesa.objects.filter(asignacion__fiscal=self).order_by('numero')
 
     @property
     def escuelas(self):
         if self.es_general:
-            return LugarVotacion.objects.filter(fiscal_general__fiscal=self)
+            return LugarVotacion.objects.filter(asignacion__fiscal=self)
         else:
-            return LugarVotacion.objects.filter(mesas__asignacion_fiscales__fiscal=self).distinct()
+            return LugarVotacion.objects.filter(mesas__asignacion__fiscal=self).distinct()
 
     @property
     def asignacion(self):
@@ -119,8 +119,10 @@ class AsignacionFiscal(TimeStampedModel):
 
 class AsignacionFiscalDeMesa(AsignacionFiscal):
     mesa = models.ForeignKey(
-        'elecciones.Mesa', related_name='asignacion_fiscales')
-    fiscal = models.ForeignKey('Fiscal',
+        'elecciones.Mesa', related_name='asignacion')
+
+    # es null si el fiscal general dice que la mesa está asignada pero aun no hay datos.
+    fiscal = models.ForeignKey('Fiscal', null=True,
         limit_choices_to={'tipo': Fiscal.TIPO.de_mesa}, related_name='asignacion_mesa')
 
 
@@ -135,7 +137,7 @@ class AsignacionFiscalDeMesa(AsignacionFiscal):
 
 class AsignacionFiscalGeneral(AsignacionFiscal):
     lugar_votacion = models.ForeignKey(
-        'elecciones.LugarVotacion', related_name='fiscal_general')
+        'elecciones.LugarVotacion', related_name='asignacion')
     fiscal = models.ForeignKey('Fiscal',
         limit_choices_to={'tipo': Fiscal.TIPO.general},
         related_name='asignacion_escuela'
