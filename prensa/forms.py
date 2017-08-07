@@ -16,6 +16,18 @@ USERNAME_PATTERNS = {
 }
 
 
+def validar_telefono(valor):
+    valor = valor.strip()
+    if valor.startswith(('15', '4')):
+        valor = f'{CARACTERISTICA_DEFAULT} {valor}'
+    elif valor.startswith('35') and 9 <= len(valor) <= 11:
+        valor = f'9 {valor}'
+    valor = phonenumbers.parse(valor, 'AR')
+    formato = phonenumbers.PhoneNumberFormat.INTERNATIONAL
+    valor = phonenumbers.format_number(valor, formato)
+    return valor
+
+
 class DatoDeContactoModelForm(forms.ModelForm):
     class Meta:
         model = DatoDeContacto
@@ -24,19 +36,12 @@ class DatoDeContactoModelForm(forms.ModelForm):
     def clean_email(self, valor):
         try:
             validate_email(valor)
-        except ValidationError:
+        except forms.ValidationError:
             self.add_error('valor', 'No es un email válido')
 
     def clean_telefono(self, valor):
         try:
-            valor = valor.strip()
-            if valor.startswith(('15', '4')):
-                valor = f'{CARACTERISTICA_DEFAULT} {valor}'
-            elif valor.startswith('35') and 9 <= len(valor) <= 11:
-                valor = f'9 {valor}'
-            valor = phonenumbers.parse(valor, 'AR')
-            formato = phonenumbers.PhoneNumberFormat.INTERNATIONAL
-            valor = phonenumbers.format_number(valor, formato)
+            valor = validar_telefono(valor)
         except (AttributeError, phonenumbers.NumberParseException):
             self.add_error('valor', 'No es un teléfono válido')
 
@@ -57,7 +62,7 @@ class DatoDeContactoModelForm(forms.ModelForm):
 
     def clean(self):
         tipo = self.cleaned_data.get("tipo")
-        valor = self.cleaned_data.get("valor").strip()
+        valor = self.cleaned_data.get("valor", '').strip()
 
         if tipo == 'email':
             self.clean_email(valor)
@@ -72,6 +77,12 @@ class DatoDeContactoModelForm(forms.ModelForm):
 
 
 ContactoInlineFormset = generic_inlineformset_factory(DatoDeContacto, form=DatoDeContactoModelForm)
+
+MinimoContactoInlineFormset = generic_inlineformset_factory(DatoDeContacto,
+    form=DatoDeContactoModelForm,
+    extra=2, can_delete=False
+)
+
 
 
 class ProgramaModelForm(forms.ModelForm):

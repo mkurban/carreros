@@ -58,6 +58,7 @@ class Fiscal(models.Model):
     def emails(self):
         return self.datos_de_contacto.filter(tipo='email').values_list('valor', flat=True)
 
+    @property
     def mesas_asignadas(self):
         if self.es_general:
             return Mesa.objects.filter(lugar_votacion__asignacion__fiscal=self).order_by('numero')
@@ -121,14 +122,15 @@ class AsignacionFiscalDeMesa(AsignacionFiscal):
     mesa = models.ForeignKey(
         'elecciones.Mesa', related_name='asignacion')
 
-    # es null si el fiscal general dice que la mesa está asignada pero aun no hay datos.
+    # es null si el fiscal general dice que la mesa está asignada
+    # pero aun no hay datos.
     fiscal = models.ForeignKey('Fiscal', null=True,
         limit_choices_to={'tipo': Fiscal.TIPO.de_mesa}, related_name='asignacion_mesa')
 
-
     def __str__(self):
-        return f'{self.fiscal} {self.mesa}'
-
+        if self.fiscal:
+            return f'Asignacion {self.mesa}: {self.fiscal}'
+        return f'Asignación {self.mesa}: registro sin datos'
 
     class Meta:
         verbose_name = 'Asignación de Fiscal de Mesa'

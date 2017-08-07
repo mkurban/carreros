@@ -35,6 +35,17 @@ class MisDatosForm(FiscalForm):
         ]
 
 
+class FiscalFormSimple(FiscalForm):
+
+    class Meta:
+        model = Fiscal
+        fields = [
+            'nombres', 'apellido',
+            'dni',
+        ]
+
+
+
 class VotoMesaModelForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):

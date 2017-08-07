@@ -8,15 +8,17 @@ from . import models
 
 
 class ConContactosMixin(ContextMixin):
+    inline_formset_class = ContactoInlineFormset
+
 
     def get_context_data(self, **kwargs):
 
         context = super().get_context_data(**kwargs)
 
         if self.request.POST:
-            formset = ContactoInlineFormset(self.request.POST, instance=self.object)
+            formset = self.inline_formset_class(self.request.POST, instance=self.object)
         else:
-            formset = ContactoInlineFormset(instance=self.object)
+            formset = self.inline_formset_class(instance=self.object)
         context['formsets'] = {'Datos de contacto': formset}
         return context
 

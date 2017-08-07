@@ -1,6 +1,12 @@
 {% extends "fiscales/base.html" %}
 {% load i18n material_form material_frontend %}
 
+{% block breadcrumbs_items %}
+<a href="{{ object.get_absolute_url }}">{{ object }}</a>
+<a class="active">Acta</a>
+{% endblock %}
+
+
 {% block page_title %}Cargar Acta {% endblock %}
 
 {% block left-panel %}

@@ -86,11 +86,8 @@ class LugarVotacion(models.Model):
         return desde_hasta(self.mesas)
 
     @property
-    def fiscal_general(self):
-        asignacion =  self.asignacion.order_by('-ingreso').last()
-        if asignacion:
-            return asignacion.fiscal
-
+    def asignacion_actual(self):
+        return self.asignacion.order_by('-ingreso').last()
 
     def __str__(self):
         return f"{self.nombre} - {self.circuito}"
@@ -123,12 +120,12 @@ class Mesa(models.Model):
     foto_del_acta = models.ImageField(upload_to=path_foto_acta, null=True, blank=True)
 
 
-    @property
-    def fiscal(self):
-        asignacion =  self.asignacion.order_by('-ingreso').last()
-        if asignacion:
-            return asignacion.fiscal
+    def get_absolute_url(self):
+        return reverse('detalle-mesa', args=(self.numero,))
 
+    @property
+    def asignacion_actual(self):
+        return self.asignacion.order_by('-ingreso').last()
 
     @property
     def computados(self):
