@@ -1,8 +1,8 @@
-
-from django.db.models import Q
 from django.contrib import admin
+from django.urls import reverse
 from leaflet.admin import LeafletGeoAdmin
 from .models import Seccion, Circuito, LugarVotacion, Mesa, Partido, Opcion, Eleccion, VotoMesaReportado
+from django.http import HttpResponseRedirect
 
 
 class HasLatLongListFilter(admin.SimpleListFilter):
@@ -51,6 +51,14 @@ class TieneFiscalGeneral(TieneFiscal):
     lookup = 'asignacion_fiscal__isnull'
 
 
+def mostrar_en_mapa(modeladmin, request, queryset):
+    selected = request.POST.getlist(admin.ACTION_CHECKBOX_NAME)
+    ids = ",".join(selected)
+    mapa_url = reverse('mapa')
+    return HttpResponseRedirect(f'{mapa_url}?ids={ids}')
+
+mostrar_en_mapa.short_description = "Mostrar seleccionadas en el mapa"
+
 
 class LugarVotacionAdmin(LeafletGeoAdmin):
 
@@ -63,6 +71,8 @@ class LugarVotacionAdmin(LeafletGeoAdmin):
     search_fields = (
         'nombre', 'direccion', 'ciudad', 'barrio', 'mesas__numero'
     )
+    actions = [mostrar_en_mapa]
+
 
 
 class MesaAdmin(admin.ModelAdmin):
