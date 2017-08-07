@@ -3,6 +3,7 @@ from django.urls import reverse
 from leaflet.admin import LeafletGeoAdmin
 from .models import Seccion, Circuito, LugarVotacion, Mesa, Partido, Opcion, Eleccion, VotoMesaReportado
 from django.http import HttpResponseRedirect
+from django_admin_row_actions import AdminRowActionsMixin
 
 
 class HasLatLongListFilter(admin.SimpleListFilter):
@@ -60,7 +61,7 @@ def mostrar_en_mapa(modeladmin, request, queryset):
 mostrar_en_mapa.short_description = "Mostrar seleccionadas en el mapa"
 
 
-class LugarVotacionAdmin(LeafletGeoAdmin):
+class LugarVotacionAdmin(AdminRowActionsMixin, LeafletGeoAdmin):
 
     def sección(o):
         return o.circuito.seccion.numero
@@ -75,13 +76,45 @@ class LugarVotacionAdmin(LeafletGeoAdmin):
 
 
 
-class MesaAdmin(admin.ModelAdmin):
+    def get_row_actions(self, obj):
+        row_actions = [
+            {
+                'label': 'Mesas',
+                'url': reverse('admin:elecciones_mesa_changelist') + f'?q={obj.nombre}',
+                'enabled': True,
+            }
+        ]
+        row_actions += super().get_row_actions(obj)
+        return row_actions
+
+
+
+
+class MesaAdmin(AdminRowActionsMixin, admin.ModelAdmin):
     list_display = ('numero', 'lugar_votacion')
     list_filter = (TieneFiscal, 'lugar_votacion__circuito__seccion', 'lugar_votacion__circuito')
     search_fields = (
         'numero', 'lugar_votacion__nombre', 'lugar_votacion__direccion',
         'lugar_votacion__ciudad', 'lugar_votacion__barrio',
     )
+
+
+    def get_row_actions(self, obj):
+        row_actions = [
+           {
+                'label': 'Asignación',
+                'url': reverse('admin:fiscales_asignacionfiscaldemesa_changelist') + f'?q={obj.numero}',
+                'enabled': True,
+            },
+            {
+                'label': 'Escuela',
+                'url': reverse('admin:elecciones_lugarvotacion_changelist') + f'?q={obj.numero}',
+                'enabled': True,
+            }
+        ]
+        row_actions += super().get_row_actions(obj)
+        return row_actions
+
 
 
 class PartidoAdmin(admin.ModelAdmin):
