@@ -7,7 +7,7 @@ urlpatterns = [
     url('^mis-datos$', views.MisDatos.as_view(), name='mis-datos'),
     url('^mis-contactos', views.MisContactos.as_view(), name='mis-contactos'),
     url('^donde-fiscalizo$', views.DondeFiscalizo.as_view(), name='donde-fiscalizo'),
-    url('^donde-fiscalizo/(?P<id_escuela>\d+)/estado/$',
+    url('^donde-fiscalizo/estado/(?P<tipo>de_mesa|general)/(?P<pk>\d+)$',
         views.asignacion_estado, name='asignacion-estado'),
     url('^donde-fiscalizo/(?P<mesa_numero>\d+)$',
         views.MesaDetalle.as_view(), name='detalle-mesa'),

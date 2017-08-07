@@ -12,7 +12,7 @@
 
             <table class="table bordered">
               <tr>
-                  <th>Estado</th>
+                  <th>Estado de Mesa</th>
                   <td>{{ object.get_estado_display }}
 
         {% if object.estado == 'ESCRUTADA' %}
@@ -42,13 +42,12 @@
                 {% if  object.asignacion_actual %}
 
                   {% if object.asignacion_actual.fiscal %}
-                    {{ object.asignacion_actual.fiscal }}  ({% if object.asignacion_actual.esta_presente %}presente{% else %}ausente{% endif %})
-
+                    {{ object.asignacion_actual.fiscal }}
                     <a href="{% url 'mesa-editar-fiscal' object.numero %}"  class="waves-effect waves-light btn white-text">
                     Editar datos
 
                   {% else %}
-                    Registrado sin datos ({% if object.asignacion_actual.esta_presente %}presente{% else %}ausente{% endif %})
+                    Registrado (sin datos)
 
                     <a href="{% url 'mesa-cargar-fiscal' object.numero %}"  class="waves-effect waves-light btn white-text">
                     Cargar datos
@@ -66,8 +65,30 @@
                 </td>
               </tr>
 
-              {% endif %}
 
+
+               {% if  object.asignacion_actual %}
+              <tr>
+                  <th>
+                    Se encuentra
+                  </th>
+
+                  <td>
+
+                    {% if object.asignacion_actual.esta_presente %}Presente{% else %}Ausente{% endif %}
+
+
+                    <a class="btn waves-effect waves-light white-text" href="{% url 'asignacion-estado' 'de_mesa' object.asignacion_actual.id %}?mesa=1">
+                      {% if object.asignacion_actual.esta_presente %}Se retiró{% else %}Está presente{% endif %}
+                      </a>
+
+                  </td>
+              </tr>
+
+                {% endif %}
+
+
+              {% endif %}
             </table>
 
         </div>

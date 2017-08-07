@@ -35,7 +35,7 @@
         <div class="card-content">
             <div class="card-title">{{ escuela.nombre }}</div>
 
-            <form method="POST" action="{% url 'asignacion-estado' escuela.id %}" enctype="multipart/form-data">
+            <form method="POST" action="{% url 'asignacion-estado' object.tipo object.asignacion.id %}" enctype="multipart/form-data">
             {% csrf_token %}
 
 

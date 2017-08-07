@@ -1,4 +1,5 @@
 from django.http import Http404, HttpResponseForbidden
+from django.conf import settings
 from django.shortcuts import redirect, get_object_or_404, render
 from django.urls import reverse, reverse_lazy
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -68,13 +69,15 @@ class MisContactos(BaseFiscal):
 
 
 @login_required
-def asignacion_estado(request, id_escuela):
+def asignacion_estado(request, tipo, pk):
     fiscal = get_object_or_404(Fiscal, user=request.user)
 
-    if fiscal.es_general:
-        asignacion = get_object_or_404(AsignacionFiscalGeneral, fiscal=fiscal, lugar_votacion__id=id_escuela)
+    if tipo == 'de_mesa':
+        asignacion = get_object_or_404(AsignacionFiscalDeMesa, id=pk)
+        if asignacion.mesa not in fiscal.mesas_asignadas:
+            raise Http404()
     else:
-        asignacion = get_object_or_404(AsignacionFiscalDeMesa, fiscal=fiscal, mesa__lugar_votacion__id=id_escuela)
+        asignacion = get_object_or_404(AsignacionFiscalGeneral, id=pk, fiscal=fiscal)
 
     if not asignacion.ingreso:
         # llega por primera vez
@@ -82,13 +85,17 @@ def asignacion_estado(request, id_escuela):
         asignacion.egreso = None
         messages.info(request, 'Tu presencia se registró ¡Gracias!')
     elif asignacion.ingreso and not asignacion.egreso:
+        # se retiró
         asignacion.egreso = timezone.now()
-        messages.info(request, '¡Gracias por haber fiscalizado!')
+        messages.info(request, 'Anotamos el retiro, ¡Gracias!')
     elif asignacion.ingreso and asignacion.egreso:
         asignacion.ingreso = timezone.now()
         asignacion.egreso = None
-        messages.info(request, 'Dijimos que ibamos a volver!')
+        messages.info(request, 'Vamos a volver!')
     asignacion.save()
+    mesa = request.GET.get('mesa')
+    if mesa:
+        return redirect(asignacion.mesa.get_absolute_url())
     return redirect('donde-fiscalizo')
 
 

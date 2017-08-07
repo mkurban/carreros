@@ -96,7 +96,7 @@ class Fiscal(models.Model):
 
     @property
     def mesas_desde_hasta(self):
-        return desde_hasta(self.mesas_asignadas())
+        return desde_hasta(self.mesas_asignadas)
 
     def __str__(self):
         return f'{self.nombres} {self.apellido}'
