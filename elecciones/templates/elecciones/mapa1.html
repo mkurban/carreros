@@ -19,12 +19,18 @@
           .then(function(data) {
             L.geoJson(data, {
               onEachFeature: function onEachFeature(feature, layer) {
-                var props = feature.properties;
-                $.get(`/elecciones/escuelas/${props.id}`, function(data){
-                  layer.bindPopup(data);
-                });
-            }
-          }).addTo(map);
+                function onSpotClick(ev) {
+                    var popup = ev.target.getPopup();
+                    var props = feature.properties;
+                    $.get(`/elecciones/escuelas/${props.id}`, function(data){
+                          popup.setContent( data );
+                          popup.update();
+                    });
+                };
+                layer.bindPopup();
+                layer.on('click', onSpotClick);
+              }
+            }).addTo(map);
           });
       });
     </script>
