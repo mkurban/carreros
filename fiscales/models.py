@@ -13,7 +13,7 @@ from elecciones.models import desde_hasta, Mesa, LugarVotacion
 
 class Organizacion(models.Model):
     nombre = models.CharField(max_length=100)
-    referentes = models.ManyToManyField('Fiscal', related_name='es_referente_de', blank=True)
+    referentes = models.ManyToManyField('Fiscal', related_name='es_referente_de_orga', blank=True)
 
     class Meta:
         verbose_name = 'Organización'
@@ -72,6 +72,10 @@ class Fiscal(models.Model):
             return LugarVotacion.objects.filter(mesas__asignacion__fiscal=self).distinct()
 
     @property
+    def circuitos(self):
+        return [e.circuito for e in self.escuelas]
+
+    @property
     def asignacion(self):
         if self.es_general:
             qs = AsignacionFiscalGeneral.objects.filter(fiscal=self)
@@ -93,6 +97,16 @@ class Fiscal(models.Model):
             return Fiscal.objects.exclude(id=self.id).filter(general | de_mesa).order_by('-tipo')
         return Fiscal.objects.none()
 
+
+    def referentes_de_circuito(self):
+        if self.circuitos:
+            return Fiscal.objects.exclude(id=self.id).filter(es_referente_de_circuito__in=self.circuitos)
+        return Fiscal.objects.none()
+
+    def referentes_de_orga(self):
+        if self.organizacion:
+            Fiscal.objects.exclude(id=self.id).filter(es_referente_de_orga=self.organizacion)
+        return Fiscal.objects.none()
 
     @property
     def mesas_desde_hasta(self):

@@ -78,12 +78,24 @@ class PartidoAdmin(admin.ModelAdmin):
     list_display = ('numero', 'nombre')
     list_display_links = list_display
 
+
+class CircuitoAdmin(admin.ModelAdmin):
+    list_display = ('__str__', 'seccion')
+    list_display_links = list_display
+    list_filter = ('seccion',)
+    search_fields = (
+        'nombre', 'numero',
+    )
+
+
+
+admin.site.register(Circuito, CircuitoAdmin)
 admin.site.register(Partido, PartidoAdmin)
 admin.site.register(LugarVotacion, LugarVotacionAdmin)
 admin.site.register(Mesa, MesaAdmin)
 
 
-for model in (Seccion, Circuito, Opcion, Eleccion, VotoMesaReportado):
+for model in (Seccion, Opcion, Eleccion, VotoMesaReportado):
     admin.site.register(model)
 
 

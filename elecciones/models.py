@@ -35,7 +35,10 @@ class Circuito(models.Model):
     seccion = models.ForeignKey(Seccion)
     numero = models.CharField(max_length=10)
     nombre = models.CharField(max_length=100)
-
+    referentes = models.ManyToManyField('fiscales.Fiscal',
+        related_name='es_referente_de_circuito',
+        blank=True
+    )
 
     class Meta:
         verbose_name = 'Circuito electoral'

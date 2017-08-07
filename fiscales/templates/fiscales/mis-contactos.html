@@ -24,9 +24,7 @@
     {% endfor %}
 
 
-  {% if object.organizacion %}
-
-  {% for fiscal in object.organizacion.referentes.all %}
+  {% for fiscal in object.referentes_de_orga.all %}
 
     <div {% if forloop.first %}id="referentes"{% endif %} class="card">
         <div class="card-content">
@@ -40,6 +38,21 @@
         </div>
       </div>
  {% endfor %}
- {% endif %}
+  {% for fiscal in object.referentes_de_circuito.all %}
+
+    <div {% if forloop.first %}id="referentes"{% endif %} class="card">
+        <div class="card-content">
+
+              <div class="card-title">
+                  Referente de {{ fiscal.es_referente_de_circuito.first.nombre }}
+              </div>
+
+          {% include "fiscales/tabla_contacto.html" %}
+
+        </div>
+      </div>
+ {% endfor %}
+
+
 
 {% endblock left-panel %}
