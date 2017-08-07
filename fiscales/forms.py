@@ -12,7 +12,12 @@ OPCION_HAN_VOTADO = 21
 OPCION_DIFERENCIA = 23
 OPCION_TOTAL_VOTOS = 20
 
-OPCIONES = Eleccion.opciones_actuales
+
+def opciones_actuales():
+    try:
+        return Eleccion.opciones_actuales.count()
+    except:
+        return 0
 
 
 class FiscalForm(forms.ModelForm):
@@ -96,7 +101,7 @@ class BaseVotoMesaReportadoFormSet(BaseModelFormSet):
 VotoMesaReportadoFormset = modelformset_factory(
     VotoMesaReportado, form=VotoMesaModelForm,
     formset=BaseVotoMesaReportadoFormSet,
-    min_num=OPCIONES().count(), extra=0, can_delete=False
+    min_num=opciones_actuales(), extra=0, can_delete=False
 )
 
 
