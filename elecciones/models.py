@@ -117,6 +117,7 @@ class Mesa(models.Model):
     hora_escrutada = MonitorField(monitor='estado', when=['ESCRUTADA'])
 
     numero = models.PositiveIntegerField()
+    es_testigo = models.BooleanField(default=False)
     circuito = models.ForeignKey(Circuito)  #
     lugar_votacion = models.ForeignKey(LugarVotacion, verbose_name='Lugar de votacion', null=True, related_name='mesas')
     url = models.URLField(blank=True, help_text='url al telegrama')

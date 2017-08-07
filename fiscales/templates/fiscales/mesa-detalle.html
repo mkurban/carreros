@@ -7,7 +7,7 @@
         {% block card-content %}
         <div class="card-content">
 
-            <div class="card-title">{{ object }}</div>
+            <div class="card-title">{{ object }} {% if object.es_testigo %}(mesa testigo){% endif %} </div>
 
 
             <table class="table bordered">

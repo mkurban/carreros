@@ -14,7 +14,14 @@
               <div class="collapsible-body" style="display:block">
                 <ul>
                   {% for mesa in object.mesas_asignadas %}
-                      <li><a href="{% url 'detalle-mesa' mesa.numero %}">Mesa Nº {{ mesa.numero }}</a></li>
+                   <li>
+                  {% if mesa.es_testigo %}
+                     <strong><a href="{% url 'detalle-mesa' mesa.numero %}" title="mesa testigo">Mesa Nº {{ mesa.numero }} <i class="material-icons tiny">star</i></a></strong>
+                    {% else %}
+                      <a href="{% url 'detalle-mesa' mesa.numero %}">Mesa Nº {{ mesa.numero }}</a>
+                    {% endif %}
+                      </li>
+
                   {% endfor %}
                   </ul>
               </div>
