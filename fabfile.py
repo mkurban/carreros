@@ -25,14 +25,14 @@ env.bundle = "%s-static.tar.gz" % (
     env.project_name,
 )
 
-def production(username, host, base_dir):
+def production():
     """Production environment."""
-    env.hosts = host
-    env.user = username
-    env.base_dir = base_dir
-    env.static_root = os.path.join(env.base_dir, 'static_%s' % env.project_name)
+    env.hosts = 'cordobaciudadana.org'
+    env.user = 'mleec'
+    env.base_dir = '/home/mleec'
+    env.static_root = os.path.join(env.base_dir, 'webapps', 'static_%s' % env.project_name)
     env.deploy_dir = os.path.join(env.base_dir, 'webapps', env.project_name)
-    env.virtual_env = os.path.join(env.base_dir, 'venvs', env.project_name
+    env.virtual_env = os.path.join(env.base_dir, 'venvs', env.project_name)
     env.server_command = os.path.join(
         env.base_dir,
         'webapps',
