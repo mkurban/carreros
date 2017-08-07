@@ -1,89 +1,40 @@
-#!/usr/bin/env python
-#-- coding: utf-8 --
+from fabric.api import run, env, cd
+from fabric.contrib.files import append
+from carreros.local_settings import HOST_IP, HOST_USER
 
-"""Deployment script.
-This script is coded so it can make the deployments automagically in the
-designed servers, it also works as a documentation of where are the programs
-installed.
-USE: fab <hosts>:<username> <action>
-EX: fab staging:admin release
-"""
-import os
-import datetime
-from fabric.api import env, run, local, require, put, cd, lcd, prefix
-from fabric.contrib.files import exists
+env.hosts = [HOST_IP]
+env.user = HOST_USER
 
-BASEDIR = os.path.dirname(__file__)
-env.static_dir = os.path.join(BASEDIR, 'static')
-env.project_name = 'carreros'
-env.bundle_built = False
-env.tar = "%s-%s.tar.gz" % (
-    env.project_name,
-    datetime.datetime.now().strftime("%Y%m%d%H%M%S"),
-)
-env.bundle = "%s-static.tar.gz" % (
-    env.project_name,
-)
 
-def production():
-    """Production environment."""
-    env.hosts = 'cordobaciudadana.org'
-    env.user = 'mleec'
-    env.base_dir = '/home/mleec'
-    env.static_root = os.path.join(env.base_dir, 'webapps', 'static_%s' % env.project_name)
-    env.deploy_dir = os.path.join(env.base_dir, 'webapps', env.project_name)
-    env.virtual_env = os.path.join(env.base_dir, 'venvs', env.project_name)
-    env.server_command = os.path.join(
-        env.base_dir,
-        'webapps',
-        env.project_name,
-        'apache2/bin/restart'
-    )
+def manage(command):
+    run("source /virtualenvs/carreros/bin/activate")
+    with cd('/projects/carreros'):
+        run(f"/virtualenvs/carreros/bin/python manage.py {command}")
 
-def release(rev='HEAD'):
-    """Create a tarball, uploads it and decompresses it in the rigth path."""
-    require("host", provided_by=[production])
-    require("deploy_dir", provided_by=[production])
-    require("virtual_env", provided_by=[production])
-    tar = env.tar
-    local("git archive %s -o %s" % (rev, tar))
-    put(tar, tar)
-    run("tar xfz %s -C %s" % (tar, env.deploy_dir))
-    # run("chown -R apache %s " % env.deploy_dir)
-    run("rm %s" % tar)
-    local("rm %s" % tar)
+def shell_plus():
+    manage('shell_plus')
 
-def build_static_bundle():
-    """
-    Create a tarball, for uploading.
-    """
-    # XXX: This expects the virtualenv to be activated already.
-    # XXX: overcome that limitation using `prefix()` and context managers.
 
-    require("project_name", provided_by=[production])
-    require("static_dir")
+def append_to_local_settings(path):
+    run("source /virtualenvs/carreros/bin/activate")
+    with open(path) as ls:
+        content = ls.read()
+    with cd('/projects/carreros'):
+        append('./carreros/local_settings.py', f'\n{content}')
 
-    local("python manage.py collectstatic --noinput")
 
-    with lcd(env.static_dir):
-        local("tar cf %s *" % env.bundle)
-        local("mv %s ../" % env.bundle)
+def loaddata(fixture):
+    run("source /virtualenvs/carreros/bin/activate")
+    with cd('/projects/carreros'):
+        run("git pull")
+        run("/virtualenvs/carreros/bin/python manage.py loaddata fixtures/{}".format(fixture))
 
-def upload_static(force=False):
-    """
-    Uploads `env.bundle` and decompresses it in the right path
-    This will attempt to create and delete local gzips.
-    Cleanup is not always what it should...
-    """
-    require("project_name", provided_by=[production])
-    require("static_root", provided_by=[production])
-    if not exists(env.bundle) or force:
-        build_static_bundle()
-    put(env.bundle, env.bundle)
-    run("tar xf ~/%s -C %s " % (env.bundle, env.static_root))
-    local("rm %s" % env.bundle)
 
-def apache_restart():
-    """Restart the program in the servers."""
-    require("server_command", provided_by=[production])
-    run(env.server_command)
+def deploy():
+    run("source /virtualenvs/carreros/bin/activate")
+    with cd('/projects/carreros'):
+        run("git pull")
+        run("/virtualenvs/carreros/bin/pip install -r requirements.txt")
+        run("/virtualenvs/carreros/bin/python manage.py migrate")
+        run("/virtualenvs/carreros/bin/python manage.py collectstatic --noinput")
+        run("supervisorctl restart carreros")
