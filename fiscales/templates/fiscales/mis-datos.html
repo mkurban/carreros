@@ -22,10 +22,12 @@
                   <td>{{ object.direccion_completa }}</td>
               </tr>
 
+              {% if object.organizacion %}
               <tr>
                   <th>Organización</th>
-                  <td>{{ object.organizacion|default:"Independiente" }}</td>
+                  <td>{{ object.organizacion }}</td>
               </tr>
+              {% endif %}
 
               <tr>
                   <th>Documento de Indentidad</th>
