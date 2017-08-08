@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     'custom_templates',   # our hack to override templates
     'material.theme.lightblue',
     'material',
+    'dbbackup',
     # 'material.admin',
     # 'django.contrib.admin',
     'material.frontend',
@@ -154,6 +155,9 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 LOGIN_REDIRECT_URL = 'home'
 LOGOUT_REDIRECT_URL = 'home'
+
+DBBACKUP_STORAGE = 'django.core.files.storage.FileSystemStorage'
+DBBACKUP_STORAGE_OPTIONS = {'location': os.path.join(BASE_DIR, 'backups')}
 
 HIJACK_LOGIN_REDIRECT_URL = 'home'  # Where admins are redirected to after hijacking a user
 HIJACK_ALLOW_GET_REQUESTS = True

@@ -3,6 +3,8 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+backups/default*
+
 # data
 *.sqlite3
 fixtures/*
