@@ -55,7 +55,6 @@ class LugarVotacion(models.Model):
     direccion = models.CharField(max_length=100)
     barrio = models.CharField(max_length=100, blank=True)
     ciudad = models.CharField(max_length=100, blank=True)
-    geo = models.CharField(max_length=200, blank=True)
     calidad = models.CharField(max_length=20, help_text='calidad de la geolocalizacion', editable=False, blank=True)
     electores = models.PositiveIntegerField()
     geom = PointField(null=True)
