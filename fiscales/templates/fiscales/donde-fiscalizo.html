@@ -74,6 +74,24 @@
                   {% endfor %}
                   </td>
               </tr>
+              {% if object.asignacion.comida != 'no asignada' %}
+              <tr>
+                <th>
+                    Comida
+                </th>
+                <td>
+                  {{ object.asignacion.comida }}
+
+                  {% if object.asignacion.comida == 'asignada' %}
+                  <button name='comida' type="submit" class="waves-effect waves-light btn white-text">
+                      Ya la recibí
+                  </button>
+                  {% endif %}
+                </td>
+
+              </tr>
+
+              {% endif %}
 
                <tr>
                   <th>Hora a la que llegaste</th>

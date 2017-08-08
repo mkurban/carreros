@@ -117,9 +117,10 @@ class Fiscal(models.Model):
 
 
 class AsignacionFiscal(TimeStampedModel):
+    ESTADOS_COMIDA = Choices('no asignada', 'asignada', 'recibida')
     ingreso = models.DateTimeField(null=True, editable=False)
     egreso = models.DateTimeField(null=True, editable=False)
-
+    comida = models.CharField(choices=ESTADOS_COMIDA, max_length=50, default='no asignada')
 
     @property
     def esta_presente(self):
@@ -133,6 +134,7 @@ class AsignacionFiscal(TimeStampedModel):
 
 
 class AsignacionFiscalDeMesa(AsignacionFiscal):
+
     mesa = models.ForeignKey(
         'elecciones.Mesa', related_name='asignacion')
 

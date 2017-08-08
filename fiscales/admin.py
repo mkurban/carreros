@@ -1,4 +1,5 @@
 from django.db.models import Q
+from django.urls import reverse
 from django.contrib import admin
 from django.contrib.contenttypes.admin import GenericTabularInline
 from .models import Fiscal, AsignacionFiscalGeneral, AsignacionFiscalDeMesa, Organizacion
@@ -6,6 +7,13 @@ from .forms import FiscalForm
 from prensa.models import DatoDeContacto
 from prensa.forms import DatoDeContactoModelForm
 from django_admin_row_actions import AdminRowActionsMixin
+from django.contrib.admin.filters import DateFieldListFilter
+
+
+class FechaIsNull(DateFieldListFilter):
+    def __init__(self, field, request, params, model, model_admin, field_path):
+        super().__init__(field, request, params, model, model_admin, field_path)
+        self.links = self.links[-2:]
 
 
 class ContactoAdminInline(GenericTabularInline):
@@ -36,6 +44,7 @@ class AsignadoFilter(admin.SimpleListFilter):
 class FiscalAdmin(AdminRowActionsMixin, admin.ModelAdmin):
 
     def get_row_actions(self, obj):
+
         row_actions = [
             {
                 'label': f'Loguearse como {obj.nombres}',
@@ -43,6 +52,22 @@ class FiscalAdmin(AdminRowActionsMixin, admin.ModelAdmin):
                 'enabled': True,
             }
         ]
+        label_asignacion = 'Editar asignación a' if  obj.asignacion else 'Asignar a'
+        if obj.es_general and obj.asignacion:
+            url = reverse('admin:fiscales_asignacionfiscalgeneral_change', args=(obj.asignacion.id,))
+        elif obj.es_general and not obj.asignacion:
+            url = reverse('admin:fiscales_asignacionfiscalgeneral_add') + f'?fiscal={obj.id}'
+        elif obj.asignacion:
+            url = reverse('admin:fiscales_asignacionfiscaldemesa_change', args=(obj.asignacion.id,))
+        else:
+            url = reverse('admin:fiscales_asignacionfiscaldemesa_add') + f'?fiscal={obj.id}'
+
+        row_actions.append({
+            'label': f'{label_asignacion} escuela' if obj.es_general else f'{label_asignacion} mesa',
+            'url': url,
+            'enabled': True
+        })
+
         row_actions += super().get_row_actions(obj)
         return row_actions
 
@@ -64,9 +89,28 @@ class FiscalAdmin(AdminRowActionsMixin, admin.ModelAdmin):
     ]
 
 
-class AsignacionFiscalGeneralAdmin(admin.ModelAdmin):
-    list_display = ('fiscal', 'lugar_votacion', 'ingreso', 'egreso')
-    list_filter = ('ingreso', 'egreso')
+def asignar_comida(modeladmin, request, queryset):
+    queryset.update(comida='asignada')
+
+
+class AsignacionFiscalAdmin(AdminRowActionsMixin, admin.ModelAdmin):
+    list_filter = (('ingreso', FechaIsNull), ('egreso', FechaIsNull), 'comida')
+    actions = [asignar_comida]
+
+    def get_row_actions(self, obj):
+        row_actions = [
+            {
+                'label': 'Ver fiscal',
+                'url': reverse('admin:fiscales_fiscal_changelist') + f'?q={obj.fiscal.dni}',
+                'enabled': True,
+            }
+        ]
+        row_actions += super().get_row_actions(obj)
+        return row_actions
+
+
+class AsignacionFiscalGeneralAdmin(AsignacionFiscalAdmin):
+    list_display = ('fiscal', 'lugar_votacion', 'ingreso', 'egreso', 'comida')
     search_fields = (
         'fiscal__apellido', 'fiscal__direccion', 'fiscal__dni',
         'lugar_votacion__nombre',
@@ -77,10 +121,9 @@ class AsignacionFiscalGeneralAdmin(admin.ModelAdmin):
     raw_id_fields = ("lugar_votacion", "fiscal")
 
 
-class AsignacionFiscalDeMesaAdmin(admin.ModelAdmin):
-    list_display = ('fiscal', 'mesa', 'ingreso', 'egreso')
+class AsignacionFiscalDeMesaAdmin(AsignacionFiscalAdmin):
+    list_display = ('fiscal', 'mesa', 'ingreso', 'egreso', 'comida')
     raw_id_fields = ("mesa", "fiscal")
-    list_filter = ('ingreso', 'egreso')
     search_fields = (
         'fiscal__apellido', 'fiscal__direccion', 'fiscal__dni',
         'mesa__numero',
@@ -89,6 +132,7 @@ class AsignacionFiscalDeMesaAdmin(admin.ModelAdmin):
         'mesa__lugar_votacion__barrio',
         'mesa__lugar_votacion__ciudad',
     )
+
 
 
 admin.site.register(AsignacionFiscalGeneral, AsignacionFiscalGeneralAdmin)

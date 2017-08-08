@@ -79,7 +79,14 @@ def asignacion_estado(request, tipo, pk):
     else:
         asignacion = get_object_or_404(AsignacionFiscalGeneral, id=pk, fiscal=fiscal)
 
-    if not asignacion.ingreso:
+    comida_post = 'comida' in request.POST
+    comida_get = 'comida' in request.GET     # fiscal general
+    if comida_post or comida_get:
+        asignacion.comida = 'recibida'
+        asignacion.save(update_fields=['comida'])
+        messages.info(request, '¡Buen provecho!' if comida_post else '¡Gracias!')
+
+    elif not asignacion.ingreso:
         # llega por primera vez
         asignacion.ingreso = timezone.now()
         asignacion.egreso = None

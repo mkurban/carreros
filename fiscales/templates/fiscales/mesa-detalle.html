@@ -67,7 +67,7 @@
 
 
 
-               {% if  object.asignacion_actual %}
+              {% if  object.asignacion_actual %}
               <tr>
                   <th>
                     Se encuentra
@@ -85,10 +85,34 @@
                   </td>
               </tr>
 
-                {% endif %}
+               {% endif %}
+              {% endif %}
 
+
+              {% if  object.asignacion_actual.comida != 'no asignada' %}
+              <tr>
+                  <th>
+                    Comida
+                  </th>
+
+                  <td>
+
+                    {% if object.asignacion_actual.comida == 'asignada' %}
+                    Asignada
+
+                    <a class="btn waves-effect waves-light white-text" href="{% url 'asignacion-estado' 'de_mesa' object.asignacion_actual.id %}?mesa=1&comida=1">
+                      La comida entregada
+                      </a>
+                    {% else %}
+                      Entregada
+
+                      {% endif %}
+                  </td>
+              </tr>
 
               {% endif %}
+
+
             </table>
 
         </div>
