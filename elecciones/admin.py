@@ -72,6 +72,7 @@ class LugarVotacionAdmin(AdminRowActionsMixin, LeafletGeoAdmin):
     search_fields = (
         'nombre', 'direccion', 'ciudad', 'barrio', 'mesas__numero'
     )
+    show_full_result_count = False
     actions = [mostrar_en_mapa]
 
 
