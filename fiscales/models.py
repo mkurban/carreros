@@ -35,7 +35,7 @@ class Fiscal(models.Model):
     barrio = models.CharField(max_length=200, blank=True)
     localidad = models.CharField(max_length=200, blank=True)
     tipo_dni = models.CharField(choices=TIPO_DNI, max_length=3, default='DNI')
-    dni = models.CharField(max_length=15)
+    dni = models.CharField(max_length=15, blank=True)
     datos_de_contacto = GenericRelation('prensa.DatoDeContacto', related_query_name='fiscales')
     organizacion = models.ForeignKey('Organizacion', null=True, blank=True, help_text='Opcional. Para mostrar contactos extra del usuario')
     user = models.OneToOneField('auth.User', null=True,
