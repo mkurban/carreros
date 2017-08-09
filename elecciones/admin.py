@@ -49,7 +49,7 @@ class TieneFiscal(admin.SimpleListFilter):
 
 class TieneFiscalGeneral(TieneFiscal):
     title = 'Tiene fiscal general'
-    lookup = 'asignacion_fiscal__isnull'
+    lookup = 'asignacion__isnull'
 
 
 def mostrar_en_mapa(modeladmin, request, queryset):
