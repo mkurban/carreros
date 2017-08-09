@@ -73,7 +73,8 @@ class Command(BaseCommand):
 
             fiscal, created = Fiscal.objects.get_or_create(dni=row['DNI'], defaults={
                 'nombres': nombres,
-                'apellido': apellido
+                'apellido': apellido,
+                'tipo': tipo
             })
             if created:
                 self.success(f'creado {fiscal}')
@@ -85,23 +86,22 @@ class Command(BaseCommand):
             if row['mesa_hasta']:
                 try:
                     escuela = LugarVotacion.objects.filter(mesas__numero=row['mesa_desde']).get(mesas__numero=row['mesa_hasta'])
-
                 except LugarVotacion.DoesNotExist:
                     self.warning(f"No se encontró escuela para row['mesa_desde'] - row['mesa_hasta']")
                     continue
 
                 asignacion, created = AsignacionFiscalGeneral.objects.get_or_create(fiscal=fiscal, lugar_votacion=escuela)
                 if created:
-                    self.success(f'creado {asignacion}')
+                    self.success(f'Asignacion: {asignacion}')
                 else:
                     self.warning(f'{asignacion} ya existia')
 
 
             else:
                 try:
-                    mesa = Mesa.objects.get(numero=row['mesas_desde'])
+                    mesa = Mesa.objects.get(numero=row['mesa_desde'])
                 except Mesa.DoesNotExist:
-                    self.warning(f"No se encontró mesa row['mesas_desde']")
+                    self.warning(f"No se encontró mesa row['mesa_desde']")
                     continue
 
                 asignacion, created = AsignacionDeMesa.objects.get_or_create(fiscal=fiscal, mesa=mesa)
