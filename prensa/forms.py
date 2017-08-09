@@ -76,7 +76,7 @@ class DatoDeContactoModelForm(forms.ModelForm):
         self.cleaned_data['valor'] = valor
 
 
-ContactoInlineFormset = generic_inlineformset_factory(DatoDeContacto, form=DatoDeContactoModelForm)
+ContactoInlineFormset = generic_inlineformset_factory(DatoDeContacto, form=DatoDeContactoModelForm, can_delete=True)
 
 MinimoContactoInlineFormset = generic_inlineformset_factory(DatoDeContacto,
     form=DatoDeContactoModelForm,

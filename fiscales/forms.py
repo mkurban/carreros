@@ -21,7 +21,7 @@ def opciones_actuales():
 
 
 class FiscalForm(forms.ModelForm):
-    dni = ARDNIField()
+    dni = ARDNIField(required=False)
 
     class Meta:
         model = Fiscal

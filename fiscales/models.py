@@ -9,6 +9,7 @@ from django.contrib.auth.models import User
 from django.dispatch import receiver
 from django.db.models.signals import post_save, pre_delete
 from elecciones.models import desde_hasta, Mesa, LugarVotacion
+from prensa.models import DatoDeContacto
 
 
 class Organizacion(models.Model):
@@ -170,22 +171,50 @@ class AsignacionFiscalGeneral(AsignacionFiscal):
         verbose_name_plural = 'Asignaciones de Fiscal General'
 
 
-
 @receiver(post_save, sender=Fiscal)
 def crear_user_para_fiscal(sender, instance=None, created=False, **kwargs):
-    if created and not instance.user:
+    if not instance.user and instance.dni:
         user = User(
             username=instance.dni,
             first_name=instance.nombres,
             last_name=instance.apellido,
             is_active=True,
         )
-        if instance.emails:
-            user.email = instance.emails[0]
+
         user.set_password(settings.DEFAULT_PASS_PREFIX + instance.dni[-3:])
         user.save()
         instance.user = user
         instance.save(update_fields=['user'])
+
+
+@receiver(post_save, sender=DatoDeContacto)
+def fiscal_contacto(sender, instance=None, created=False, **kwargs):
+    # metadata de user con datos de contacto
+    if (instance.tipo == 'teléfono' and isinstance(instance.content_object, Fiscal) and not
+            instance.content_object.user):
+        # si no tiene usuario y se asigna telefono, usar este dato
+        fiscal = instance.content_object
+        rawnumber = ''.join(instance.valor.split()[-2:]).replace('-', '')
+
+        user = User(
+            username=rawnumber,
+            first_name=fiscal.nombres,
+            last_name=fiscal.apellido,
+            is_active=True,
+        )
+        user.set_password(settings.DEFAULT_PASS_PREFIX + rawnumber[-3:])
+        user.save()
+
+        fiscal.user = user
+        fiscal.save(update_fields=['user'])
+
+    if (instance.tipo == 'email' and
+            isinstance(instance.content_object, Fiscal) and
+            instance.content_object.user and not
+            instance.content_object.user.email):
+        user = instance.content_object.user
+        user.email = instance.valor
+        user.save(update_fields=['email'])
 
 
 

@@ -44,14 +44,16 @@ class AsignadoFilter(admin.SimpleListFilter):
 class FiscalAdmin(AdminRowActionsMixin, admin.ModelAdmin):
 
     def get_row_actions(self, obj):
+        row_actions = []
+        if obj.user:
+            row_actions.append(
+                {
+                    'label': f'Loguearse como {obj.nombres}',
+                    'url': f'/hijack/{obj.user.id}/',
+                    'enabled': True,
+                }
+            )
 
-        row_actions = [
-            {
-                'label': f'Loguearse como {obj.nombres}',
-                'url': f'/hijack/{obj.user.id}/',
-                'enabled': True,
-            }
-        ]
         label_asignacion = 'Editar asignación a' if  obj.asignacion else 'Asignar a'
         if obj.es_general and obj.asignacion:
             url = reverse('admin:fiscales_asignacionfiscalgeneral_change', args=(obj.asignacion.id,))
