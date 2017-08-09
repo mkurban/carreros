@@ -76,8 +76,13 @@ class FiscalAdmin(AdminRowActionsMixin, admin.ModelAdmin):
     def telefonos(o):
         return ' / '.join(o.telefonos)
 
+    def asignado_a(o):
+        if o.asignacion:
+            return o.asignacion.lugar_votacion if o.es_general else o.asignacion.mesa
+
+
     form = FiscalForm
-    list_display = ('__str__', 'tipo', 'direccion', 'organizacion', 'dni', telefonos)
+    list_display = ('__str__', 'tipo', 'direccion', 'organizacion', 'dni', telefonos, asignado_a)
     search_fields = (
         'apellido', 'direccion', 'dni',
         'asignacion_escuela__lugar_votacion__nombre',
