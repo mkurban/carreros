@@ -14,6 +14,13 @@ def manage(command):
 def shell_plus():
     manage('shell_plus')
 
+def dbbackup():
+    manage('dbbackup -z')
+
+
+def dbrestore():
+    manage('dbrestore -z')
+
 
 def append_to_local_settings(path):
     run("source /virtualenvs/carreros/bin/activate")
