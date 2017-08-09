@@ -7,7 +7,7 @@ from .models import LugarVotacion
 
 class LugaresVotacionGeoJSON(GeoJSONLayerView):
     model = LugarVotacion
-    properties = ('id',)    # 'popup_html',)
+    properties = ('id', 'color')    # 'popup_html',)
 
     def get_queryset(self):
         qs = super().get_queryset()
@@ -24,7 +24,7 @@ class EscuelaDetailView(DetailView):
 
 # Create your views here.
 class Mapa(TemplateView):
-    template_name = "elecciones/mapa1.html"
+    template_name = "elecciones/mapa.html"
 
     def get_context_data(self, **kwargs):
 

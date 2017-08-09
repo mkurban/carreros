@@ -91,6 +91,14 @@ class LugarVotacion(models.Model):
     def asignacion_actual(self):
         return self.asignacion.order_by('-ingreso').last()
 
+    @property
+    def color(self):
+        if not self.asignacion_actual:
+            return 'red'
+        return 'blue'
+
+
+
     def __str__(self):
         return f"{self.nombre} - {self.circuito}"
 
