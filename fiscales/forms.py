@@ -125,3 +125,9 @@ EstadoMesaModelForm = modelform_factory(
     fields=['estado'],
     widgets={"estado": forms.HiddenInput}
 )
+
+
+ActaMesaModelForm = modelform_factory(
+    Mesa,
+    fields=['foto_del_acta'],
+)

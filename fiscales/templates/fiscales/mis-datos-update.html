@@ -1,5 +1,5 @@
 {% extends "fiscales/base.html" %}
-{% load i18n material_form material_frontend %}
+{% load material_form material_frontend %}
 
 {% block page_title %}Editar mis datos{% endblock %}
 
@@ -41,7 +41,11 @@
 
         <div class="card-action">
             <div class="right-align">
-              <button type="submit" class="waves-effect waves-light btn white-text">{% trans 'Save' %}</button>
+              <button type="submit" class="waves-effect waves-light btn white-text">
+            {% block button_text %}
+              Guardar
+            {% endblock button_text %}
+              </button>
             </div>
         </div>
 

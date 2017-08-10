@@ -17,7 +17,8 @@ from elecciones.models import Mesa, Eleccion, VotoMesaReportado
 from .forms import (
     MisDatosForm,
     FiscalFormSimple,
-    VotoMesaReportadoFormset
+    VotoMesaReportadoFormset,
+    ActaMesaModelForm
 )
 from prensa.views import ConContactosMixin
 
@@ -125,6 +126,22 @@ class MiMesaMixin:
 
     def verificar_fiscal_existente(self, fiscal):
         return fiscal
+
+
+class MesaActa(BaseFiscal, UpdateView):
+    template_name = "fiscales/cargar-foto.html"
+    slug_field = 'numero'
+    slug_url_kwarg = 'mesa_numero'
+    model = Mesa
+    form_class = ActaMesaModelForm
+
+    def get_object(self):
+        return get_object_or_404(Mesa, numero=self.kwargs['mesa_numero'], estado='ESCRUTADA')
+
+    def form_valid(self, form):
+        super().form_valid(form)
+        messages.success(self.request, 'Foto subida correctamente ¡Gracias!')
+        return redirect(self.object.get_absolute_url())
 
 
 class BaseFiscalSimple(LoginRequiredMixin, MiMesaMixin, ConContactosMixin):
@@ -236,6 +253,9 @@ class MesaDetalle(LoginRequiredMixin, MiMesaMixin, DetailView):
 
 
 
+
+
+
 @login_required
 def cargar_resultados(request, mesa_numero):
     def fix_opciones(formset):
@@ -264,8 +284,16 @@ def cargar_resultados(request, mesa_numero):
     formset = VotoMesaReportadoFormset(data, queryset=qs, initial=initial)
 
     fix_opciones(formset)
+
+    is_valid = False
+    if qs:
+        formset.convert_warnings = True  # monkepatch
+
+    if request.method == 'POST' or qs:
+        is_valid = formset.is_valid()
+
     eleccion = Eleccion.objects.last()
-    if request.method == 'POST' and formset.is_valid():
+    if is_valid:
         for form in formset:
             vmr = form.save(commit=False)
             vmr.mesa = mesa
@@ -273,9 +301,11 @@ def cargar_resultados(request, mesa_numero):
             vmr.eleccion = eleccion
             vmr.save()
 
-        messages.success(request, 'gracias por enviar resultados')
-        for warning in formset.warnings:
-            messages.warning(request, warning[2])
+        if formset.warnings:
+            messages.warning(request, 'Guardamos los resultados, pero')
+        else:
+            messages.success(request, 'Los resultados se guardaron correctamente')
+
 
         return redirect(reverse('detalle-mesa', args=(mesa.numero,)))
 

@@ -13,6 +13,8 @@ urlpatterns = [
         views.MesaDetalle.as_view(), name='detalle-mesa'),
     url('^donde-fiscalizo/(?P<mesa_numero>\d+)/cargar$',
         views.cargar_resultados, name='mesa-cargar-resultados'),
+    url('^donde-fiscalizo/(?P<mesa_numero>\d+)/acta$',
+        views.MesaActa.as_view(), name='mesa-acta'),
     url('^donde-fiscalizo/(?P<mesa_numero>\d+)/estado/(?P<estado>\w+)$',
         views.mesa_cambiar_estado, name='mesa-cambiar-estado'),
     url('^donde-fiscalizo/(?P<mesa_numero>\d+)/fiscal/crear$',

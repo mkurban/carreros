@@ -106,7 +106,7 @@ class LugarVotacion(models.Model):
 def path_foto_acta(instance, filename):
     # file will be uploaded to MEDIA_ROOT/user_<id>/<filename>
     _, ext = os.path.splitext(filename)
-    return '{}/{}/{}{}'.format(
+    return 's{}/c{}/m{}{}'.format(
         instance.circuito.seccion.numero,
         instance.circuito.numero,
         instance.numero,
