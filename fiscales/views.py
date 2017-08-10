@@ -245,6 +245,10 @@ def cargar_resultados(request, mesa_numero):
         for opcion, form in zip(Eleccion.opciones_actuales(), formset):
             form.fields['opcion'].choices = [(opcion.id, str(opcion))]
 
+            # si la opcion es obligatoria, se llenan estos campos
+            if opcion.obligatorio:
+                form.fields['votos'].required = True
+
     mesa = get_object_or_404(Mesa, numero=mesa_numero)
     try:
         fiscal = request.user.fiscal
@@ -260,15 +264,19 @@ def cargar_resultados(request, mesa_numero):
     formset = VotoMesaReportadoFormset(data, queryset=qs, initial=initial)
 
     fix_opciones(formset)
-
-    if formset.is_valid():
+    eleccion = Eleccion.objects.last()
+    if request.method == 'POST' and formset.is_valid():
         for form in formset:
             vmr = form.save(commit=False)
             vmr.mesa = mesa
             vmr.fiscal = fiscal
-            vmr.eleccion = Eleccion.objects.last()
+            vmr.eleccion = eleccion
             vmr.save()
-        messages.success(request, 'Los resultados se cargaron correctamente')
+
+        messages.success(request, 'gracias por enviar resultados')
+        for warning in formset.warnings:
+            messages.warning(request, warning[2])
+
         return redirect(reverse('detalle-mesa', args=(mesa.numero,)))
 
     return render(request, "fiscales/carga.html",

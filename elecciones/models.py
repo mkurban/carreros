@@ -172,7 +172,7 @@ class Opcion(models.Model):
     partido = models.ForeignKey(Partido, null=True, blank=True)   # blanco, / recurrido / etc
     orden = models.PositiveIntegerField(
         help_text='Orden en la boleta', null=True, blank=True)
-
+    obligatorio = models.BooleanField(default=False)
 
     class Meta:
         verbose_name = 'Opción'
@@ -209,7 +209,7 @@ class AbstractVotoMesa(models.Model):
     eleccion = models.ForeignKey(Eleccion)
     mesa = models.ForeignKey(Mesa)
     opcion = models.ForeignKey(Opcion)
-    votos = models.PositiveIntegerField()
+    votos = models.PositiveIntegerField(null=True)
 
     class Meta:
         abstract = True
