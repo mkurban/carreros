@@ -1,4 +1,5 @@
 from csv import DictReader
+from django.core.exceptions import ValidationError
 from django.contrib.contenttypes.models import ContentType
 from django.core.management.base import BaseCommand, CommandError
 from nameparser import HumanName
@@ -39,18 +40,26 @@ class Command(BaseCommand):
 
     def add_telefono(self, objeto, telefono):
         ct = ContentType.objects.get(app_label='fiscales', model=type(objeto).__name__.lower())
+
         d = DatoDeContactoModelForm({
             'tipo': 'teléfono',
             'valor': telefono,
             'content_type': ct.id,
             'object_id': objeto.id
         })
-        if d.is_valid():
-            dato = d.save()
-            self.success(f'Importado {dato} para {objeto}')
-        else:
-            self.warning(f'Ignorado {d.errors}')
 
+        if d.is_valid():
+            dato = d.save(commit=False)
+            try:
+                dato.full_clean(validate_unique=True)
+                dato.save()
+                self.success(f'Importado {dato} para {objeto}')
+                return
+            except ValidationError:
+                error = 'Este dato ya existe'
+        else:
+            error = d.errors
+        self.warning(f'Ignorado: {error}')
 
 
 
@@ -78,10 +87,10 @@ class Command(BaseCommand):
             })
             if created:
                 self.success(f'creado {fiscal}')
-                self.add_telefono(fiscal, row['Telefono'])
             else:
                 self.warning(f'{fiscal} existente (dni {fiscal.dni})')
 
+            self.add_telefono(fiscal, row['Telefono'])
 
             if row['mesa_hasta']:
                 try:

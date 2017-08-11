@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
 
     'rest_framework',
+    'admincommand',
     'anymail',
     'raven.contrib.django.raven_compat',
     'localflavor',

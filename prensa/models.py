@@ -22,6 +22,10 @@ class DatoDeContacto(models.Model):
     object_id = models.PositiveIntegerField()
     content_object = GenericForeignKey('content_type', 'object_id')
 
+    class Meta:
+        unique_together = (('tipo', 'valor', 'content_type', 'object_id'),)
+
+
     def __str__(self):
         return f'{self.tipo}: {self.valor}'
 
