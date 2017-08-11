@@ -52,10 +52,7 @@ class Command(BaseCommand):
                     lon = row_data['lon']
 
                     geom = {'type': 'Point', 'coordinates': [lon, lat]}
-                    try:
-                        escuela = LugarVotacion.objects.get(id=pk)
-                    except:
-                        import ipdb; ipdb.set_trace()
+                    escuela = LugarVotacion.objects.get(id=pk)
                     escuela.geom = geom
                     escuela.longitud = lon
                     escuela.latitud = lat

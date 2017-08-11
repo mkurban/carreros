@@ -91,7 +91,6 @@ class Fiscal(models.Model):
 
     def fiscales_colegas(self):
         """fiscales en la misma escuela"""
-        import ipdb; ipdb.set_trace()
         escuelas = self.escuelas.all()
         if escuelas:
             general = Q(tipo='general') & Q(asignacion_escuela__lugar_votacion__in=escuelas)
