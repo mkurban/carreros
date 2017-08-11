@@ -95,9 +95,12 @@ class LugarVotacion(models.Model):
     def color(self):
         if not self.asignacion_actual:
             return 'red'
-        return 'blue'
+        elif self.asignacion_actual.esta_presente:
+            return 'green'
+        return 'orange'
 
 
+# 'red', 'darkred', 'orange', 'green', 'darkgreen', 'blue', 'purple', 'darkpuple', 'cadetblue'
 
     def __str__(self):
         return f"{self.nombre} - {self.circuito}"
