@@ -56,9 +56,7 @@
 
                   {% endif %}
 
-                    <a title="Eliminar la asignación" class="right-align btn-floating btn waves-effect waves-light red modal-trigger" href="#modal1"><i class="material-icons tiny">delete</i></a>
-
-
+                    <a title="Eliminar la asignación" class="right-align btn-floating btn waves-effect waves-light red modal-trigger" href="{% url 'mesa-eliminar-asignacion' object.numero %}" onclick="return confirm('¿Estás seguro?', 'lala')"><i class="material-icons tiny">delete</i></a>
 
                           <!-- Modal Structure -->
                             <div id="modal1" class="modal">
@@ -178,7 +176,13 @@
 
 {% endblock left-panel %}
 
+{% comment %}
 {% block extrajs %}
+
+
+
+ // todo
+
 <script type="text/javascript">
   $(document).ready(function(){
     // the "href" attribute of the modal trigger must specify the modal ID that wants to be triggered
@@ -186,3 +190,5 @@
   });
 </script>
 {% endblock extrajs %}
+
+{% endcomment %}
