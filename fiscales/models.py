@@ -91,8 +91,9 @@ class Fiscal(models.Model):
 
     def fiscales_colegas(self):
         """fiscales en la misma escuela"""
-        if self.escuelas.exists():
-            escuelas = self.escuelas.all()
+        import ipdb; ipdb.set_trace()
+        escuelas = self.escuelas.all()
+        if escuelas:
             general = Q(tipo='general') & Q(asignacion_escuela__lugar_votacion__in=escuelas)
             de_mesa = Q(tipo='de_mesa') & Q(asignacion_mesa__mesa__lugar_votacion__in=escuelas)
             return Fiscal.objects.exclude(id=self.id).filter(general | de_mesa).order_by('-tipo')

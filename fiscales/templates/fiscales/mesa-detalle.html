@@ -55,6 +55,26 @@
                   </a>
 
                   {% endif %}
+
+                    <a title="Eliminar la asignación" class="right-align btn-floating btn waves-effect waves-light red modal-trigger" href="#modal1"><i class="material-icons tiny">delete</i></a>
+
+
+
+                          <!-- Modal Structure -->
+                            <div id="modal1" class="modal">
+                              <div class="modal-content">
+                                <h4>Eliminar la asignación a la mesa {{ object.numero }} </h4>
+                                <p>Esta acción dejará la mesa sin fiscal asignado.
+                                Si cargaste datos de un fiscal no se perderán, podés asignarlo a otra mesa ingresando el mismo DNI</p>
+                              </div>
+                              <div class="modal-footer center-align">
+                                <a href="{% url 'mesa-eliminar-asignacion' object.numero %}" class="modal-action modal-close waves-effect waves-effect btn-flat red white-text">De acuerdo</a>
+                              </div>
+                            </div>
+
+
+
+
                 {% else %}
                   No se registra
                     <a href="{% url 'mesa-tengo-fiscal' object.numero %}"  class="waves-effect waves-light btn white-text">
@@ -157,3 +177,12 @@
 
 
 {% endblock left-panel %}
+
+{% block extrajs %}
+<script type="text/javascript">
+  $(document).ready(function(){
+    // the "href" attribute of the modal trigger must specify the modal ID that wants to be triggered
+    $('.modal').modal();
+  });
+</script>
+{% endblock extrajs %}

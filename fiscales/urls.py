@@ -19,6 +19,8 @@ urlpatterns = [
         views.mesa_cambiar_estado, name='mesa-cambiar-estado'),
     url('^donde-fiscalizo/(?P<mesa_numero>\d+)/fiscal/crear$',
         views.FiscalSimpleCreateView.as_view(), name='mesa-cargar-fiscal'),
+    url('^donde-fiscalizo/(?P<mesa_numero>\d+)/fiscal/eliminar$',
+        views.eliminar_asignacion, name='mesa-eliminar-asignacion'),
     url('^donde-fiscalizo/(?P<mesa_numero>\d+)/fiscal/editar$',
         views.FiscalSimpleUpdateView.as_view(), name='mesa-editar-fiscal'),
     url('^donde-fiscalizo/(?P<mesa_numero>\d+)/fiscal/registrar$',

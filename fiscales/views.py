@@ -163,9 +163,9 @@ class BaseFiscalSimple(LoginRequiredMixin, MiMesaMixin, ConContactosMixin):
         context['mesa'] = self.get_mesa()
         return context
 
-
     def form_valid(self, form):
         fiscal = form.save(commit=False)
+        fiscal.tipo = 'de_mesa'
         fiscal = self.verificar_fiscal_existente(fiscal)
         fiscal.save()
         mesa = self.get_mesa()
@@ -183,9 +183,6 @@ class FiscalSimpleCreateView(BaseFiscalSimple, CreateView):
         if not self.mesa.asignacion_actual:
             messages.error(self.request, 'No se registra fiscal en esta mesa ')
             return redirect(self.mesa.get_absolute_url())
-        if self.mesa.asignacion_actual.fiscal:
-            return redirect(reverse('mesa-editar-fiscal', args=(self.mesa.numero,)))
-
         return d
 
     def verificar_fiscal_existente(self, fiscal):
@@ -207,6 +204,18 @@ class FiscalSimpleUpdateView(BaseFiscalSimple, UpdateView):
         if fiscal:
             return fiscal
         raise Http404
+
+
+@login_required
+def eliminar_asignacion(request, mesa_numero):
+    fiscal = get_object_or_404(Fiscal, tipo='general', user=request.user)
+    mesa = get_object_or_404(Mesa, numero=mesa_numero)
+    if mesa not in fiscal.mesas_asignadas:
+        return HttpResponseForbidden()
+    mesa.asignacion_actual.delete()
+    messages.success(request, 'La asignación se eliminó')
+    return redirect(mesa.get_absolute_url())
+
 
 
 @login_required

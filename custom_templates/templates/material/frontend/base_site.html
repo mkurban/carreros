@@ -16,7 +16,15 @@
 
 {% load i18n static %}
 
-{% block title %}Frente Córdoba Ciudadana - Bunker Web{% endblock %}
+{% block title %}Frente Córdoba Ciudadana{% endblock %}
 {% block page_title %}Elecciones 2017{% endblock %}
 
 {% block favicon %}<link href="{% static 'img/favicon.png' %}" rel="shortcut icon">{% endblock %}
+
+
+
+      {% block js %}
+      <script src="https://code.jquery.com/jquery-2.1.1.min.js"></script>
+      {% include 'material/includes/material_js.html' %}
+      {% block extrajs %}{% endblock %}
+      {% endblock %}
