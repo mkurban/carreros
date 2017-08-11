@@ -78,9 +78,14 @@ class LugarVotacionAdmin(AdminRowActionsMixin, LeafletGeoAdmin):
 
     def get_row_actions(self, obj):
         row_actions = [
+           {
+                'label': 'Asignación',
+                'url': reverse('admin:fiscales_asignacionfiscalgeneral_changelist') + f'?lugar_votacion__id={obj.id}',
+                'enabled': True,
+            },
             {
                 'label': 'Mesas',
-                'url': reverse('admin:elecciones_mesa_changelist') + f'?q={obj.nombre}',
+                'url': reverse('admin:elecciones_mesa_changelist') + f'?lugar_votacion__id={obj.id}',
                 'enabled': True,
             }
         ]
@@ -103,12 +108,12 @@ class MesaAdmin(AdminRowActionsMixin, admin.ModelAdmin):
         row_actions = [
            {
                 'label': 'Asignación',
-                'url': reverse('admin:fiscales_asignacionfiscaldemesa_changelist') + f'?q={obj.numero}',
+                'url': reverse('admin:fiscales_asignacionfiscaldemesa_changelist') + f'?mesa__id={obj.id}',
                 'enabled': True,
             },
             {
                 'label': 'Escuela',
-                'url': reverse('admin:elecciones_lugarvotacion_changelist') + f'?q={obj.numero}',
+                'url': reverse('admin:elecciones_lugarvotacion_changelist') + f'?id={obj.lugar_votacion.id}',
                 'enabled': True,
             }
         ]
