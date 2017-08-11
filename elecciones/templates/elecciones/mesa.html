@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Resultados {{ mesa }}</title>
+
+    <link href="/static/elecciones/lib/nv.d3.css" rel="stylesheet" type="text/css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.17/d3.min.js" charset="utf-8"></script>
+    <script src="/static/elecciones/lib/nv.d3.js"></script>
+    <script src="/static/elecciones/lib/stream_layers.js"></script>
+
+    <style>
+        text {
+            font: 12px sans-serif;
+        }
+        svg {
+            display: block;
+            float: left;
+            height: 350px !important;
+            width: 350px !important;
+        }
+        html, body {
+            margin: 0px;
+            padding: 0px;
+            height: 100%;
+            width: 100%;
+        }
+    </style>
+
+</head>
+<body>
+    <h1>{{ mesa }}</h1>
+    <h3>{{ mesa.lugar_votacion.nombre }}</h3>
+    <table>
+        <tr>
+            <td>
+                <table>
+                    <thead>Reporte de Fiscal</thead>
+                    {% if reporte %}
+                        {% for op in reporte %}
+                        <tr><td>{{ op.opcion.nombre}} {% if op.opcion.partido %}({{op.opcion.partido.nombre}}) {% endif %}</td><td>{{op.votos }}</td></tr>
+                        {% endfor %}
+                        <tr><td><svg id="svg_reporte"></svg></td></tr>
+                    {% else %}
+                        <p>Nope</p>
+                    {% endif %}
+                </table>
+            </td>
+            <td>
+                |
+            </td>
+            <td>
+                <table>
+                    <thead>Parte de Mesa</thead>
+                    {% if parte_de_mesa %}
+                        {% for op in parte_de_mesa %}
+                        <tr><td>{{ op.opcion.nombre}} {% if op.opcion.partido %}({{op.opcion.partido.nombre}}) {% endif %}</td><td>{{op.votos }}</td></tr>
+                        {% endfor %}
+                        <tr><td><svg id="svg_parte"></svg></td></tr>
+                    {% else %}
+                        <p>Nope</p>
+                    {% endif %}
+                </table>
+            </td>
+        </tr>
+    </table>
+
+<script>
+
+    var rep_data = {{ rep_chart|safe }}
+    var par_data = {{ par_chart|safe }}
+
+    var width = 300;
+    var height = 300;
+
+    nv.addGraph(function() {
+        var chart = nv.models.pie()
+                .x(function(d) { return d.key; })
+                .y(function(d) { return d.y; })
+                .width(width)
+                .height(height)
+                .labelsOutside(true)
+                ;
+
+        d3.select("#svg_reporte")
+                .datum([rep_data])
+                .transition().duration(1200)
+                .attr('width', width)
+                .attr('height', height)
+                .call(chart);
+
+        // LISTEN TO CLICK EVENTS ON THE SLICES OF THE PIE
+        // chart.dispatch.on('elementClick', function() {
+        //   code...
+        // });
+
+        // OTHER EVENTS DISPATCHED BY THE PIE INCLUDE: elementDblClick, elementMouseover, elementMouseout, elementMousemove, renderEnd
+        // @see nv.models.pie
+        return chart;
+    });
+
+    nv.addGraph(function() {
+        var chart = nv.models.pie()
+                .x(function(d) { return d.key; })
+                .y(function(d) { return d.y; })
+                .width(width)
+                .height(height)
+                .labelsOutside(true)
+                ;
+
+        d3.select("#svg_parte")
+                .datum([par_data])
+                .transition().duration(1200)
+                .attr('width', width)
+                .attr('height', height)
+                .call(chart);
+
+        // LISTEN TO CLICK EVENTS ON THE SLICES OF THE PIE
+        // chart.dispatch.on('elementClick', function() {
+        //   code...
+        // });
+
+        // OTHER EVENTS DISPATCHED BY THE PIE INCLUDE: elementDblClick, elementMouseover, elementMouseout, elementMousemove, renderEnd
+        // @see nv.models.pie
+        return chart;
+    });
+
+</script>
+</body>
+</html>

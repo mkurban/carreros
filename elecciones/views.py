@@ -1,3 +1,8 @@
+import json
+
+from django.http import HttpResponse
+from django.template import loader
+from .models import *
 from django.views.generic.base import TemplateView
 from django.views.generic.detail import DetailView
 from django.urls import reverse
@@ -45,3 +50,31 @@ class Mapa(StaffOnlyMixing, TemplateView):
             geojson_url += f'?{query}'
         context['geojson_url'] = geojson_url
         return context
+
+def resultados(request):
+    mesas_list = Mesa.objects.filter(votomesaoficial__eleccion__isnull=False)
+    mesas_list2 = Mesa.objects.filter(votomesareportado__eleccion__isnull=False)
+    mesas_list = set(set(mesas_list) | set(mesas_list2))
+    template = loader.get_template('elecciones/resultados.html')
+    context = {
+        'mesas_list': mesas_list,
+    }
+    return HttpResponse(template.render(context, request))
+
+def resultados_mesa(request, nro):
+    def extrac_chart_data(ops):
+        return json.dumps([{'key': op.opcion.nombre, 'y': op.votos} for op in ops if not op.opcion.nombre.find("TOTAL")==0])
+    mesa = Mesa.objects.get(numero=nro)
+    reporte = VotoMesaReportado.objects.filter(mesa__numero=mesa.numero, votos__isnull=False)
+    rep_chart = extrac_chart_data(reporte)
+    parte = VotoMesaOficial.objects.filter(mesa__numero=mesa.numero, votos__isnull=False)
+    par_chart = extrac_chart_data(parte)
+    template = loader.get_template('elecciones/mesa.html')
+    context = {
+        'mesa': mesa,
+        'reporte': reporte,
+        'rep_chart': rep_chart,
+        'parte_de_mesa':parte,
+        'par_chart': par_chart
+    }
+    return HttpResponse(template.render(context, request))
