@@ -75,24 +75,29 @@ class LugarVotacionAdmin(AdminRowActionsMixin, LeafletGeoAdmin):
     show_full_result_count = False
     actions = [mostrar_en_mapa]
 
-
     def get_row_actions(self, obj):
         row_actions = [
-           {
-                'label': 'Asignación',
-                'url': reverse('admin:fiscales_asignacionfiscalgeneral_changelist') + f'?lugar_votacion__id={obj.id}',
-                'enabled': True,
-            },
             {
                 'label': 'Mesas',
                 'url': reverse('admin:elecciones_mesa_changelist') + f'?lugar_votacion__id={obj.id}',
                 'enabled': True,
             }
         ]
+        if obj.asignacion_actual:
+            url = reverse('admin:fiscales_asignacionfiscalgeneral_change', args=(obj.asignacion_actual.id,))
+            label_asignacion = 'Editar asignación'
+
+        else:
+            url = reverse('admin:fiscales_asignacionfiscalgeneral_add') + f'?lugar_votacion={obj.id}'
+            label_asignacion = 'Asignar fiscal general'
+
+        row_actions.append({
+            'label': f'{label_asignacion}',
+            'url': url,
+            'enabled': True
+        })
         row_actions += super().get_row_actions(obj)
         return row_actions
-
-
 
 
 class MesaAdmin(AdminRowActionsMixin, admin.ModelAdmin):
@@ -103,20 +108,28 @@ class MesaAdmin(AdminRowActionsMixin, admin.ModelAdmin):
         'lugar_votacion__ciudad', 'lugar_votacion__barrio',
     )
 
-
     def get_row_actions(self, obj):
         row_actions = [
-           {
-                'label': 'Asignación',
-                'url': reverse('admin:fiscales_asignacionfiscaldemesa_changelist') + f'?mesa__id={obj.id}',
-                'enabled': True,
-            },
             {
                 'label': 'Escuela',
                 'url': reverse('admin:elecciones_lugarvotacion_changelist') + f'?id={obj.lugar_votacion.id}',
                 'enabled': True,
             }
         ]
+        if obj.asignacion_actual:
+            url = reverse('admin:fiscales_asignacionfiscaldemesa_change', args=(obj.asignacion_actual.id,))
+            label_asignacion = 'Editar asignación'
+
+        else:
+            url = reverse('admin:fiscales_asignacionfiscaldemesa_add') + f'?mesa={obj.id}'
+            label_asignacion = 'Asignar fiscal'
+
+        row_actions.append({
+            'label': f'{label_asignacion}',
+            'url': url,
+            'enabled': True
+        })
+
         row_actions += super().get_row_actions(obj)
         return row_actions
 

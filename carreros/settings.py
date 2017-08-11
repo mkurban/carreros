@@ -31,6 +31,7 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
+    'custom_templates',   # our hack to override templates
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -43,7 +44,7 @@ INSTALLED_APPS = [
     'raven.contrib.django.raven_compat',
     'localflavor',
     'django_extensions',
-    'custom_templates',   # our hack to override templates
+
     'material.theme.lightblue',
     'material',
     'dbbackup',

@@ -141,7 +141,7 @@ class AsignacionFiscalDeMesa(AsignacionFiscal):
 
     # es null si el fiscal general dice que la mesa está asignada
     # pero aun no hay datos.
-    fiscal = models.ForeignKey('Fiscal', null=True,
+    fiscal = models.ForeignKey('Fiscal', null=True, blank=True,
         limit_choices_to={'tipo': Fiscal.TIPO.de_mesa}, related_name='asignacion_mesa')
 
     def __str__(self):
