@@ -3,6 +3,15 @@ from django.views.generic.detail import DetailView
 from django.urls import reverse
 from djgeojson.views import GeoJSONLayerView
 from .models import LugarVotacion
+from django.contrib.admin.views.decorators import staff_member_required
+from django.utils.decorators import method_decorator
+
+
+class StaffOnlyMixing:
+
+    @method_decorator(staff_member_required)
+    def dispatch(self, *args, **kwargs):
+        return super().dispatch(*args, **kwargs)
 
 
 class LugaresVotacionGeoJSON(GeoJSONLayerView):
@@ -17,13 +26,13 @@ class LugaresVotacionGeoJSON(GeoJSONLayerView):
         return qs.filter(latitud__isnull=False)
 
 
-class EscuelaDetailView(DetailView):
+class EscuelaDetailView(StaffOnlyMixing, DetailView):
     template_name = "elecciones/detalle_escuela.html"
     model = LugarVotacion
 
 
 # Create your views here.
-class Mapa(TemplateView):
+class Mapa(StaffOnlyMixing, TemplateView):
     template_name = "elecciones/mapa.html"
 
     def get_context_data(self, **kwargs):
