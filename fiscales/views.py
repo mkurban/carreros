@@ -302,9 +302,9 @@ def cargar_resultados(request, mesa_numero):
             vmr.save()
 
         if formset.warnings:
-            messages.warning(request, 'Guardamos los resultados, pero')
+            messages.warning(request, 'Guardado con inconsistencias')
         else:
-            messages.success(request, 'Los resultados se guardaron correctamente')
+            messages.success(request, 'Guardado correctamente')
 
 
         return redirect(reverse('detalle-mesa', args=(mesa.numero,)))

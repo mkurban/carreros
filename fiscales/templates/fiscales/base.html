@@ -36,6 +36,11 @@
            <a href="{{ url }}" class="collapsible-header" data-turbolinks="false">Mis Contactos<i class="material-icons">contacts</i></a>
         </li>
 
+
+        <li>
+            <a href="{% url 'logout' %}" class="collapsible-header"  data-turbolinks="false">Cerrar sesión<i class="material-icons">exit_to_app</i></a>
+        </li>
+
         {% endblock sidenav_items %}
 
 
