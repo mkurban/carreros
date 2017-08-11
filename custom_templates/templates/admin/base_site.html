@@ -11,17 +11,12 @@
 
 
 {% block userlinks %}
-    <a href="{% url 'mapa' %}">Ver mapa</a> /
+    <a href="{% url 'mapa' %}">Mapa</a> /
 
-    {% if site_url %}
-        <a href="{{ site_url }}">{% trans 'View site' %}</a> /
-    {% endif %}
-    {% if user.is_active and user.is_staff %}
-        {% url 'django-admindocs-docroot' as docsroot %}
-        {% if docsroot %}
-            <a href="{{ docsroot }}">{% trans 'Documentation' %}</a> /
-        {% endif %}
-    {% endif %}
+    <a href="{% url 'admin:fiscales_fiscal_changelist' %}">Fiscales</a> /
+
+    <a href="{% url 'admin:elecciones_lugarvotacion_changelist' %}">Escuelas</a> /
+
     {% if user.has_usable_password %}
     <a href="{% url 'admin:password_change' %}">{% trans 'Change password' %}</a> /
     {% endif %}
