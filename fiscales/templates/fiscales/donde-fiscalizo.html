@@ -74,6 +74,27 @@
                   {% endfor %}
                   </td>
               </tr>
+
+              {% if  object.asignacion %}
+              <tr>
+                  <th>
+                      Estás
+                  </th>
+
+                  <td>
+
+                    {% if object.asignacion.esta_presente %}Presente{% else %}Ausente{% endif %}
+
+                     <button  type="submit" class="waves-effect waves-light btn white-text">
+                      {% if object.asignacion.esta_presente %}Tengo que retirarme{% else %}Estoy presente{% endif %}
+
+                      </button>
+
+                  </td>
+              </tr>
+
+               {% endif %}
+
               {% if object.asignacion.comida != 'no asignada' %}
               <tr>
                 <th>
@@ -93,38 +114,6 @@
 
               {% endif %}
 
-               <tr>
-                  <th>Hora a la que llegaste</th>
-                  <td> {{ object.asignacion.ingreso|time }}
-                    {% if not object.asignacion.esta_presente %}
-
-
-                    <button  type="submit" class="waves-effect waves-light btn white-text">
-                        {% if not object.asignacion.egreso %}
-                            Avisar que llegué    {# todavia no estuvo nunca #}
-                        {% else %}
-                            Avisar que volví
-                        {% endif %}
-                    </button>
-
-                    {% endif %}
-
-                  </td>
-              </tr>
-
-              <tr>
-                  <th>Hora a la que te fuiste</th>
-                  <td> {{ object.asignacion.egreso|time }}
-
-                  {% if object.asignacion.esta_presente  %}
-
-                    <button  type="submit" class="waves-effect waves-light btn white-text">
-                      Tengo que retirarme
-                      </button>
-                  {% endif %}
-
-                  </td>
-              </tr>
 
 
 
