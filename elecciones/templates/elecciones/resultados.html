@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+    {% if mesas_list %}
+    <ul>
+        {% for mesa in mesas_list %}
+        <li><a href="/elecciones/resultados/mesa/{{ mesa.numero }}">{{ mesa.numero }} - {{ mesa.lugarvotacion.nombre }} </a></li>
+        {% endfor %}
+    </ul>
+    {% else %}
+    <p>Sin Mesas disponibles?.</p>
+    {% endif %}
+</body>
+</html>
