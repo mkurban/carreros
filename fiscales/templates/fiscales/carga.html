@@ -18,9 +18,10 @@
         <div class="card-content">
             <div class="card-title"> Mesa {{ object.numero }}</div>
 
-                <table>
-                    {{ formset.as_table }}
-                </table>
+            {{ formset.management_form }}
+            {% for form in formset %}
+                {% form %}{% endform %}
+            {% endfor %}
 
         </div>
 
