@@ -144,6 +144,7 @@ class CircuitoAdmin(admin.ModelAdmin):
     list_display = ('__str__', 'seccion')
     list_display_links = list_display
     list_filter = ('seccion',)
+    filter_horizontal = ('referentes',)
     search_fields = (
         'nombre', 'numero',
     )

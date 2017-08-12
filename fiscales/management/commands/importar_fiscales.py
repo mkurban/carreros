@@ -69,7 +69,7 @@ class Command(BaseCommand):
             raise CommandError(f'Archivo no válido\n {e}')
 
         for row in data:
-            if not row['Nombres']:
+            if not row['Nombres'] or not row['mesa_desde']:
                 continue
 
             if not row['DNI']:
@@ -89,6 +89,9 @@ class Command(BaseCommand):
                 self.warning(f'{fiscal} existente (dni {fiscal.dni})')
 
             self.add_telefono(fiscal, row['Telefono'])
+
+
+
 
             if row['mesa_hasta']:
                 try:
