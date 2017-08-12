@@ -117,6 +117,9 @@ class AsignacionFiscalAdmin(AdminRowActionsMixin, admin.ModelAdmin):
 
 
 class AsignacionFiscalGeneralAdmin(AsignacionFiscalAdmin):
+
+    list_filter = ('lugar_votacion__circuito',) + AsignacionFiscalAdmin.list_filter
+
     list_display = ('fiscal', 'lugar_votacion', 'ingreso', 'egreso', 'comida')
     search_fields = (
         'fiscal__apellido', 'fiscal__direccion', 'fiscal__dni',
@@ -129,6 +132,9 @@ class AsignacionFiscalGeneralAdmin(AsignacionFiscalAdmin):
 
 
 class AsignacionFiscalDeMesaAdmin(AsignacionFiscalAdmin):
+
+    list_filter = ('mesa__lugar_votacion__circuito',) + AsignacionFiscalAdmin.list_filter
+
     list_display = ('fiscal', 'mesa', 'ingreso', 'egreso', 'comida')
     raw_id_fields = ("mesa", "fiscal")
     search_fields = (
