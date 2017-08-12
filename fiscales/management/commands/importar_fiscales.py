@@ -62,7 +62,6 @@ class Command(BaseCommand):
         self.warning(f'Ignorado: {error}')
 
     def handle(self, *args, **options):
-        import ipdb; ipdb.set_trace()
         path = options['csv']
         try:
             data = DictReader(open(path))
