@@ -14,10 +14,10 @@ from prensa.forms import DatoDeContactoModelForm
 def apellido_nombres(nombre, apellido):
     raw = f'{nombre} {apellido}'.strip()
     nombre = HumanName(raw)
-    apellido = nombre.last
-    nombres = f'{nombre.first}'
+    apellido = nombre.last.title()
+    nombres = nombre.first.title()
     if nombre.middle:
-        nombres += f' {nombre.middle}'
+        nombres += f' {nombre.middle}'.title()
     return apellido, nombres
 
 
@@ -61,9 +61,8 @@ class Command(BaseCommand):
             error = d.errors
         self.warning(f'Ignorado: {error}')
 
-
-
     def handle(self, *args, **options):
+        import ipdb; ipdb.set_trace()
         path = options['csv']
         try:
             data = DictReader(open(path))
@@ -75,7 +74,7 @@ class Command(BaseCommand):
                 continue
 
             if not row['DNI']:
-                self.warning(f"{row['Nombre']} fiscal sin dni")
+                self.warning(f"{row['Nombres']} fiscal sin dni")
                 continue
             apellido, nombres = apellido_nombres(row['Nombres'], row['Apellidos'])
             tipo = 'general' if row['mesa_hasta'] else 'de_mesa'
