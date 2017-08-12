@@ -68,9 +68,9 @@
                     Mesa asignada
                   {% endif %} </th>
                   <td>
-                  {% for mesa in object.mesas_asignadas %}
-                    <a href="{% url 'detalle-mesa' mesa.numero %}">Nº {{ mesa.numero }}</a>
-                     {% if not forloop.last %} | {% endif %}
+                  {% for mesa in escuela.mesas.all %}
+                    <a class="waves-effect waves-teal btn-flat" href="{% url 'detalle-mesa' mesa.numero %}">Nº {{ mesa.numero }}</a>
+                     {% if not forloop.last %}  {% endif %}
                   {% endfor %}
                   </td>
               </tr>
