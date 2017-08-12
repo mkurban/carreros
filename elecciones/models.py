@@ -162,6 +162,7 @@ class Partido(models.Model):
     orden = models.PositiveIntegerField(help_text='Orden opcion')
     numero = models.PositiveIntegerField()
     nombre = models.CharField(max_length=100)
+    nombre_corto = models.CharField(max_length=10, default='')
     ordering = ['orden']
 
 
@@ -172,6 +173,7 @@ class Partido(models.Model):
 class Opcion(models.Model):
     orden = models.PositiveIntegerField(help_text='Orden en el acta')
     nombre = models.CharField(max_length=100)
+    nombre_corto = models.CharField(max_length=10, default='')
     partido = models.ForeignKey(Partido, null=True, blank=True)   # blanco, / recurrido / etc
     orden = models.PositiveIntegerField(
         help_text='Orden en la boleta', null=True, blank=True)

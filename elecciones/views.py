@@ -63,13 +63,13 @@ def resultados(request):
 
 def resultados_mesa(request, nro):
     def extrac_chart_data(ops):
-        return json.dumps([{'key': op.opcion.nombre, 'y': op.votos} for op in ops if not op.opcion.nombre.find("TOTAL")==0])
+        return json.dumps([{'key': op.opcion.nombre_corto, 'y': op.votos} for op in ops if not op.opcion.nombre.find("TOTAL")==0])
     mesa = Mesa.objects.get(numero=nro)
     reporte = VotoMesaReportado.objects.filter(mesa__numero=mesa.numero, votos__isnull=False)
     rep_chart = extrac_chart_data(reporte)
     parte = VotoMesaOficial.objects.filter(mesa__numero=mesa.numero, votos__isnull=False)
     par_chart = extrac_chart_data(parte)
-    template = loader.get_template('elecciones/mesa.html')
+    template = loader.get_template('elecciones/resultados_mesa.html')
     context = {
         'mesa': mesa,
         'reporte': reporte,
