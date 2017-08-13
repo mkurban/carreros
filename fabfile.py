@@ -41,6 +41,13 @@ def deploy():
     run("source /virtualenvs/carreros/bin/activate")
     with cd('/projects/carreros'):
         run("git pull")
+        run("supervisorctl restart carreros")
+
+
+def full_deploy():
+    run("source /virtualenvs/carreros/bin/activate")
+    with cd('/projects/carreros'):
+        run("git pull")
         run("/virtualenvs/carreros/bin/pip install -r requirements.txt")
         run("/virtualenvs/carreros/bin/python manage.py migrate")
         run("/virtualenvs/carreros/bin/python manage.py collectstatic --noinput")
