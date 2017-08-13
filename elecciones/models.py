@@ -101,9 +101,10 @@ class LugarVotacion(models.Model):
 
     @property
     def color(self):
-        if not self.asignacion_actual:
+
+        if not self.asignacion.exists():
             return 'red'
-        elif self.asignacion_actual.esta_presente:
+        elif self.asignacion.filter(ingreso__isnull=False).exists():
             return 'green'
         return 'orange'
 
@@ -157,7 +158,6 @@ class Mesa(models.Model):
     def proximo_estado(self):
         if self.estado == 'ESCRUTADA':
             return self.estado
-        list(Mesa.ESTADOS)
         pos = Mesa.ESTADOS_.index(self.estado)
         return Mesa.ESTADOS_[pos + 1]
 
