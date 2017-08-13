@@ -14,6 +14,7 @@ from django.contrib.admin.views.decorators import staff_member_required
 from django.utils.decorators import method_decorator
 from django.contrib.auth.decorators import user_passes_test
 
+from rest_framework.exceptions import NotFound
 
 class StaffOnlyMixing:
 
@@ -81,6 +82,59 @@ def resultados_mesa(request, nro):
         'par_chart': par_chart
     }
     return HttpResponse(template.render(context, request))
+
+def resultados_mesas(request):
+    from urllib import parse
+    idss = []
+    if 'ids' in request.GET:
+        query = request.GET.urlencode()
+        ids = f'?{query}'
+        ids = parse.unquote(ids)
+        idss = ids[5:].split(",")
+
+    mesas = Mesa.objects.filter(numero__in=idss)
+    if len(mesas) > 0:
+        reporte = VotoMesaReportado.objects.filter(mesa__numero__in=idss, opcion__obligatorio=True, votos__isnull=False)\
+            .values('opcion__nombre','opcion__nombre_corto','opcion__partido__nombre_corto') \
+            .annotate(votos=Sum("votos")) \
+            .order_by("-votos")
+        rep_otros = VotoMesaReportado.objects.filter(mesa__numero__in=idss, opcion__obligatorio=False, votos__isnull=False) \
+            .aggregate(Sum("votos"))
+        reporte_l = [o for o in reporte]
+        reporte_l = reporte_l + ([{'opcion__nombre':"Otros", "votos": rep_otros["votos__sum"]}] if rep_otros["votos__sum"] else [])
+        reporte_l = (reporte_l[1:] + [reporte_l[0]] if reporte_l else reporte_l)
+
+        parte = VotoMesaOficial.objects.filter(mesa__numero=mesas[0].numero, opcion__obligatorio=True, votos__isnull=False) \
+            .values('opcion__nombre','opcion__nombre_corto','opcion__partido__nombre_corto') \
+            .annotate(votos=Sum("votos")) \
+            . order_by("-votos")
+        par_otros = VotoMesaOficial.objects.filter(mesa__numero__in=idss, opcion__obligatorio=False, votos__isnull=False) \
+            .aggregate(Sum("votos"))
+        parte_l = [o for o in parte]
+        parte_l = parte_l + ([{'opcion__nombre':"Otros", "votos": par_otros["votos__sum"]}] if par_otros["votos__sum"] else [])
+        parte_l = (parte_l[1:] + [parte_l[0]] if parte_l else parte_l)
+
+        def extract_chart_data(ops, is_parte):
+            return json.dumps([{'key': op["opcion__nombre_corto"], 'y': op["votos"]} \
+                               for op in ops \
+                               if not op["opcion__nombre"].find("TOTAL")==0] \
+                              + ([{'key':"Otros", 'y':rep_otros["votos__sum"]}] if not is_parte else [{'key':"Otros", 'y':par_otros["votos__sum"]}]))
+        rep_chart = extract_chart_data(reporte, False)
+        par_chart = extract_chart_data(parte, True)
+
+        template = loader.get_template('elecciones/resultados_mesas.html')
+        context = {
+            'ids': idss,
+            'mesas': mesas,
+            'reporte': reporte_l,
+            'rep_chart': rep_chart,
+            'parte_de_mesa':parte_l,
+            'par_chart': par_chart
+        }
+        print(context)
+        return HttpResponse(template.render(context, request))
+    else:
+        raise NotFound(detail="Error, Mesas no encontradas", code=404)
 
 
 @user_passes_test(lambda u: u.is_superuser)
