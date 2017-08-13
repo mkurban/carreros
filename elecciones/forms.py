@@ -5,7 +5,7 @@ from fiscales.models import Fiscal
 
 class ReferentesForm(forms.Form):
     referentes = forms.ModelMultipleChoiceField(
-        queryset=Fiscal.objects.filter(tipo='general'), required=True,
+        queryset=Fiscal.objects.filter(tipo='general'), required=False,
         widget=FilteredSelectMultiple('Referentes', is_stacked=False)
     )
 
