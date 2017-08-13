@@ -9,9 +9,11 @@ from django.views.generic.base import TemplateView
 from django.views.generic.detail import DetailView
 from django.urls import reverse
 from django.shortcuts import render, redirect
+from django.contrib import messages
 from djgeojson.views import GeoJSONLayerView
 from .models import LugarVotacion, Circuito
-from .forms import ReferentesForm
+from fiscales.models import  Fiscal
+from .forms import ReferentesForm, LoggueConMesaForm
 from django.contrib.admin.views.decorators import staff_member_required
 from django.utils.decorators import method_decorator
 from django.contrib.auth.decorators import user_passes_test
@@ -168,3 +170,17 @@ def asignar_referentes(request):
         return redirect('admin:elecciones_circuito_changelist')
 
     return render(request, 'elecciones/add_referentes.html', {'form':form, 'ids': ids, 'qs': qs})
+
+
+@user_passes_test(lambda u: u.is_superuser)
+def fiscal_mesa(request):
+    form = LoggueConMesaForm(request.POST if request.method == 'POST' else None)
+
+    if form.is_valid():
+        f = Fiscal.objects.filter(asignacion_escuela__lugar_votacion__mesas__numero=form.cleaned_data['mesa']).first()
+        if f:
+            return redirect(f'/hijack/{f.user.id}/',)
+        else:
+            messages.warning(request, "mesa no existe o no sin fiscal")
+
+    return render(request, 'elecciones/add_referentes.html', {'form':form})
