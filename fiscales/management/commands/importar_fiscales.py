@@ -1,3 +1,4 @@
+import re
 from csv import DictReader
 from django.core.exceptions import ValidationError
 from django.contrib.contenttypes.models import ContentType
@@ -75,10 +76,12 @@ class Command(BaseCommand):
             if not row['DNI']:
                 self.warning(f"{row['Nombres']} fiscal sin dni")
                 continue
+
+            dni = re.sub("[^0-9]", "", row['DNI'])
             apellido, nombres = apellido_nombres(row['Nombres'], row['Apellidos'])
             tipo = 'general' if row['mesa_hasta'] else 'de_mesa'
 
-            fiscal, created = Fiscal.objects.get_or_create(dni=row['DNI'], defaults={
+            fiscal, created = Fiscal.objects.get_or_create(dni=dni, defaults={
                 'nombres': nombres,
                 'apellido': apellido,
                 'tipo': tipo

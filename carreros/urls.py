@@ -5,9 +5,16 @@ from elecciones import urls as elecciones_urls
 from fiscales import urls as fiscales_urls
 from fiscales.views import choice_home
 from elecciones import views as views_elecciones
+from fiscales.forms import AuthenticationFormCustomError
+from django.contrib.auth import views as auth_views
+
+
 
 urlpatterns = [
     url(r'^$', choice_home, name="home"),
+    url(r'^login/$', auth_views.LoginView.as_view(authentication_form=AuthenticationFormCustomError)),
+    url(r'^accounts/login/$', auth_views.LoginView.as_view(authentication_form=AuthenticationFormCustomError)),
+
     url(r'', include(frontend_urls)),
     url(r'', include('django.contrib.auth.urls')),
     url(r'^hijack/', include('hijack.urls')),

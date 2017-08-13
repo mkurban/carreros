@@ -1,3 +1,4 @@
+import re
 from django.db import models
 from django.conf import settings
 from django.db.models import Q
@@ -179,7 +180,7 @@ class AsignacionFiscalGeneral(AsignacionFiscal):
 def crear_user_para_fiscal(sender, instance=None, created=False, **kwargs):
     if not instance.user and instance.dni:
         user = User(
-            username=instance.dni,
+            username=re.sub("[^0-9]", "", instance.dni),
             first_name=instance.nombres,
             last_name=instance.apellido,
             is_active=True,

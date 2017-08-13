@@ -5,12 +5,21 @@ from material import Layout, Row
 from .models import Fiscal
 from elecciones.models import Mesa, VotoMesaReportado, Eleccion
 from localflavor.ar.forms import ARDNIField
+from django.contrib.auth.forms import AuthenticationForm
+from django.utils.translation import ugettext_lazy as _
 
 
 OPCION_CANTIDAD_DE_SOBRES = 22
 OPCION_HAN_VOTADO = 21
 OPCION_DIFERENCIA = 23
 OPCION_TOTAL_VOTOS = 20
+
+
+class AuthenticationFormCustomError(AuthenticationForm):
+    error_messages = {
+        'invalid_login': "Por favor introduzca un nombre de usuario y una contraseña correctos. Prueba tu DNI o teléfono sin puntos, guiones ni espacios",
+        'inactive': _("This account is inactive."),
+    }
 
 
 
