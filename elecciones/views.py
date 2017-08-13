@@ -104,7 +104,7 @@ def resultados_mesas(request):
         reporte_l = reporte_l + ([{'opcion__nombre':"Otros", "votos": rep_otros["votos__sum"]}] if rep_otros["votos__sum"] else [])
         reporte_l = (reporte_l[1:] + [reporte_l[0]] if reporte_l else reporte_l)
 
-        parte = VotoMesaOficial.objects.filter(mesa__numero=mesas[0].numero, opcion__obligatorio=True, votos__isnull=False) \
+        parte = VotoMesaOficial.objects.filter(mesa__numero__in=idss, opcion__obligatorio=True, votos__isnull=False) \
             .values('opcion__nombre','opcion__nombre_corto','opcion__partido__nombre_corto') \
             .annotate(votos=Sum("votos")) \
             . order_by("-votos")
@@ -131,7 +131,6 @@ def resultados_mesas(request):
             'parte_de_mesa':parte_l,
             'par_chart': par_chart
         }
-        print(context)
         return HttpResponse(template.render(context, request))
     else:
         raise NotFound(detail="Error, Mesas no encontradas", code=404)
