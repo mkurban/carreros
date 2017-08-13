@@ -134,7 +134,7 @@ class AsignacionFiscalAdmin(AdminRowActionsMixin, admin.ModelAdmin):
         row_actions = [
             {
                 'label': 'Ver fiscal',
-                'url': reverse('admin:fiscales_fiscal_changelist') + f'?id={obj.id}',
+                'url': reverse('admin:fiscales_fiscal_changelist') + f'?id={obj.fiscal.id}',
                 'enabled': True,
             }
         ]
