@@ -7,6 +7,8 @@ from django.conf import settings
 from djgeojson.fields import PointField
 from django.template.loader import render_to_string
 from django.utils.safestring import mark_safe
+from django.dispatch import receiver
+from django.db.models.signals import m2m_changed
 from model_utils.fields import StatusField, MonitorField
 from model_utils import Choices
 
@@ -66,6 +68,12 @@ class LugarVotacion(models.Model):
     class Meta:
         verbose_name = 'Lugar de votación'
         verbose_name_plural = "Lugares de votación"
+
+
+    def get_absolute_url(self):
+        url = reverse('donde-fiscalizo')
+        return f'{url}#donde{self.id}'
+
 
     def save(self, *args, **kwargs):
 
@@ -232,3 +240,18 @@ class VotoMesaReportado(AbstractVotoMesa):
 
 class VotoMesaOficial(AbstractVotoMesa):
     pass
+
+
+@receiver(m2m_changed, sender=Circuito.referentes.through)
+def referentes_cambiaron(sender, instance, action, reverse, model, pk_set, using, **kwargs):
+    # cuando se asigna a un circuito, se crean las asignaciones a todas las escuelas del circuito
+    from fiscales.models import AsignacionFiscalGeneral, Fiscal
+    if action == 'post_remove':
+        # quitar a estos fiscales cualquier asignacion a escuelas del circuito
+        AsignacionFiscalGeneral.objects.filter(lugar_votacion__circuito=instance, fiscal__id__in=pk_set).delete()
+    elif action == 'post_add':
+        fiscales = Fiscal.objects.filter(id__in=pk_set)
+        escuelas = LugarVotacion.objects.filter(circuito=instance)
+        for fiscal in fiscales:
+            for escuela in escuelas:
+                AsignacionFiscalGeneral.objects.create(lugar_votacion=escuela, fiscal=fiscal)

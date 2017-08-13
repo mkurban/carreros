@@ -52,6 +52,10 @@ class Fiscal(models.Model):
         return self.tipo == Fiscal.TIPO.general
 
     @property
+    def es_referente(self):
+        return self.es_referente_de_circuito.exists()
+
+    @property
     def telefonos(self):
         return self.datos_de_contacto.filter(tipo='teléfono').values_list('valor', flat=True)
 
@@ -74,7 +78,7 @@ class Fiscal(models.Model):
 
     @property
     def circuitos(self):
-        return [e.circuito for e in self.escuelas]
+        return {e.circuito for e in self.escuelas}
 
     @property
     def asignacion(self):

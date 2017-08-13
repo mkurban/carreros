@@ -6,10 +6,13 @@ from .models import *
 from django.views.generic.base import TemplateView
 from django.views.generic.detail import DetailView
 from django.urls import reverse
+from django.shortcuts import render, redirect
 from djgeojson.views import GeoJSONLayerView
-from .models import LugarVotacion
+from .models import LugarVotacion, Circuito
+from .forms import ReferentesForm
 from django.contrib.admin.views.decorators import staff_member_required
 from django.utils.decorators import method_decorator
+from django.contrib.auth.decorators import user_passes_test
 
 
 class StaffOnlyMixing:
@@ -78,3 +81,22 @@ def resultados_mesa(request, nro):
         'par_chart': par_chart
     }
     return HttpResponse(template.render(context, request))
+
+
+@user_passes_test(lambda u: u.is_superuser)
+def asignar_referentes(request):
+    ids = request.GET.get('ids')
+    if not ids:
+        return redirect('admin:elecciones_circuito_changelist')
+
+    qs = Circuito.objects.filter(id__in=ids.split(','))
+    initial = Circuito.objects.get(id=ids[0]).referentes.all()
+
+    form = ReferentesForm(request.POST if request.method == 'POST' else None,
+                          initial={'referentes': initial})
+    if form.is_valid():
+        for circuito in qs:
+            circuito.referentes.set(form.cleaned_data['referentes'])
+        return redirect('admin:elecciones_circuito_changelist')
+
+    return render(request, 'elecciones/add_referentes.html', {'form':form, 'ids': ids, 'qs': qs})

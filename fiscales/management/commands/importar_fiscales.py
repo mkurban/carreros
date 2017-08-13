@@ -14,10 +14,10 @@ from prensa.forms import DatoDeContactoModelForm
 def apellido_nombres(nombre, apellido):
     raw = f'{nombre} {apellido}'.strip()
     nombre = HumanName(raw)
-    apellido = nombre.last
-    nombres = f'{nombre.first}'
+    apellido = nombre.last.title()
+    nombres = nombre.first.title()
     if nombre.middle:
-        nombres += f' {nombre.middle}'
+        nombres += f' {nombre.middle}'.title()
     return apellido, nombres
 
 
@@ -61,8 +61,6 @@ class Command(BaseCommand):
             error = d.errors
         self.warning(f'Ignorado: {error}')
 
-
-
     def handle(self, *args, **options):
         path = options['csv']
         try:
@@ -71,11 +69,11 @@ class Command(BaseCommand):
             raise CommandError(f'Archivo no válido\n {e}')
 
         for row in data:
-            if not row['Nombres']:
+            if not row['Nombres'] or not row['mesa_desde']:
                 continue
 
             if not row['DNI']:
-                self.warning(f"{row['Nombre']} fiscal sin dni")
+                self.warning(f"{row['Nombres']} fiscal sin dni")
                 continue
             apellido, nombres = apellido_nombres(row['Nombres'], row['Apellidos'])
             tipo = 'general' if row['mesa_hasta'] else 'de_mesa'
@@ -91,6 +89,9 @@ class Command(BaseCommand):
                 self.warning(f'{fiscal} existente (dni {fiscal.dni})')
 
             self.add_telefono(fiscal, row['Telefono'])
+
+
+
 
             if row['mesa_hasta']:
                 try:

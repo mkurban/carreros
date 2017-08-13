@@ -1,5 +1,11 @@
 {% extends "fiscales/donde-fiscalizo.html" %}
 
+{% block breadcrumbs_items %}
+<a href="{{ object.lugar_votacion.get_absolute_url }}">{{ mesa.lugar_votacion }}</a>
+<a class="active">Mesa Nº {{ object.numero }}</a>
+{% endblock %}
+
+
 {% block page_title %}Mesa Nº {{ object.numero }} {% endblock %}
 
 {% block left-panel %}

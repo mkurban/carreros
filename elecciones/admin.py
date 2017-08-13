@@ -96,6 +96,14 @@ class LugarVotacionAdmin(AdminRowActionsMixin, LeafletGeoAdmin):
             'url': url,
             'enabled': True
         })
+
+        if obj.asignacion_actual and obj.asignacion_actual.fiscal:
+            row_actions.append({
+                'label': 'Fiscal',
+                'url': reverse('admin:fiscales_fiscal_changelist') + f'?id={obj.asignacion_actual.fiscal.id}',
+                'enabled': True
+            })
+
         row_actions += super().get_row_actions(obj)
         return row_actions
 
@@ -144,9 +152,20 @@ class CircuitoAdmin(admin.ModelAdmin):
     list_display = ('__str__', 'seccion')
     list_display_links = list_display
     list_filter = ('seccion',)
+    filter_horizontal = ('referentes',)
     search_fields = (
         'nombre', 'numero',
     )
+    actions = ['asignar']
+
+    def asignar(self, request, queryset):
+        selected = request.POST.getlist(admin.ACTION_CHECKBOX_NAME)
+        ids = ",".join(selected)
+        url = reverse('asignar-referentes')
+        return HttpResponseRedirect(f'{url}?ids={ids}')
+
+    asignar.short_description = "Asignar referentes"
+
 
 
 
