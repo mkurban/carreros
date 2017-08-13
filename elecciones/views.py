@@ -102,13 +102,16 @@ def resultados_mesas_ids(request):
         ids = f'?{query}'
         ids = parse.unquote(ids)
         idss = ids[5:].split(",")
+        mesas = Mesa.objects.filter(id__in=idss)
+    else:
+        mesas = Mesa.objects.filter(es_testigo=True)
 
-    mesas = Mesa.objects.filter(id__in=idss)
     if len(mesas) > 0:
         nums = [str(m.numero) for m in mesas]
         return redirect('/elecciones/resultados/mesas?ids=' + ",".join(nums))
     else:
         raise Http404("Error, Mesas no encontradas")
+
 
 def resultados_mesas(request):
     idss = []

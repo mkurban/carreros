@@ -32,11 +32,15 @@
                         <div class="cell">Porc.</div>
                     </div>
                     {% for op in reporte %}
+                    {% if op.opcion__nombre != 'Otros' %}
+
                     <div class="row">
                         <div class="cell">{{ op.opcion__nombre}} {% if op.opcion__partido__nombre_corto %}({{op.opcion__partido__nombre_corto}}) {% endif %}</div>
                         <div class="cell">{{ op.votos }}</div>
                         <div class="cell">{{ op.porcentaje }}</div>
                     </div>
+
+                    {% endif %}
                     {% endfor %}
                 </div>
                 <div class="chart"><svg id="svg_reporte"></svg></div>
