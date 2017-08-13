@@ -29,11 +29,13 @@
                     <div class="row header">
                         <div class="cell">Opción</div>
                         <div class="cell">Votos</div>
+                        <div class="cell">Porc.</div>
                     </div>
                     {% for op in reporte %}
                     <div class="row">
                         <div class="cell">{{ op.opcion__nombre}} {% if op.opcion__partido__nombre_corto %}({{op.opcion__partido__nombre_corto}}) {% endif %}</div>
                         <div class="cell">{{ op.votos }}</div>
+                        <div class="cell">{{ op.porcentaje }}</div>
                     </div>
                     {% endfor %}
                 </div>

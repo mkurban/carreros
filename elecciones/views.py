@@ -119,6 +119,13 @@ def resultados_mesas(request):
             .aggregate(Sum("votos"))
         reporte_l = [o for o in reporte]
         reporte_l = reporte_l + ([{'opcion__nombre':"Otros", "votos": rep_otros["votos__sum"]}] if rep_otros["votos__sum"] else [])
+        if len(reporte_l) > 0:
+            total_votos= float(reporte_l[0]["votos"])
+            for e in reporte_l:
+                if total_votos > 0:
+                    e["porcentaje"] = "{:10.2f}".format(100.0 * (float(e["votos"]) / total_votos))
+                else:
+                    e["porcentaje"] = 0.0
         reporte_l = (reporte_l[1:] + [reporte_l[0]] if reporte_l else reporte_l)
 
         parte = VotoMesaOficial.objects.filter(mesa__numero__in=idss, opcion__obligatorio=True, votos__isnull=False) \
@@ -129,6 +136,13 @@ def resultados_mesas(request):
             .aggregate(Sum("votos"))
         parte_l = [o for o in parte]
         parte_l = parte_l + ([{'opcion__nombre':"Otros", "votos": par_otros["votos__sum"]}] if par_otros["votos__sum"] else [])
+        if len(parte_l) > 0:
+            total_votos_p= float(parte_l[0]["votos"])
+            for e in parte_l:
+                if total_votos_p > 0:
+                    e["porcentaje"] = "{:10.2f}".format(100.0 * (float(e["votos"]) / total_votos))
+                else:
+                    e["porcentaje"] = 0.0
         parte_l = (parte_l[1:] + [parte_l[0]] if parte_l else parte_l)
 
         def extract_chart_data(ops, is_parte):
