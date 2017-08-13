@@ -37,6 +37,9 @@ class LugaresVotacionGeoJSON(GeoJSONLayerView):
             qs = qs.filter(id__in=ids.split(','))
         elif 'todas' in self.request.GET:
             return qs
+        elif 'testigo' in self.request.GET:
+            qs = qs.filter(mesas__es_testigo=True).distinct()
+
         return qs
 
 
@@ -57,8 +60,8 @@ class Mapa(StaffOnlyMixing, TemplateView):
         if 'ids' in self.request.GET:
             query = self.request.GET.urlencode()
             geojson_url += f'?{query}'
-        elif 'todas' in self.request.GET:
-            query = 'todas=si'
+        elif 'testigo' in self.request.GET:
+            query = 'testigo=si'
             geojson_url += f'?{query}'
 
         context['geojson_url'] = geojson_url
