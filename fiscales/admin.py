@@ -41,6 +41,25 @@ class AsignadoFilter(admin.SimpleListFilter):
         return queryset
 
 
+class ReferenteFilter(admin.SimpleListFilter):
+    title = 'Referente'
+    parameter_name = 'referente'
+
+    def lookups(self, request, model_admin):
+        return (
+            ('sí', 'sí'),
+            ('no', 'no'),
+        )
+
+    def queryset(self, request, queryset):
+        value = self.value()
+        if value:
+            isnull = value == 'no'
+            queryset = queryset.filter(es_referente_de_circuito__isnull=isnull)
+        return queryset
+
+
+
 class FiscalAdmin(AdminRowActionsMixin, admin.ModelAdmin):
 
     def get_row_actions(self, obj):
@@ -70,6 +89,13 @@ class FiscalAdmin(AdminRowActionsMixin, admin.ModelAdmin):
             'enabled': True
         })
 
+        escuelas_ids = ','.join(str(id) for id in obj.escuelas.values_list('id', flat=True))
+        row_actions.append({
+                'label': 'Escuelas asignadas',
+                'url': reverse('admin:elecciones_lugarvotacion_changelist') + f'?id__in={escuelas_ids}',
+                'enabled': True
+        })
+
         row_actions += super().get_row_actions(obj)
         return row_actions
 
@@ -89,7 +115,7 @@ class FiscalAdmin(AdminRowActionsMixin, admin.ModelAdmin):
         'asignacion_mesa__mesa__lugar_votacion__nombre'
     )
     list_display_links = ('__str__',)
-    list_filter = (AsignadoFilter, 'tipo', 'organizacion')
+    list_filter = (AsignadoFilter, 'tipo', ReferenteFilter, 'organizacion')
     readonly_fields = ('mesas_desde_hasta',)
     inlines = [
         ContactoAdminInline,

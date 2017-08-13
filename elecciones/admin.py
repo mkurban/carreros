@@ -96,6 +96,14 @@ class LugarVotacionAdmin(AdminRowActionsMixin, LeafletGeoAdmin):
             'url': url,
             'enabled': True
         })
+
+        if obj.asignacion_actual and obj.asignacion_actual.fiscal:
+            row_actions.append({
+                'label': 'Fiscal',
+                'url': reverse('admin:fiscales_fiscal_changelist') + f'?id={obj.asignacion_actual.fiscal.id}',
+                'enabled': True
+            })
+
         row_actions += super().get_row_actions(obj)
         return row_actions
 
