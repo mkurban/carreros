@@ -74,7 +74,7 @@ class Fiscal(models.Model):
 
     @property
     def circuitos(self):
-        return [e.circuito for e in self.escuelas]
+        return {e.circuito for e in self.escuelas}
 
     @property
     def asignacion(self):

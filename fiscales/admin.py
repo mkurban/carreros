@@ -84,7 +84,7 @@ class FiscalAdmin(AdminRowActionsMixin, admin.ModelAdmin):
     form = FiscalForm
     list_display = ('__str__', 'tipo', 'direccion', 'organizacion', 'dni', telefonos, asignado_a)
     search_fields = (
-        'apellido', 'direccion', 'dni',
+        'apellido', 'nombres', 'direccion', 'dni',
         'asignacion_escuela__lugar_votacion__nombre',
         'asignacion_mesa__mesa__lugar_votacion__nombre'
     )
@@ -122,7 +122,7 @@ class AsignacionFiscalGeneralAdmin(AsignacionFiscalAdmin):
 
     list_display = ('fiscal', 'lugar_votacion', 'ingreso', 'egreso', 'comida')
     search_fields = (
-        'fiscal__apellido', 'fiscal__direccion', 'fiscal__dni',
+        'fiscal__apellido', 'fiscal__nombres', 'fiscal__direccion', 'fiscal__dni',
         'lugar_votacion__nombre',
         'lugar_votacion__direccion',
         'lugar_votacion__barrio',
@@ -138,7 +138,7 @@ class AsignacionFiscalDeMesaAdmin(AsignacionFiscalAdmin):
     list_display = ('fiscal', 'mesa', 'ingreso', 'egreso', 'comida')
     raw_id_fields = ("mesa", "fiscal")
     search_fields = (
-        'fiscal__apellido', 'fiscal__direccion', 'fiscal__dni',
+        'fiscal__apellido', 'fiscal__nombres', 'fiscal__direccion', 'fiscal__dni',
         'mesa__numero',
         'mesa__lugar_votacion__nombre',
         'mesa__lugar_votacion__direccion',
