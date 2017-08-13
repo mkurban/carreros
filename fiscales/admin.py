@@ -55,7 +55,7 @@ class ReferenteFilter(admin.SimpleListFilter):
         value = self.value()
         if value:
             isnull = value == 'no'
-            queryset = queryset.filter(es_referente_de_circuito__isnull=isnull)
+            queryset = queryset.filter(es_referente_de_circuito__isnull=isnull).distinct()
         return queryset
 
 
