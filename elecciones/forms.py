@@ -3,6 +3,10 @@ from django.contrib.admin.widgets import FilteredSelectMultiple
 from fiscales.models import Fiscal
 
 
+class LoggueConMesaForm(forms.Form):
+    mesa = forms.IntegerField()
+
+
 class ReferentesForm(forms.Form):
     referentes = forms.ModelMultipleChoiceField(
         queryset=Fiscal.objects.filter(tipo='general'), required=False,
