@@ -35,7 +35,9 @@ class LugaresVotacionGeoJSON(GeoJSONLayerView):
         ids = self.request.GET.get('ids')
         if ids:
             qs = qs.filter(id__in=ids.split(','))
-        return qs.filter(latitud__isnull=False)
+        elif 'todas' in self.request.GET:
+            return qs
+        return qs
 
 
 class EscuelaDetailView(StaffOnlyMixing, DetailView):
@@ -55,6 +57,10 @@ class Mapa(StaffOnlyMixing, TemplateView):
         if 'ids' in self.request.GET:
             query = self.request.GET.urlencode()
             geojson_url += f'?{query}'
+        elif 'todas' in self.request.GET:
+            query = 'todas=si'
+            geojson_url += f'?{query}'
+
         context['geojson_url'] = geojson_url
         return context
 
@@ -103,13 +109,16 @@ def resultados_mesas_ids(request):
 
 def resultados_mesas(request):
     idss = []
+
     if 'ids' in request.GET:
         query = request.GET.urlencode()
         ids = f'?{query}'
         ids = parse.unquote(ids)
         idss = ids[5:].split(",")
+        mesas = Mesa.objects.filter(numero__in=idss)
+    else:
+        mesas = Mesa.objects.filter(es_testigo=True)
 
-    mesas = Mesa.objects.filter(numero__in=idss)
     if len(mesas) > 0:
         reporte = VotoMesaReportado.objects.filter(mesa__numero__in=idss, opcion__obligatorio=True, votos__isnull=False)\
             .values('opcion__nombre','opcion__nombre_corto','opcion__partido__nombre_corto') \
@@ -160,7 +169,7 @@ def resultados_mesas(request):
             'reporte': reporte_l,
             'rep_chart': rep_chart,
             'parte_de_mesa':parte_l,
-            'par_chart': par_chart
+            'par_chart': par_chart,
         }
         return HttpResponse(template.render(context, request))
     else:
