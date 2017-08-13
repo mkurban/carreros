@@ -1,6 +1,8 @@
 import json
+from urllib import parse
 
 from django.http import HttpResponse
+from django.http import Http404
 from django.template import loader
 from .models import *
 from django.views.generic.base import TemplateView
@@ -14,7 +16,6 @@ from django.contrib.admin.views.decorators import staff_member_required
 from django.utils.decorators import method_decorator
 from django.contrib.auth.decorators import user_passes_test
 
-from rest_framework.exceptions import NotFound
 
 class StaffOnlyMixing:
 
@@ -83,8 +84,22 @@ def resultados_mesa(request, nro):
     }
     return HttpResponse(template.render(context, request))
 
+def resultados_mesas_ids(request):
+    idss = []
+    if 'ids' in request.GET:
+        query = request.GET.urlencode()
+        ids = f'?{query}'
+        ids = parse.unquote(ids)
+        idss = ids[5:].split(",")
+
+    mesas = Mesa.objects.filter(id__in=idss)
+    if len(mesas) > 0:
+        nums = [str(m.numero) for m in mesas]
+        return redirect('/elecciones/resultados/mesas?ids=' + ",".join(nums))
+    else:
+        raise Http404("Error, Mesas no encontradas")
+
 def resultados_mesas(request):
-    from urllib import parse
     idss = []
     if 'ids' in request.GET:
         query = request.GET.urlencode()
@@ -133,7 +148,7 @@ def resultados_mesas(request):
         }
         return HttpResponse(template.render(context, request))
     else:
-        raise NotFound(detail="Error, Mesas no encontradas", code=404)
+        raise Http404("Error, Mesas no encontradas")
 
 
 @user_passes_test(lambda u: u.is_superuser)

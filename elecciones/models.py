@@ -154,6 +154,10 @@ class Mesa(models.Model):
         return self.votomesaoficial_set.aggregate(Sum('votos'))['votos__sum']
 
     @property
+    def tiene_reporte(self):
+        return self.votomesareportado_set.aggregate(Sum('votos'))['votos__sum']
+
+    @property
     def proximo_estado(self):
         if self.estado == 'ESCRUTADA':
             return self.estado
@@ -186,6 +190,7 @@ class Opcion(models.Model):
     orden = models.PositiveIntegerField(
         help_text='Orden en la boleta', null=True, blank=True)
     obligatorio = models.BooleanField(default=False)
+    es_contable = models.BooleanField(default=True)
 
     class Meta:
         verbose_name = 'Opción'
