@@ -61,6 +61,15 @@ def mostrar_en_mapa(modeladmin, request, queryset):
 mostrar_en_mapa.short_description = "Mostrar seleccionadas en el mapa"
 
 
+def mostrar_resultados_escuelas(modeladmin, request, queryset):
+    selected = request.POST.getlist(admin.ACTION_CHECKBOX_NAME)
+    ids = ",".join(selected)
+    mapa_url = reverse('resultados_escuelas')
+    return HttpResponseRedirect(f'{mapa_url}?ids={ids}')
+
+mostrar_resultados_escuelas.short_description = "Mostrar resultados de Escuelas seleccionadas"
+
+
 class LugarVotacionAdmin(AdminRowActionsMixin, LeafletGeoAdmin):
 
     def sección(o):
@@ -73,7 +82,7 @@ class LugarVotacionAdmin(AdminRowActionsMixin, LeafletGeoAdmin):
         'nombre', 'direccion', 'ciudad', 'barrio', 'mesas__numero'
     )
     show_full_result_count = False
-    actions = [mostrar_en_mapa]
+    actions = [mostrar_en_mapa, mostrar_resultados_escuelas]
 
     def get_row_actions(self, obj):
         row_actions = [
@@ -108,7 +117,17 @@ class LugarVotacionAdmin(AdminRowActionsMixin, LeafletGeoAdmin):
         return row_actions
 
 
+def mostrar_resultados_mesas(modeladmin, request, queryset):
+    selected = request.POST.getlist(admin.ACTION_CHECKBOX_NAME)
+    ids = ",".join(selected)
+    mapa_url = reverse('resultados_mesas_ids')
+    return HttpResponseRedirect(f'{mapa_url}?ids={ids}')
+
+mostrar_resultados_mesas.short_description = "Mostrar resultados de Mesas seleccionadas"
+
+
 class MesaAdmin(AdminRowActionsMixin, admin.ModelAdmin):
+    actions = [mostrar_resultados_mesas]
     list_display = ('numero', 'lugar_votacion')
     list_filter = (TieneFiscal, 'lugar_votacion__circuito__seccion', 'lugar_votacion__circuito')
     search_fields = (
@@ -122,6 +141,11 @@ class MesaAdmin(AdminRowActionsMixin, admin.ModelAdmin):
                 'label': 'Escuela',
                 'url': reverse('admin:elecciones_lugarvotacion_changelist') + f'?id={obj.lugar_votacion.id}',
                 'enabled': True,
+            },
+            {
+                'label': 'Resultados',
+                'url': reverse('resultados_mesas_ids') + f'?ids={obj.numero}',
+                'enabled': obj.computados or obj.tiene_reporte,
             }
         ]
         if obj.asignacion_actual:
