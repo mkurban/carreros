@@ -148,6 +148,16 @@ class CircuitoAdmin(admin.ModelAdmin):
     search_fields = (
         'nombre', 'numero',
     )
+    actions = ['asignar']
+
+    def asignar(self, request, queryset):
+        selected = request.POST.getlist(admin.ACTION_CHECKBOX_NAME)
+        ids = ",".join(selected)
+        url = reverse('asignar-referentes')
+        return HttpResponseRedirect(f'{url}?ids={ids}')
+
+    asignar.short_description = "Asignar referentes"
+
 
 
 
