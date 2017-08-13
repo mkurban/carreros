@@ -19,3 +19,13 @@ class ImportarFiscales(AdminCommand):
 
         return [path], {}
 
+
+class Dbbackup(AdminCommand):
+
+    class form(forms.Form):
+        opciones = forms.CharField(initial='-z', widget=forms.HiddenInput())
+
+    def get_command_arguments(self, forms_data, user):
+        flags = forms_data['opciones']
+        return [flags], {}
+
