@@ -64,6 +64,6 @@ def asignar_referentes(request):
     if form.is_valid():
         for circuito in qs:
             circuito.referentes.set(form.cleaned_data['referentes'])
-            return redirect('admin:elecciones_circuito_changelist')
+        return redirect('admin:elecciones_circuito_changelist')
 
     return render(request, 'elecciones/add_referentes.html', {'form':form, 'ids': ids, 'qs': qs})
