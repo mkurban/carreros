@@ -8,7 +8,7 @@ from djgeojson.fields import PointField
 from django.template.loader import render_to_string
 from django.utils.safestring import mark_safe
 from django.dispatch import receiver
-from django.db.models.signals import m2m_changed
+from django.db.models.signals import m2m_changed, post_save
 from model_utils.fields import StatusField, MonitorField
 from model_utils import Choices
 
@@ -101,12 +101,17 @@ class LugarVotacion(models.Model):
 
     @property
     def color(self):
-
+        if self.mesa_testigo:
+            return 'blue'
         if not self.asignacion.exists():
             return 'red'
         elif self.asignacion.filter(ingreso__isnull=False).exists():
             return 'green'
         return 'orange'
+
+    @property
+    def mesa_testigo(self):
+        return self.mesas.filter(es_testigo=True).first()
 
 
 # 'red', 'darkred', 'orange', 'green', 'darkgreen', 'blue', 'purple', 'darkpuple', 'cadetblue'
@@ -260,3 +265,12 @@ def referentes_cambiaron(sender, instance, action, reverse, model, pk_set, using
         for fiscal in fiscales:
             for escuela in escuelas:
                 AsignacionFiscalGeneral.objects.create(lugar_votacion=escuela, fiscal=fiscal)
+
+
+@receiver(post_save, sender=VotoMesaReportado)
+def marcar_como_testigo(sender, instance=None, created=False, **kwargs):
+    mesa = instance.mesa
+    if not mesa.lugar_votacion.mesa_testigo:
+        mesa.es_testigo = True
+        mesa.save(update_fields=['es_testigo'])
+
