@@ -2,7 +2,7 @@ import os
 from django.contrib.auth.models import User
 from django.urls import reverse
 from django.db import models
-from django.db.models import Sum
+from django.db.models import Sum, IntegerField, Case, Value, When, F
 from django.conf import settings
 from djgeojson.fields import PointField
 from django.template.loader import render_to_string
@@ -11,6 +11,7 @@ from django.dispatch import receiver
 from django.db.models.signals import m2m_changed, post_save
 from model_utils.fields import StatusField, MonitorField
 from model_utils import Choices
+
 
 
 def desde_hasta(qs):
@@ -110,11 +111,20 @@ class LugarVotacion(models.Model):
         return 'orange'
 
     @property
+    def seccion(self):
+        return str(self.circuito.seccion)
+
+    @property
     def mesa_testigo(self):
         return self.mesas.filter(es_testigo=True).first()
 
 
-# 'red', 'darkred', 'orange', 'green', 'darkgreen', 'blue', 'purple', 'darkpuple', 'cadetblue'
+    @property
+    def resultados_oficiales(self):
+        return VotoMesaOficial.objects.filter(mesa__lugar_votacion=self, opcion__id__in=Opcion.MOSTRABLES).aggregate(
+            **Opcion.AGREGACIONES
+        )
+
 
     def __str__(self):
         return f"{self.nombre} - {self.circuito}"
@@ -188,6 +198,9 @@ class Partido(models.Model):
 
 
 class Opcion(models.Model):
+    MOSTRABLES = list(range(1, 21))
+    AGREGACIONES = {f'{id}': Sum(Case(When(opcion__id=id, then=F('votos')), output_field=IntegerField())) for id in MOSTRABLES}
+
     orden = models.PositiveIntegerField(help_text='Orden en el acta')
     nombre = models.CharField(max_length=100)
     nombre_corto = models.CharField(max_length=10, default='')

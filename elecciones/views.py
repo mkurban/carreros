@@ -42,6 +42,11 @@ class LugaresVotacionGeoJSON(GeoJSONLayerView):
 
         return qs
 
+class ResultadosOficialesGeoJSON(GeoJSONLayerView):
+    model = LugarVotacion
+    properties = ('id', 'nombre', 'direccion_completa', 'seccion', 'circuito', 'resultados_oficiales')
+
+
 
 class EscuelaDetailView(StaffOnlyMixing, DetailView):
     template_name = "elecciones/detalle_escuela.html"
