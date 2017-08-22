@@ -42,15 +42,43 @@ class LugaresVotacionGeoJSON(GeoJSONLayerView):
 
         return qs
 
+
 class ResultadosOficialesGeoJSON(GeoJSONLayerView):
     model = LugarVotacion
-    properties = ('id', 'nombre', 'direccion_completa', 'seccion', 'circuito', 'resultados_oficiales')
-
+    properties = ('id', 'nombre', 'direccion_completa',
+                  'seccion', 'circuito', 'resultados_oficiales')
 
 
 class EscuelaDetailView(StaffOnlyMixing, DetailView):
     template_name = "elecciones/detalle_escuela.html"
     model = LugarVotacion
+
+
+class ResultadoEscuelaDetailView(StaffOnlyMixing, DetailView):
+    template_name = "elecciones/resultados_escuela.html"
+    model = LugarVotacion
+
+
+    def get_context_data(self, **kwargs):
+
+        context = super().get_context_data(**kwargs)
+        sum_por_partido = {}
+        for nombre, id in Partido.objects.values_list('nombre', 'id'):
+            sum_por_partido[nombre] = Sum(Case(When(opcion__partido__id=id, then=F('votos')),
+                             output_field=IntegerField()))
+
+        for nombre, id in Opcion.objects.filter(id__in=[16, 17, 18, 19]).values_list('nombre', 'id'):
+            sum_por_partido[nombre] = Sum(Case(When(opcion__id=id, then=F('votos')),
+                             output_field=IntegerField()))
+
+        result = VotoMesaOficial.objects.filter(eleccion__id=1, mesa__lugar_votacion=self.object).aggregate(
+            **sum_por_partido
+        )
+        total = sum(result.values())
+        result = {k: (v, f'{v*100/total:.2f}') for k, v in result.items()}
+        context['resultados'] = result
+        return context
+
 
 
 # Create your views here.
@@ -71,6 +99,20 @@ class Mapa(StaffOnlyMixing, TemplateView):
 
         context['geojson_url'] = geojson_url
         return context
+
+
+class MapaResultadosOficiales(StaffOnlyMixing, TemplateView):
+    template_name = "elecciones/mapa_resultados.html"
+
+    def get_context_data(self, **kwargs):
+
+        context = super().get_context_data(**kwargs)
+        geojson_url = reverse("resultados-geojson", kwargs=self.kwargs)
+        context['elecciones_slug'] = self.kwargs['elecciones_slug']
+        context['geojson_url'] = geojson_url
+        return context
+
+
 
 def resultados(request):
     mesas_list = Mesa.objects.filter(votomesaoficial__eleccion__isnull=False)

@@ -1,0 +1,15 @@
+<h3>{{object.nombre}}</h3>
+<table>
+    <tr><th>seccion</th><td>{{ object.circuito.seccion }}</td></tr>
+    <tr><th>circuito</th><td>{{ object.circuito.numero }}</td></tr>
+    <tr><th>direccion</th><td>{{ object.direccion_completa }}</td></tr>
+</table>
+
+
+<table>
+    {% for partido, votos in  resultados.items %}
+
+    <tr><th>{{ partido }}</th><td> {{ votos.0 }}</td><td> {{ votos.1 }}%</td></tr>
+
+    {% endfor %}
+</table>

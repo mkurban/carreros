@@ -199,7 +199,8 @@ class Partido(models.Model):
 
 class Opcion(models.Model):
     MOSTRABLES = list(range(1, 21))
-    AGREGACIONES = {f'{id}': Sum(Case(When(opcion__id=id, then=F('votos')), output_field=IntegerField())) for id in MOSTRABLES}
+    AGREGACIONES = {f'{id}': Sum(Case(When(opcion__id=id, then=F('votos')),
+                             output_field=IntegerField())) for id in MOSTRABLES}
 
     orden = models.PositiveIntegerField(help_text='Orden en el acta')
     nombre = models.CharField(max_length=100)
@@ -215,14 +216,14 @@ class Opcion(models.Model):
         verbose_name_plural = 'Opciones'
         ordering = ['orden']
 
-
-
     def __str__(self):
         if self.partido:
             return f'{self.partido} - {self.nombre}'
         return self.nombre
 
+
 class Eleccion(models.Model):
+    slug = models.SlugField(max_length=50, unique=True)
     nombre = models.CharField(max_length=50)
     fecha = models.DateTimeField(blank=True, null=True)
     opciones = models.ManyToManyField(Opcion)
