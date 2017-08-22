@@ -203,6 +203,14 @@ EMAIL_BACKEND = "anymail.backends.mailgun.EmailBackend"  # or sendgrid.EmailBack
 DEFAULT_FROM_EMAIL = "info@cordobaciudadana.org"         # if you don't already have this in settings
 
 
+CACHES = {
+    'default': {
+         'BACKEND': 'django.core.cache.backends.dummy.DummyCache',
+        # 'BACKEND': 'django.core.cache.backends.filebased.FileBasedCache',
+        'LOCATION': '/var/tmp/django_cache',
+    }
+}
+
 try:
     from .local_settings import *
 except ImportError:
