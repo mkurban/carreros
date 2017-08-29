@@ -70,6 +70,17 @@ def mostrar_resultados_escuelas(modeladmin, request, queryset):
 mostrar_resultados_escuelas.short_description = "Mostrar resultados de Escuelas seleccionadas"
 
 
+def resultados_oficiales(modeladmin, request, queryset):
+
+    selected = request.POST.getlist(admin.ACTION_CHECKBOX_NAME)
+    name = modeladmin.model.__name__.lower()
+    ids = "&".join(f'{name}={s}' for s in selected)
+    mapa_url = reverse('resultados-mapa')
+    return HttpResponseRedirect(f'{mapa_url}?{ids}')
+
+resultados_oficiales.short_description = "Ver Resultados Oficiales"
+
+
 class LugarVotacionAdmin(AdminRowActionsMixin, LeafletGeoAdmin):
 
     def sección(o):
@@ -82,7 +93,7 @@ class LugarVotacionAdmin(AdminRowActionsMixin, LeafletGeoAdmin):
         'nombre', 'direccion', 'ciudad', 'barrio', 'mesas__numero'
     )
     show_full_result_count = False
-    actions = [mostrar_en_mapa, mostrar_resultados_escuelas]
+    actions = [mostrar_en_mapa, resultados_oficiales]
 
     def get_row_actions(self, obj):
         row_actions = [
@@ -127,7 +138,7 @@ mostrar_resultados_mesas.short_description = "Mostrar resultados de Mesas selecc
 
 
 class MesaAdmin(AdminRowActionsMixin, admin.ModelAdmin):
-    actions = [mostrar_resultados_mesas]
+    actions = [resultados_oficiales]
     list_display = ('numero', 'lugar_votacion')
     list_filter = (TieneFiscal, 'es_testigo', 'lugar_votacion__circuito__seccion', 'lugar_votacion__circuito')
     search_fields = (
@@ -180,7 +191,7 @@ class CircuitoAdmin(admin.ModelAdmin):
     search_fields = (
         'nombre', 'numero',
     )
-    actions = ['asignar']
+    actions = ['asignar', resultados_oficiales]
 
     def asignar(self, request, queryset):
         selected = request.POST.getlist(admin.ACTION_CHECKBOX_NAME)
@@ -190,16 +201,21 @@ class CircuitoAdmin(admin.ModelAdmin):
 
     asignar.short_description = "Asignar referentes"
 
+class SeccionAdmin(admin.ModelAdmin):
+    actions = [resultados_oficiales]
+    search_fields = (
+        'nombre', 'numero',
+    )
 
 
-
+admin.site.register(Seccion, SeccionAdmin)
 admin.site.register(Circuito, CircuitoAdmin)
 admin.site.register(Partido, PartidoAdmin)
 admin.site.register(LugarVotacion, LugarVotacionAdmin)
 admin.site.register(Mesa, MesaAdmin)
 
 
-for model in (Seccion, Opcion, Eleccion, VotoMesaReportado):
+for model in (Opcion, Eleccion, VotoMesaReportado):
     admin.site.register(model)
 
 

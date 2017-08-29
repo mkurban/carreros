@@ -56,8 +56,8 @@ class ResultadosOficialesGeoJSON(GeoJSONLayerView):
             return qs.filter(circuito__seccion__id__in=self.request.GET.getlist('seccion'))
         elif 'circuito' in self.request.GET:
             return qs.filter(circuito__id__in=self.request.GET.getlist('circuito'))
-        elif 'lugar_votacion' in self.request.GET:
-            return qs.filter(id__in=self.request.GET.getlist('lugar_votacion'))
+        elif 'lugarvotacion' in self.request.GET:
+            return qs.filter(id__in=self.request.GET.getlist('lugarvotacion'))
 
         elif 'mesa' in self.request.GET:
             return qs.objects.filter(mesas__id__in=self.request.GET.getlist('mesa')).distinct()
@@ -138,8 +138,8 @@ class MapaResultadosOficiales(StaffOnlyMixing, TemplateView):
             return Seccion.objects.filter(id__in=self.request.GET.getlist('seccion'))
         elif 'circuito' in self.request.GET:
             return Circuito.objects.filter(id__in=self.request.GET.getlist('circuito'))
-        elif 'lugar_votacion' in self.request.GET:
-            return LugarVotacion.objects.filter(id__in=self.request.GET.getlist('lugar_votacion'))
+        elif 'lugarvotacion' in self.request.GET:
+            return LugarVotacion.objects.filter(id__in=self.request.GET.getlist('lugarvotacion'))
         elif 'mesa' in self.request.GET:
             return Mesa.objects.filter(id__in=self.request.GET.getlist('mesa'))
 
@@ -156,7 +156,7 @@ class MapaResultadosOficiales(StaffOnlyMixing, TemplateView):
                 lookups &= Q(mesa__lugar_votacion__circuito__in=self.filtros)
 
             elif 'lugar_votacion' in self.request.GET:
-                lookups &= Q(mesa__lugar_cotacion__in=self.filtros)
+                lookups &= Q(mesa__lugar_votacion__in=self.filtros)
 
             elif 'mesa' in self.request.GET:
                 lookups &= Q(mesa__in=self.filtros)
