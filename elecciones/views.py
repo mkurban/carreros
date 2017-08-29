@@ -1,10 +1,12 @@
 import json
 from urllib import parse
-
+from functools import lru_cache
 from django.http import HttpResponse
 from django.http import Http404
 from django.template import loader
+from django.utils.text import get_text_list
 from .models import *
+from django.db.models import Q, F, Sum
 from django.views.generic.base import TemplateView
 from django.views.generic.detail import DetailView
 from django.urls import reverse
@@ -47,6 +49,21 @@ class ResultadosOficialesGeoJSON(GeoJSONLayerView):
     model = LugarVotacion
     properties = ('id', 'nombre', 'direccion_completa',
                   'seccion', 'circuito', 'resultados_oficiales')
+
+    def get_queryset(self):
+        qs = super().get_queryset()
+        if 'seccion' in self.request.GET:
+            return qs.filter(circuito__seccion__id__in=self.request.GET.getlist('seccion'))
+        elif 'circuito' in self.request.GET:
+            return qs.filter(circuito__id__in=self.request.GET.getlist('circuito'))
+        elif 'lugar_votacion' in self.request.GET:
+            return qs.filter(id__in=self.request.GET.getlist('lugar_votacion'))
+
+        elif 'mesa' in self.request.GET:
+            return qs.objects.filter(mesas__id__in=self.request.GET.getlist('mesa')).distinct()
+
+        return qs
+
 
 
 class EscuelaDetailView(StaffOnlyMixing, DetailView):
@@ -103,13 +120,69 @@ class Mapa(StaffOnlyMixing, TemplateView):
 
 class MapaResultadosOficiales(StaffOnlyMixing, TemplateView):
     template_name = "elecciones/mapa_resultados.html"
+    sum_por_partido = {}
+    for nombre, id in Partido.objects.values_list('nombre', 'id'):
+        sum_por_partido[nombre] = Sum(Case(When(opcion__partido__id=id, then=F('votos')),
+                                      output_field=IntegerField()))
+
+    for nombre, id in Opcion.objects.filter(id__in=[16, 17, 18, 19]).values_list('nombre', 'id'):
+        sum_por_partido[nombre] = Sum(Case(When(opcion__id=id, then=F('votos')),
+                                      output_field=IntegerField()))
+
+    @property
+    @lru_cache(128)
+    def filtros(self):
+        """a partir de los argumentos de urls, devuelve
+        listas de seccion / circuito etc. para filtrar """
+        if 'seccion' in self.request.GET:
+            return Seccion.objects.filter(id__in=self.request.GET.getlist('seccion'))
+        elif 'circuito' in self.request.GET:
+            return Circuito.objects.filter(id__in=self.request.GET.getlist('circuito'))
+        elif 'lugar_votacion' in self.request.GET:
+            return LugarVotacion.objects.filter(id__in=self.request.GET.getlist('lugar_votacion'))
+        elif 'mesa' in self.request.GET:
+            return Mesa.objects.filter(id__in=self.request.GET.getlist('mesa'))
+
+
+    def get_resultados(self):
+        lookups = Q()
+
+        if self.filtros:
+
+            if 'seccion' in self.request.GET:
+                lookups &= Q(mesa__lugar_votacion__circuito__seccion__in=self.filtros)
+
+            elif 'circuito' in self.request.GET:
+                lookups &= Q(mesa__lugar_votacion__circuito__in=self.filtros)
+
+            elif 'lugar_votacion' in self.request.GET:
+                lookups &= Q(mesa__lugar_cotacion__in=self.filtros)
+
+            elif 'mesa' in self.request.GET:
+                lookups &= Q(mesa__in=self.filtros)
+
+        resultados = {}
+        for eleccion in Eleccion.objects.all():
+            result = VotoMesaOficial.objects.filter(
+                Q(eleccion=eleccion) & lookups
+            ).aggregate(
+                **MapaResultadosOficiales.sum_por_partido
+            )
+            total = sum(result.values())
+            result = {k: (v, f'{v*100/total:.2f}') for k, v in result.items()}
+            resultados[eleccion] = result
+        return resultados
+
 
     def get_context_data(self, **kwargs):
-
         context = super().get_context_data(**kwargs)
-        geojson_url = reverse("resultados-geojson", kwargs=self.kwargs)
-        context['elecciones_slug'] = self.kwargs['elecciones_slug']
-        context['geojson_url'] = geojson_url
+        context['geojson_url'] = reverse("resultados-geojson", args=['paso2017']) + f'?{self.request.GET.urlencode()}'
+        if self.filtros:
+            context['para'] = get_text_list(list(self.filtros), " y ")
+        else:
+            context['para'] = 'Córdoba'
+
+        context['resultados'] = self.get_resultados()
         return context
 
 
