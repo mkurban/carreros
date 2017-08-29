@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     'raven.contrib.django.raven_compat',
     'localflavor',
     'django_extensions',
+    'fancy_cache',
 
     'material.theme.lightblue',
     'material',

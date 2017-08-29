@@ -1,9 +1,11 @@
 # -*- coding: utf-8 -*-
 from django.conf.urls import url
 from . import views
-from django.views.decorators.cache import cache_page
+from fancy_cache import cache_page
+
 
 cached = cache_page(3600 * 24 * 7)
+
 
 urlpatterns = [
     url('^escuelas.geojson$', cached(views.LugaresVotacionGeoJSON.as_view()), name='geojson'),
@@ -14,7 +16,7 @@ urlpatterns = [
     url('^mapa/(?P<elecciones_slug>\w+)/(?P<pk>\d+)$', views.ResultadoEscuelaDetailView.as_view()),
     url('^mapa/(?P<elecciones_slug>\w+)/resultados.geojson$', cached(views.ResultadosOficialesGeoJSON.as_view()), name='resultados-geojson'),
 
-    url('^resultados/mapa$', views.MapaResultadosOficiales.as_view(), name='resultados-mapa'),
+    url('^resultados/mapa$', cached(views.MapaResultadosOficiales.as_view()), name='resultados-mapa'),
 
     url('^resultados$', views.resultados, name='resultados'),
     url('^resultados/mesa/(?P<nro>\d+)$', views.resultados_mesa, name='resultados_mesa'),
