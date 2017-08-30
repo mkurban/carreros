@@ -18,9 +18,9 @@ urlpatterns = [
 
     url('^resultados/mapa$', cached(views.MapaResultadosOficiales.as_view()), name='resultados-mapa'),
 
-    url('^resultados$', views.resultados, name='resultados'),
-    url('^resultados/mesa/(?P<nro>\d+)$', views.resultados_mesa, name='resultados_mesa'),
-    url('^resultados/mesas_ids$', views.resultados_mesas_ids, name='resultados_mesas_ids'),
-    url('^resultados/mesas$', views.resultados_mesas, name='resultados_mesas'),
+    # url('^resultados$', views.resultados, name='resultados'),
+    # url('^resultados/mesa/(?P<nro>\d+)$', views.resultados_mesa, name='resultados_mesa'),
+    # url('^resultados/mesas_ids$', views.resultados_mesas_ids, name='resultados_mesas_ids'),
+    # url('^resultados/mesas$', views.resultados_mesas, name='resultados_mesas'),
     url(r'^fiscal_mesa/', views.fiscal_mesa, name='fiscal_mesa'),
 ]

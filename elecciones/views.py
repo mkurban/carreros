@@ -88,7 +88,7 @@ class ResultadoEscuelaDetailView(StaffOnlyMixing, DetailView):
             sum_por_partido[nombre] = Sum(Case(When(opcion__id=id, then=F('votos')),
                              output_field=IntegerField()))
 
-        result = VotoMesaOficial.objects.filter(eleccion__id=1, mesa__lugar_votacion=self.object).aggregate(
+        result = VotoMesaOficial.objects.filter(mesa__eleccion__id=1, mesa__lugar_votacion=self.object).aggregate(
             **sum_por_partido
         )
         total = sum(result.values())
@@ -164,7 +164,7 @@ class MapaResultadosOficiales(StaffOnlyMixing, TemplateView):
         resultados = {}
         for eleccion in Eleccion.objects.all():
             result = VotoMesaOficial.objects.filter(
-                Q(eleccion=eleccion) & lookups
+                Q(mesa__eleccion=eleccion) & lookups
             ).aggregate(
                 **MapaResultadosOficiales.sum_por_partido
             )
@@ -185,7 +185,7 @@ class MapaResultadosOficiales(StaffOnlyMixing, TemplateView):
         context['resultados'] = self.get_resultados()
         return context
 
-
+"""
 
 def resultados(request):
     mesas_list = Mesa.objects.filter(votomesaoficial__eleccion__isnull=False)
@@ -300,7 +300,7 @@ def resultados_mesas(request):
         return HttpResponse(template.render(context, request))
     else:
         raise Http404("Error, Mesas no encontradas")
-
+"""
 
 @user_passes_test(lambda u: u.is_superuser)
 def asignar_referentes(request):

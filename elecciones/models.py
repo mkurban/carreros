@@ -144,12 +144,12 @@ def path_foto_acta(instance, filename):
 class Mesa(models.Model):
     ESTADOS_ = ('EN ESPERA', 'ABIERTA', 'CERRADA', 'ESCRUTADA')
     ESTADOS = Choices(*ESTADOS_)
-
     estado = StatusField(choices_name='ESTADOS', default='EN ESPERA')
     hora_abierta = MonitorField(monitor='estado', when=['ABIERTA'])
     hora_cerrada = MonitorField(monitor='estado', when=['CERRADA'])
     hora_escrutada = MonitorField(monitor='estado', when=['ESCRUTADA'])
 
+    eleccion = models.ForeignKey('Eleccion')
     numero = models.PositiveIntegerField()
     es_testigo = models.BooleanField(default=False)
     circuito = models.ForeignKey(Circuito)  #
@@ -159,7 +159,7 @@ class Mesa(models.Model):
 
 
     def get_absolute_url(self):
-        return reverse('detalle-mesa', args=(self.numero,))
+        return reverse('detalle-mesa', args=(self.eleccion.id, self.numero,))
 
     @property
     def asignacion_actual(self):
@@ -243,18 +243,17 @@ class Eleccion(models.Model):
 
 
 class AbstractVotoMesa(models.Model):
-    eleccion = models.ForeignKey(Eleccion)
     mesa = models.ForeignKey(Mesa)
     opcion = models.ForeignKey(Opcion)
     votos = models.PositiveIntegerField(null=True)
 
     class Meta:
         abstract = True
-        unique_together = ('eleccion', 'mesa', 'opcion')
+        unique_together = ('mesa', 'opcion')
 
 
     def __str__(self):
-        return f"{self.eleccion} - {self.opcion}: {self.votos}"
+        return f"{self.mesa} - {self.opcion}: {self.votos}"
 
 
 class VotoMesaReportado(AbstractVotoMesa):

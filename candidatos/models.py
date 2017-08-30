@@ -9,7 +9,6 @@ class Eleccion(models.Model):
 
 
 class Lista(models.Model):
-    # eleccion = models.ForeignKey(Eleccion)
     nombre = models.CharField(max_length=50, unique=True)
     numero = models.PositiveIntegerField(null=True, blank=True)
 

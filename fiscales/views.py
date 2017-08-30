@@ -117,7 +117,7 @@ class MiMesaMixin:
         return d
 
     def get_mesa(self):
-        return get_object_or_404(Mesa, numero=self.kwargs['mesa_numero'])
+        return get_object_or_404(Mesa, eleccion__id=self.kwargs['eleccion_id'], numero=self.kwargs['mesa_numero'])
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -136,7 +136,8 @@ class MesaActa(BaseFiscal, UpdateView):
     form_class = ActaMesaModelForm
 
     def get_object(self):
-        return get_object_or_404(Mesa, numero=self.kwargs['mesa_numero'], estado='ESCRUTADA')
+        return get_object_or_404(Mesa, eleccion__id=self.kwargs['eleccion_id'],
+                                 numero=self.kwargs['mesa_numero'], estado='ESCRUTADA')
 
     def form_valid(self, form):
         super().form_valid(form)
@@ -207,9 +208,9 @@ class FiscalSimpleUpdateView(BaseFiscalSimple, UpdateView):
 
 
 @login_required
-def eliminar_asignacion(request, mesa_numero):
+def eliminar_asignacion(request, eleccion_id, mesa_numero):
     fiscal = get_object_or_404(Fiscal, tipo='general', user=request.user)
-    mesa = get_object_or_404(Mesa, numero=mesa_numero)
+    mesa = get_object_or_404(Mesa, eleccion__id=eleccion_id, numero=mesa_numero)
     if mesa not in fiscal.mesas_asignadas:
         return HttpResponseForbidden()
     mesa.asignacion_actual.delete()
@@ -219,9 +220,9 @@ def eliminar_asignacion(request, mesa_numero):
 
 
 @login_required
-def tengo_fiscal(request, mesa_numero):
+def tengo_fiscal(request, eleccion_id, mesa_numero):
     fiscal = get_object_or_404(Fiscal, tipo='general', user=request.user)
-    mesa = get_object_or_404(Mesa, numero=mesa_numero)
+    mesa = get_object_or_404(Mesa, eleccion__id=eleccion_id, numero=mesa_numero)
     if mesa not in fiscal.mesas_asignadas:
         return HttpResponseForbidden()
 
@@ -238,9 +239,9 @@ def tengo_fiscal(request, mesa_numero):
 
 
 @login_required
-def mesa_cambiar_estado(request, mesa_numero, estado):
+def mesa_cambiar_estado(request, eleccion_id, mesa_numero, estado):
     fiscal = get_object_or_404(Fiscal, user=request.user)
-    mesa = get_object_or_404(Mesa, numero=mesa_numero)
+    mesa = get_object_or_404(Mesa, eleccion__id=eleccion_id, numero=mesa_numero)
     if mesa not in fiscal.mesas_asignadas:
         return HttpResponseForbidden()
     mesa.estado = estado
@@ -262,11 +263,8 @@ class MesaDetalle(LoginRequiredMixin, MiMesaMixin, DetailView):
 
 
 
-
-
-
 @login_required
-def cargar_resultados(request, mesa_numero):
+def cargar_resultados(request, eleccion_id, mesa_numero):
     def fix_opciones(formset):
         # hack para dejar sólo la opcion correspondiente a cada fila
         # se podria hacer "disabled" pero ese caso quita el valor del
@@ -278,7 +276,7 @@ def cargar_resultados(request, mesa_numero):
             if opcion.obligatorio:
                 form.fields['votos'].required = True
 
-    mesa = get_object_or_404(Mesa, numero=mesa_numero)
+    mesa = get_object_or_404(Mesa, eleccion__id=eleccion_id, numero=mesa_numero)
     try:
         fiscal = request.user.fiscal
     except Fiscal.DoesNotExist:
@@ -301,13 +299,13 @@ def cargar_resultados(request, mesa_numero):
     if request.method == 'POST' or qs:
         is_valid = formset.is_valid()
 
-    eleccion = Eleccion.objects.last()
+    # eleccion = Eleccion.objects.last()
     if is_valid:
         for form in formset:
             vmr = form.save(commit=False)
             vmr.mesa = mesa
             vmr.fiscal = fiscal
-            vmr.eleccion = eleccion
+            # vmr.eleccion = eleccion
             vmr.save()
 
         if formset.warnings:
@@ -315,8 +313,7 @@ def cargar_resultados(request, mesa_numero):
         else:
             messages.success(request, 'Guardado correctamente')
 
-
-        return redirect(reverse('detalle-mesa', args=(mesa.numero,)))
+        return redirect(mesa)
 
     return render(request, "fiscales/carga.html",
         {'formset': formset, 'object': mesa})
