@@ -59,7 +59,7 @@ class LugarVotacion(models.Model):
     barrio = models.CharField(max_length=100, blank=True)
     ciudad = models.CharField(max_length=100, blank=True)
     calidad = models.CharField(max_length=20, help_text='calidad de la geolocalizacion', editable=False, blank=True)
-    electores = models.PositiveIntegerField()
+    electores = models.PositiveIntegerField(null=True, blank=True)
     geom = PointField(null=True)
 
     # denormalizacion para hacer queries más simples
@@ -131,11 +131,10 @@ class LugarVotacion(models.Model):
 
 
 def path_foto_acta(instance, filename):
-    # file will be uploaded to MEDIA_ROOT/user_<id>/<filename>
+    # file will be uploaded to MEDIA_ROOT/
     _, ext = os.path.splitext(filename)
-    return 's{}/c{}/m{}{}'.format(
-        instance.circuito.seccion.numero,
-        instance.circuito.numero,
+    return 'actas/{}/{}{}'.format(
+        instance.eleccion.slug,
         instance.numero,
         ext
     )
@@ -156,6 +155,7 @@ class Mesa(models.Model):
     lugar_votacion = models.ForeignKey(LugarVotacion, verbose_name='Lugar de votacion', null=True, related_name='mesas')
     url = models.URLField(blank=True, help_text='url al telegrama')
     foto_del_acta = models.ImageField(upload_to=path_foto_acta, null=True, blank=True)
+    electores = models.PositiveIntegerField(null=True, blank=True)
 
 
     def get_absolute_url(self):
@@ -187,9 +187,11 @@ class Mesa(models.Model):
 
 class Partido(models.Model):
     orden = models.PositiveIntegerField(help_text='Orden opcion')
-    numero = models.PositiveIntegerField()
+    numero = models.PositiveIntegerField(null=True, blank=True)
     nombre = models.CharField(max_length=100)
     nombre_corto = models.CharField(max_length=10, default='')
+    color = models.CharField(max_length=30, default='', blank=True)
+    referencia = models.CharField(max_length=30, default='', blank=True)
     ordering = ['orden']
 
 
@@ -210,6 +212,8 @@ class Opcion(models.Model):
         help_text='Orden en la boleta', null=True, blank=True)
     obligatorio = models.BooleanField(default=False)
     es_contable = models.BooleanField(default=True)
+    codigo_dne = models.PositiveIntegerField(null=True, blank=True)
+
 
     class Meta:
         verbose_name = 'Opción'

@@ -109,10 +109,30 @@
                 </h3>
 
                 {% for eleccion, resultados in resultados.items %}
-                <strong> {{ eleccion }}</strong>
 
 
-                  {% include "elecciones/tabla_resultados.html" with responsive=True %}
+                <h5> {{ eleccion }}</h5>
+              <table class="bordered" style="font-size: 0.7em">
+              <tr>
+                <th title="Electores"><i class="small material-icons">person_outline</i></th>
+                <th title="Escrutados"><i class="small material-icons">person</i></th>
+                <th title="Positivos"><i class="small material-icons">person_add</i></th>
+                <th title="Participación"><i class="small material-icons">timeline</i></th>
+              </tr>
+              <tr>
+                <td title="Electores">{{ resultados.electores}} </td>
+                <td title="Escrutados">{{ resultados.escrutados }} </td>
+                <td title="Positivos">{{ resultados.positivos}}</td>
+                <td title="Participación">{{ resultados.participacion}} %</td>
+              </tr>
+          </table>
+
+                  {% with resultados.tabla as resultados %}
+
+                    {% include "elecciones/tabla_resultados.html" with responsive=True incluir_votos=True%}
+
+                  {% endwith %}
+
 
 
                 {% endfor %}

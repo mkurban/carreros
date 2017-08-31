@@ -60,7 +60,7 @@ class ResultadosOficialesGeoJSON(GeoJSONLayerView):
             return qs.filter(id__in=self.request.GET.getlist('lugarvotacion'))
 
         elif 'mesa' in self.request.GET:
-            return qs.objects.filter(mesas__id__in=self.request.GET.getlist('mesa')).distinct()
+            return qs.filter(mesas__id__in=self.request.GET.getlist('mesa')).distinct()
 
         return qs
 
@@ -88,11 +88,12 @@ class ResultadoEscuelaDetailView(StaffOnlyMixing, DetailView):
             sum_por_partido[nombre] = Sum(Case(When(opcion__id=id, then=F('votos')),
                              output_field=IntegerField()))
 
+
         result = VotoMesaOficial.objects.filter(mesa__eleccion__id=1, mesa__lugar_votacion=self.object).aggregate(
             **sum_por_partido
         )
-        total = sum(result.values())
-        result = {k: (v, f'{v*100/total:.2f}') for k, v in result.items()}
+        total = sum(v for v in result.values() if v)
+        result = {k: (v, f'{v*100/total:.2f}') for k, v in result.items() if v}
         context['resultados'] = result
         return context
 
@@ -120,14 +121,22 @@ class Mapa(StaffOnlyMixing, TemplateView):
 
 class MapaResultadosOficiales(StaffOnlyMixing, TemplateView):
     template_name = "elecciones/mapa_resultados.html"
-    sum_por_partido = {}
-    for nombre, id in Partido.objects.values_list('nombre', 'id'):
-        sum_por_partido[nombre] = Sum(Case(When(opcion__partido__id=id, then=F('votos')),
-                                      output_field=IntegerField()))
 
-    for nombre, id in Opcion.objects.filter(id__in=[16, 17, 18, 19]).values_list('nombre', 'id'):
-        sum_por_partido[nombre] = Sum(Case(When(opcion__id=id, then=F('votos')),
-                                      output_field=IntegerField()))
+
+    @classmethod
+    @lru_cache(128)
+    def agregaciones_por_partido(cls):
+        sum_por_partido = {}
+        otras_opciones = {}
+        for id in Partido.objects.values_list('id', flat=True):
+            sum_por_partido[str(id)] = Sum(Case(When(opcion__partido__id=id, then=F('votos')),
+                                                     output_field=IntegerField()))
+
+        for nombre, id in Opcion.objects.filter(id__in=[16, 17, 18, 19]).values_list('nombre', 'id'):
+            otras_opciones[nombre] = Sum(Case(When(opcion__id=id, then=F('votos')),
+                                          output_field=IntegerField()))
+
+        return sum_por_partido, otras_opciones
 
     @property
     @lru_cache(128)
@@ -143,34 +152,81 @@ class MapaResultadosOficiales(StaffOnlyMixing, TemplateView):
         elif 'mesa' in self.request.GET:
             return Mesa.objects.filter(id__in=self.request.GET.getlist('mesa'))
 
+    @property
+    @lru_cache(128)
+    def electores(self):
+        lookups = Q()
+        meta = {}
+        for eleccion in Eleccion.objects.all():
+
+            if self.filtros:
+                if 'seccion' in self.request.GET:
+                    lookups = Q(circuito__seccion__in=self.filtros)
+
+                elif 'circuito' in self.request.GET:
+                    lookups = Q(circuito__in=self.filtros)
+
+                elif 'lugarvotacion' in self.request.GET:
+                    lookups = Q(id__in=self.filtros)
+
+                elif 'mesa' in self.request.GET:
+                    lookups = Q(mesas__id__in=self.filtros, mesas__eleccion=eleccion)
+
+            escuelas = LugarVotacion.objects.filter(lookups).distinct()
+            electores = escuelas.aggregate(v=Sum('electores'))['v']
+            if electores and 'mesa' in self.request.GET:
+                # promediamos los electores por mesa
+                electores = electores * self.filtros.count() // Mesa.objects.filter(lugar_votacion__in=escuelas, eleccion=eleccion).count()
+            meta[eleccion] = electores or 0
+        return meta
+
 
     def get_resultados(self):
         lookups = Q()
-
-        if self.filtros:
-
-            if 'seccion' in self.request.GET:
-                lookups &= Q(mesa__lugar_votacion__circuito__seccion__in=self.filtros)
-
-            elif 'circuito' in self.request.GET:
-                lookups &= Q(mesa__lugar_votacion__circuito__in=self.filtros)
-
-            elif 'lugar_votacion' in self.request.GET:
-                lookups &= Q(mesa__lugar_votacion__in=self.filtros)
-
-            elif 'mesa' in self.request.GET:
-                lookups &= Q(mesa__in=self.filtros)
-
         resultados = {}
+        sum_por_partido, otras_opciones = MapaResultadosOficiales.agregaciones_por_partido()
         for eleccion in Eleccion.objects.all():
+
+            if self.filtros:
+                if 'seccion' in self.request.GET:
+                    lookups = Q(mesa__lugar_votacion__circuito__seccion__in=self.filtros)
+
+                elif 'circuito' in self.request.GET:
+                    lookups = Q(mesa__lugar_votacion__circuito__in=self.filtros)
+
+                elif 'lugarvotacion' in self.request.GET:
+                    lookups = Q(mesa__lugar_votacion__in=self.filtros)
+
+                elif 'mesa' in self.request.GET:
+                    lookups = Q(mesa_in=self.filtros)
+
+            electores = self.electores[eleccion]
+            # primero para partidos
             result = VotoMesaOficial.objects.filter(
                 Q(mesa__eleccion=eleccion) & lookups
             ).aggregate(
-                **MapaResultadosOficiales.sum_por_partido
+                **sum_por_partido
             )
+            result = {Partido.objects.get(id=k): v for k, v in result.items() if v is not None}
+
+            positivos = sum(result.values())
+
+            # no positivos
+            result_opc = VotoMesaOficial.objects.filter(
+                Q(mesa__eleccion=eleccion) & lookups
+            ).aggregate(
+                **otras_opciones
+            )
+            result_opc = {k: v for k, v in result_opc.items() if v is not None}
+            result.update(result_opc)
+
             total = sum(result.values())
             result = {k: (v, f'{v*100/total:.2f}') for k, v in result.items()}
-            resultados[eleccion] = result
+            resultados[eleccion] = {'tabla': result,
+                                    'electores': electores,
+                                    'positivos': positivos,
+                                    'escrutados': total,
+                                    'participacion': f'{total*100/electores:.2f}'} if electores else '-'
         return resultados
 
 
