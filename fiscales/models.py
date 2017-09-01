@@ -10,7 +10,10 @@ from django.contrib.auth.models import User
 from django.dispatch import receiver
 from django.db.models.signals import post_save, pre_delete
 from elecciones.models import desde_hasta, Mesa, LugarVotacion
+from django.contrib.contenttypes.models import ContentType
 from prensa.models import DatoDeContacto
+from model_utils.fields import StatusField
+from model_utils import Choices
 
 
 class Organizacion(models.Model):
@@ -29,7 +32,14 @@ class Organizacion(models.Model):
 class Fiscal(models.Model):
     TIPO = Choices(('general', 'General'), ('de_mesa', 'de Mesa'))
     TIPO_DNI = Choices('DNI', 'CI', 'LE', 'LC')
+
+    ESTADOS = Choices('IMPORTADO', 'AUTOCONFIRMADO', 'PRE-INSCRIPTO', 'CONFIRMADO', 'DECLINADO')
+    estado = StatusField(choices_name='ESTADOS', default='PRE-INSCRIPTO')
+    notas = models.TextField(blank=True, help_text='Notas internas, no se muestran')
+    escuela_donde_vota = models.ForeignKey('elecciones.LugarVotacion', null=True, blank=True)
+
     tipo = models.CharField(choices=TIPO, max_length=20)
+
 
     apellido = models.CharField(max_length=50)
     nombres = models.CharField(max_length=100)
@@ -47,6 +57,13 @@ class Fiscal(models.Model):
     class Meta:
         verbose_name_plural = 'Fiscales'
         unique_together = (('tipo_dni', 'dni'),)
+
+    def agregar_dato_de_contacto(self, tipo, valor):
+        type_ = ContentType.objects.get_for_model(self)
+        try:
+            DatoDeContacto.objects.get(content_type__pk=type_.id, object_id=self.id, tipo=tipo, valor=valor)
+        except DatoDeContacto.DoesNotExist:
+            DatoDeContacto.objects.create(content_object=self, tipo=tipo, valor=valor)
 
     @property
     def es_general(self):
@@ -178,7 +195,7 @@ class AsignacionFiscalGeneral(AsignacionFiscal):
 
 @receiver(post_save, sender=Fiscal)
 def crear_user_para_fiscal(sender, instance=None, created=False, **kwargs):
-    if not instance.user and instance.dni:
+    if not instance.user and instance.dni and instance.estado in ('AUTOCONFIRMADO', 'CONFIRMADO'):
         user = User(
             username=re.sub("[^0-9]", "", instance.dni),
             first_name=instance.nombres,
@@ -196,7 +213,8 @@ def crear_user_para_fiscal(sender, instance=None, created=False, **kwargs):
 def fiscal_contacto(sender, instance=None, created=False, **kwargs):
     # metadata de user con datos de contacto
     if (instance.tipo == 'teléfono' and isinstance(instance.content_object, Fiscal) and not
-            instance.content_object.user):
+            instance.content_object.user and
+            instance.content_object.estado in ('AUTOCONFIRMADO', 'CONFIRMADO')):
         # si no tiene usuario y se asigna telefono, usar este dato
         fiscal = instance.content_object
         rawnumber = ''.join(instance.valor.split()[-2:]).replace('-', '')
