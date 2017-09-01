@@ -200,7 +200,8 @@ ANYMAIL = {
     "MAILGUN_API_KEY": "***REMOVED***",
     "MAILGUN_SENDER_DOMAIN": '***REMOVED***',  # your Mailgun domain, if needed
 }
-EMAIL_BACKEND = "anymail.backends.mailgun.EmailBackend"  # or sendgrid.EmailBackend, or...
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+# EMAIL_BACKEND = "anymail.backends.mailgun.EmailBackend"  # or sendgrid.EmailBackend, or...
 DEFAULT_FROM_EMAIL = "info@cordobaciudadana.org"         # if you don't already have this in settings
 
 

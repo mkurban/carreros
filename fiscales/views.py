@@ -1,4 +1,4 @@
-from django.http import Http404, HttpResponseForbidden
+from django.http import Http404, HttpResponseForbidden, HttpResponse
 from django.conf import settings
 from django.shortcuts import redirect, get_object_or_404, render
 from django.urls import reverse, reverse_lazy
@@ -13,12 +13,18 @@ from annoying.functions import get_object_or_None
 from prensa.forms import MinimoContactoInlineFormset
 from .models import Fiscal, AsignacionFiscalGeneral, AsignacionFiscalDeMesa
 from elecciones.models import Mesa, Eleccion, VotoMesaReportado
+from formtools.wizard.views import SessionWizardView
+from django.template.loader import render_to_string
+from html2text import html2text
+from django.core.mail import send_mail
 
 from .forms import (
     MisDatosForm,
     FiscalFormSimple,
     VotoMesaReportadoFormset,
-    ActaMesaModelForm
+    ActaMesaModelForm,
+    QuieroSerFiscal1,
+    QuieroSerFiscal2
 )
 from prensa.views import ConContactosMixin
 
@@ -50,6 +56,65 @@ class BaseFiscal(LoginRequiredMixin, DetailView):
             return self.request.user.fiscal
         except Fiscal.DoesNotExist:
             raise Http404('no está registrado como fiscal')
+
+
+class QuieroSerFiscal(SessionWizardView):
+    form_list = [QuieroSerFiscal1, QuieroSerFiscal2]
+
+    def get_form_initial(self, step):
+        if step == '1':
+            dni = self.get_cleaned_data_for_step('0')['dni']
+            fiscal = get_object_or_None(Fiscal, dni=dni)
+            if fiscal:
+                if self.steps.current == '0':
+                    messages.info(self.request, 'Ya estás en el sistema. Por favor, confirmá tus datos.')
+                return {
+                    'nombre': fiscal.nombres,
+                    'apellido': fiscal.apellido,
+                    'telefono': fiscal.telefonos[0] if fiscal.telefonos else '',
+                    'email': fiscal.emails[0] if fiscal.emails else '',
+                    'email2': fiscal.emails[0] if fiscal.emails else '',
+                    'escuela': fiscal.escuelas[0] if fiscal.escuelas else None
+                }
+        return self.initial_dict.get(step, {})
+
+    def done(self, form_list, **kwargs):
+        data = self.get_all_cleaned_data()
+        dni = data['dni']
+        fiscal = get_object_or_None(Fiscal, dni=dni)
+        if fiscal:
+            fiscal.estado = 'AUTOCONFIRMADO'
+        else:
+            fiscal = Fiscal(estado='PRE-INSCRIPTO', tipo='de_mesa')
+        email = data['email']
+        fiscal.nombres = data['nombre']
+        fiscal.apellido = data['apellido']
+        fiscal.escuela_donde_vota = data['escuela']
+        fiscal.save()
+        fiscal.agregar_dato_de_contacto('teléfono', data['telefono'])
+        fiscal.agregar_dato_de_contacto('email', email)
+
+        body_html = render_to_string('fiscales/email.html', {'nombre': fiscal.nombres})
+        body_text = html2text(body_html)
+
+        send_mail(
+            'Recibimos tu inscripción como fiscal',
+            body_text,
+            'info@cordobaciudadana.org',
+            [email],
+            fail_silently=False,
+            html_message=body_html
+        )
+
+        return render(self.request, 'formtools/wizard/wizard_done.html', {
+            'fiscal': fiscal,
+        })
+
+
+def email(request):
+    html = render_to_string('fiscales/email.html', {'nombre': 'Pedro'})
+    return HttpResponse(html2text(html), content_type='plain/text')
+    # return render(request, 'fiscales/email.html', {})
 
 
 class MisDatos(BaseFiscal):

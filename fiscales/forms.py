@@ -3,10 +3,12 @@ from django.forms.models import modelform_factory
 from django.forms import modelformset_factory, BaseModelFormSet
 from material import Layout, Row
 from .models import Fiscal
-from elecciones.models import Mesa, VotoMesaReportado, Eleccion
+from elecciones.models import Mesa, VotoMesaReportado, Eleccion, LugarVotacion
 from localflavor.ar.forms import ARDNIField
 from django.contrib.auth.forms import AuthenticationForm
 from django.utils.translation import ugettext_lazy as _
+from prensa.forms import validar_telefono
+import phonenumbers
 
 
 OPCION_CANTIDAD_DE_SOBRES = 22
@@ -59,6 +61,45 @@ class FiscalFormSimple(FiscalForm):
             'nombres', 'apellido',
             'dni',
         ]
+
+
+
+class FiscalForm(forms.ModelForm):
+
+    dni = ARDNIField(required=False)
+
+    class Meta:
+        model = Fiscal
+        exclude = []
+
+
+class QuieroSerFiscal1(forms.Form):
+    dni = ARDNIField(required=True, help_text='Ingresa tu Nº de documento')
+
+
+class QuieroSerFiscal2(forms.Form):
+    nombre = forms.CharField()
+    apellido = forms.CharField()
+    telefono = forms.CharField(label='Teléfono', help_text='Preferentemente celular')
+    email = forms.EmailField(required=True)
+    email2 = forms.EmailField(required=True, label="Confirmar email")
+    escuela = forms.ModelChoiceField(queryset=LugarVotacion.objects.all(), help_text='Escuela donde votás o fiscalizás')
+
+    def clean_telefono(self):
+        valor = self.cleaned_data['telefono']
+        try:
+            valor = validar_telefono(valor)
+        except (AttributeError, phonenumbers.NumberParseException):
+            raise forms.ValidationError('No es un teléfono válido')
+        return valor
+
+    def clean(self):
+        cleaned_data = super().clean()
+        email = cleaned_data.get('email')
+        email2 = cleaned_data.get('email2')
+        if email and email2 and email != email2:
+            self.add_error('email', 'Los emails no coinciden')
+            self.add_error('email2', 'Los emails no coinciden')
 
 
 
