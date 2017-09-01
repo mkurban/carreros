@@ -1,9 +1,10 @@
 from django import forms
 from django.forms.models import modelform_factory
 from django.forms import modelformset_factory, BaseModelFormSet
+from django.utils.safestring import mark_safe
 from material import Layout, Row
 from .models import Fiscal
-from elecciones.models import Mesa, VotoMesaReportado, Eleccion, LugarVotacion
+from elecciones.models import Mesa, VotoMesaReportado, Eleccion, LugarVotacion, Circuito, Seccion
 from localflavor.ar.forms import ARDNIField
 from django.contrib.auth.forms import AuthenticationForm
 from django.utils.translation import ugettext_lazy as _
@@ -15,6 +16,8 @@ OPCION_CANTIDAD_DE_SOBRES = 22
 OPCION_HAN_VOTADO = 21
 OPCION_DIFERENCIA = 23
 OPCION_TOTAL_VOTOS = 20
+
+LINK = 'Si tenés dudas consultá el <a href="https://www.padron.gob.ar" target="_blank">padrón</a>'
 
 
 class AuthenticationFormCustomError(AuthenticationForm):
@@ -83,7 +86,9 @@ class QuieroSerFiscal2(forms.Form):
     telefono = forms.CharField(label='Teléfono', help_text='Preferentemente celular')
     email = forms.EmailField(required=True)
     email2 = forms.EmailField(required=True, label="Confirmar email")
-    escuela = forms.ModelChoiceField(queryset=LugarVotacion.objects.all(), help_text='Escuela donde votás o fiscalizás')
+    seccion = forms.ModelChoiceField(label='Sección electoral', queryset=Seccion.objects.all(),
+        help_text=mark_safe(f'Sección/departamento donde votás y/o fiscalizás. {LINK}')
+    )
 
     def clean_telefono(self):
         valor = self.cleaned_data['telefono']
@@ -101,6 +106,17 @@ class QuieroSerFiscal2(forms.Form):
             self.add_error('email', 'Los emails no coinciden')
             self.add_error('email2', 'Los emails no coinciden')
 
+
+class QuieroSerFiscal3(forms.Form):
+    circuito = forms.ModelChoiceField(queryset=Circuito.objects.all(),
+        help_text=mark_safe(f'Circuito/zona donde votás y/o fiscalizás. {LINK}')
+    )
+
+
+class QuieroSerFiscal4(forms.Form):
+    escuela = forms.ModelChoiceField(queryset=LugarVotacion.objects.all(),
+        help_text=mark_safe(f'Escuela donde votás y/o fiscalizás. {LINK}')
+    )
 
 
 class VotoMesaModelForm(forms.ModelForm):
