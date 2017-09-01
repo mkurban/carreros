@@ -197,8 +197,8 @@ REST_FRAMEWORK = {
 
 ANYMAIL = {
     # (exact settings here depend on your ESP...)
-    "MAILGUN_API_KEY": "***REMOVED***",
-    "MAILGUN_SENDER_DOMAIN": '***REMOVED***',  # your Mailgun domain, if needed
+    "MAILGUN_API_KEY": "",
+    "MAILGUN_SENDER_DOMAIN": '',  # your Mailgun domain, if needed
 }
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 # EMAIL_BACKEND = "anymail.backends.mailgun.EmailBackend"  # or sendgrid.EmailBackend, or...
