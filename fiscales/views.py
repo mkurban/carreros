@@ -97,14 +97,14 @@ class QuieroSerFiscal(SessionWizardView):
         body_html = render_to_string('fiscales/email.html', {'nombre': fiscal.nombres})
         body_text = html2text(body_html)
 
-        send_mail(
-            'Recibimos tu inscripción como fiscal',
-            body_text,
-            'info@cordobaciudadana.org',
-            [email],
-            fail_silently=False,
-            html_message=body_html
-        )
+        # send_mail(
+        #     'Recibimos tu inscripción como fiscal',
+        #     body_text,
+        #     'info@cordobaciudadana.org',
+        #     [email],
+        #     fail_silently=False,
+        #     html_message=body_html
+        # )
 
         return render(self.request, 'formtools/wizard/wizard_done.html', {
             'fiscal': fiscal,
