@@ -87,7 +87,7 @@ class QuieroSerFiscal(SessionWizardView):
                 'seccion': fiscal.escuelas[0].circuito.seccion if fiscal.escuelas else None
 
             }
-        elif step == '2':
+        elif step == '2' and fiscal:
             seccion = self.get_cleaned_data_for_step('1')['seccion']
             if seccion == fiscal.escuelas[0].circuito.seccion:
                 circuito = fiscal.escuelas[0].circuito
@@ -97,7 +97,7 @@ class QuieroSerFiscal(SessionWizardView):
             return {
                 'circuito': circuito
             }
-        elif step == '3':
+        elif step == '3' and fiscal:
             circuito = self.get_cleaned_data_for_step('2')['circuito']
             if circuito == fiscal.escuelas[0].circuito:
                 escuela = fiscal.escuelas[0]
