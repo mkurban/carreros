@@ -1,0 +1,25 @@
+{% extends 'formtools/wizard/wizard_base.html' %}
+{% load i18n material_form %}
+
+
+{% block left-panel %}
+    <div class="card">
+        <div class="card-content">
+            <span class="card-title grey-text text-darken-2">¡Completado!</span>
+
+            <p>¡Gracias por sumarte a este esfuerzo!</p>
+
+            <p>Pronto te contactaremos para asignarte tu lugar de fiscalización</p>
+        </div>
+        {% comment %}
+
+
+        <div class="card-action right-align">
+            <a class="btn white-text" href="/demo/wizard/">
+                {% trans "One more time" %}
+                <i class="mdi-av-repeat left"></i>
+            </a>
+        </div>
+        {% endcomment %}
+    </div>
+{% endblock left-panel %}

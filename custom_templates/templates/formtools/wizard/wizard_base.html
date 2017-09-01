@@ -1,0 +1,19 @@
+{% extends 'material/frontend/base.html' %}
+{% load i18n material_form static %}
+
+{% block extrahead %}
+{{ wizard.form.media }}
+{% endblock %}
+{% block sidenav_items %}{% endblock %}
+{% block page_title %}Quiero ser fiscal de Córdoba Ciudadana{% endblock %}
+{%block bodyclass %}{% endblock %}
+
+{% block topbar_links %}{% endblock %}
+
+{% block content %}
+<div class="left-panel">
+{% block left-panel %}
+{% endblock left-panel %}
+</div>
+{% block right-panel %}{% endblock right-panel %}
+{% endblock %}
