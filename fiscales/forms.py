@@ -2,7 +2,7 @@ from django import forms
 from django.forms.models import modelform_factory
 from django.forms import modelformset_factory, BaseModelFormSet
 from django.utils.safestring import mark_safe
-from material import Layout, Row
+from material import Layout, Row, Fieldset
 from .models import Fiscal
 from elecciones.models import Mesa, VotoMesaReportado, Eleccion, LugarVotacion, Circuito, Seccion
 from localflavor.ar.forms import ARDNIField
@@ -81,6 +81,10 @@ class QuieroSerFiscal1(forms.Form):
     email = forms.EmailField(required=True)
     email2 = forms.EmailField(required=True, label="Confirmar email")
 
+    layout = Layout('dni',
+                    Row('email', 'email2'))
+
+
     def clean(self):
         cleaned_data = super().clean()
         email = cleaned_data.get('email')
@@ -94,11 +98,16 @@ class QuieroSerFiscal2(forms.ModelForm):
     nombre = forms.CharField()
     apellido = forms.CharField()
     telefono = forms.CharField(label='Teléfono', help_text='Preferentemente celular')
-    movilidad = forms.BooleanField(label='Movilidad propia?', help_text='Marcá la casilla si tenés cómo movilizarte el día de la elección')
+    movilidad = forms.BooleanField(label='¿Tenés Movilidad propia?', help_text='Marcá la casilla si tenés cómo movilizarte el día de la elección')
     seccion = forms.ModelChoiceField(label='Sección electoral', queryset=Seccion.objects.all(),
         help_text=mark_safe(f'Sección/departamento donde votás y/o fiscalizás. {LINK}')
     )
 
+    layout = Layout(Row('nombre', 'apellido'),
+                    'telefono',
+                    Row('movilidad', 'disponibilidad'),
+                    Fieldset('¿Dónde votás?',
+                             'seccion'))
     class Meta:
         model = Fiscal
         fields = [
@@ -114,7 +123,6 @@ class QuieroSerFiscal2(forms.ModelForm):
         except (AttributeError, phonenumbers.NumberParseException):
             raise forms.ValidationError('No es un teléfono válido')
         return valor
-
 
 
 class QuieroSerFiscal3(forms.Form):
