@@ -32,11 +32,14 @@ class Organizacion(models.Model):
 class Fiscal(models.Model):
     TIPO = Choices(('general', 'General'), ('de_mesa', 'de Mesa'))
     TIPO_DNI = Choices('DNI', 'CI', 'LE', 'LC')
-
     ESTADOS = Choices('IMPORTADO', 'AUTOCONFIRMADO', 'PRE-INSCRIPTO', 'CONFIRMADO', 'DECLINADO')
+    DISPONIBILIDAD = Choices('mañana', 'tarde', 'todo el día')
+
     estado = StatusField(choices_name='ESTADOS', default='PRE-INSCRIPTO')
     notas = models.TextField(blank=True, help_text='Notas internas, no se muestran')
     escuela_donde_vota = models.ForeignKey('elecciones.LugarVotacion', null=True, blank=True)
+    disponibilidad = models.CharField(choices=DISPONIBILIDAD, max_length=20, blank=True)
+    movilidad = models.NullBooleanField(help_text='Movilidad propia')
 
     tipo = models.CharField(choices=TIPO, max_length=20)
 

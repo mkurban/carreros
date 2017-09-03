@@ -8,6 +8,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.views import PasswordChangeView
 from django.utils import timezone
+from django.db.models import Q
 from annoying.functions import get_object_or_None
 from prensa.forms import MinimoContactoInlineFormset
 from .models import Fiscal, AsignacionFiscalGeneral, AsignacionFiscalDeMesa
@@ -72,7 +73,11 @@ class QuieroSerFiscal(SessionWizardView):
     def get_form_initial(self, step):
         if step != '0':
             dni = self.get_cleaned_data_for_step('0')['dni']
-            fiscal = get_object_or_None(Fiscal, dni=dni)
+            email = self.get_cleaned_data_for_step('0')['email']
+            fiscal = (get_object_or_None(Fiscal, dni=dni) or
+                      get_object_or_None(Fiscal,
+                                         datos_de_contacto__valor=email,
+                                         datos_de_contacto__tipo='email'))
 
         if step == '1' and fiscal:
             if self.steps.current == '0':
@@ -82,8 +87,8 @@ class QuieroSerFiscal(SessionWizardView):
                 'nombre': fiscal.nombres,
                 'apellido': fiscal.apellido,
                 'telefono': fiscal.telefonos[0] if fiscal.telefonos else '',
-                'email': fiscal.emails[0] if fiscal.emails else '',
-                'email2': fiscal.emails[0] if fiscal.emails else '',
+                'disponibilidad': fiscal.disponibilidad,
+                'movilidad': fiscal.movilidad,
                 'seccion': fiscal.escuelas[0].circuito.seccion if fiscal.escuelas else None
 
             }
@@ -128,12 +133,17 @@ class QuieroSerFiscal(SessionWizardView):
     def done(self, form_list, **kwargs):
         data = self.get_all_cleaned_data()
         dni = data['dni']
-        fiscal = get_object_or_None(Fiscal, dni=dni)
+        email = data['email']
+        fiscal = (get_object_or_None(Fiscal, dni=dni) or
+                  get_object_or_None(Fiscal,
+                                     datos_de_contacto__valor=email,
+                                     datos_de_contacto__tipo='email'))
         if fiscal:
             fiscal.estado = 'AUTOCONFIRMADO'
         else:
             fiscal = Fiscal(estado='PRE-INSCRIPTO', tipo='de_mesa', dni=dni)
-        email = data['email']
+
+        fiscal.dni = dni
         fiscal.nombres = data['nombre']
         fiscal.apellido = data['apellido']
         fiscal.escuela_donde_vota = data['escuela']

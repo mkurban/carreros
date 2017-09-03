@@ -77,18 +77,35 @@ class FiscalForm(forms.ModelForm):
 
 
 class QuieroSerFiscal1(forms.Form):
-    dni = ARDNIField(required=True, help_text='Ingresa tu Nº de documento')
+    dni = ARDNIField(required=True, help_text='Ingresá tu Nº de documento')
+    email = forms.EmailField(required=True)
+    email2 = forms.EmailField(required=True, label="Confirmar email")
+
+    def clean(self):
+        cleaned_data = super().clean()
+        email = cleaned_data.get('email')
+        email2 = cleaned_data.get('email2')
+        if email and email2 and email != email2:
+            self.add_error('email', 'Los emails no coinciden')
+            self.add_error('email2', 'Los emails no coinciden')
 
 
-class QuieroSerFiscal2(forms.Form):
+class QuieroSerFiscal2(forms.ModelForm):
     nombre = forms.CharField()
     apellido = forms.CharField()
     telefono = forms.CharField(label='Teléfono', help_text='Preferentemente celular')
-    email = forms.EmailField(required=True)
-    email2 = forms.EmailField(required=True, label="Confirmar email")
+    movilidad = forms.BooleanField(label='Movilidad propia?', help_text='Marcá la casilla si tenés cómo movilizarte el día de la elección')
     seccion = forms.ModelChoiceField(label='Sección electoral', queryset=Seccion.objects.all(),
         help_text=mark_safe(f'Sección/departamento donde votás y/o fiscalizás. {LINK}')
     )
+
+    class Meta:
+        model = Fiscal
+        fields = [
+            'nombre', 'apellido', 'telefono', 'movilidad',
+            'disponibilidad', 'seccion'
+        ]
+
 
     def clean_telefono(self):
         valor = self.cleaned_data['telefono']
@@ -98,13 +115,6 @@ class QuieroSerFiscal2(forms.Form):
             raise forms.ValidationError('No es un teléfono válido')
         return valor
 
-    def clean(self):
-        cleaned_data = super().clean()
-        email = cleaned_data.get('email')
-        email2 = cleaned_data.get('email2')
-        if email and email2 and email != email2:
-            self.add_error('email', 'Los emails no coinciden')
-            self.add_error('email2', 'Los emails no coinciden')
 
 
 class QuieroSerFiscal3(forms.Form):
