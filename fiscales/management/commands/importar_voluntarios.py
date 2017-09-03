@@ -13,6 +13,9 @@ from django import forms
 class DniForm(forms.Form):
     dni = ARDNIField(required=False)
 
+class EmailForm(forms.Form):
+    email = forms.EmailField()
+
 
 class Command(BaseCommand):
     help = "Importar fiscales voluntarios"
@@ -58,7 +61,8 @@ class Command(BaseCommand):
             raise CommandError(f'Archivo no válido\n {e}')
 
         for row in data:
-            email = row.get('Dirección de correo electrónico', '').lower().strip()
+            email_f = EmailForm({'email': row['Dirección de correo electrónico']})
+            email = email_f.cleaned_data['email'] if email_f.is_valid() else None
             if not email:
                 self.warning(f"Ignorando {row['Apellido']}, {row['Nombre']}: sin email")
                 continue
