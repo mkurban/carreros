@@ -98,7 +98,10 @@ class QuieroSerFiscal2(forms.ModelForm):
     nombre = forms.CharField()
     apellido = forms.CharField()
     telefono = forms.CharField(label='Teléfono', help_text='Preferentemente celular')
-    movilidad = forms.BooleanField(label='¿Tenés Movilidad propia?', help_text='Marcá la casilla si tenés cómo movilizarte el día de la elección')
+    movilidad = forms.BooleanField(
+        label='¿Tenés Movilidad propia?', required=False,
+        help_text='Marcá la casilla si tenés cómo movilizarte el día de la elección'
+    )
     seccion = forms.ModelChoiceField(label='Sección electoral', queryset=Seccion.objects.all(),
         help_text=mark_safe(f'Sección/departamento donde votás y/o fiscalizás. {LINK}')
     )
