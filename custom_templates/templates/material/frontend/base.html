@@ -1,4 +1,6 @@
 {% extends 'material/frontend/base.html' %}
+{% load staticfiles %}
+{% block favicon %}<link href="{% static 'img/favicon.png' %}" rel="shortcut icon">{% endblock %}
 {% load i18n static %}
 
         {% block sidenav_header %}
