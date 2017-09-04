@@ -3,6 +3,7 @@ from django.shortcuts import redirect, get_object_or_404, render
 from django.urls import reverse, reverse_lazy
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.generic.detail import DetailView
+from django.utils.safestring import mark_safe
 from django.views.generic.edit import UpdateView, CreateView
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
@@ -94,7 +95,9 @@ class QuieroSerFiscal(SessionWizardView):
             }
         elif step == '2' and fiscal:
             seccion = self.get_cleaned_data_for_step('1')['seccion']
-            if seccion == fiscal.escuelas[0].circuito.seccion:
+            seccion_original = fiscal.escuelas[0].circuito.seccion if fiscal.escuelas else None
+
+            if seccion_original and seccion == seccion_original:
                 circuito = fiscal.escuelas[0].circuito
             else:
                 circuito = None
@@ -104,7 +107,9 @@ class QuieroSerFiscal(SessionWizardView):
             }
         elif step == '3' and fiscal:
             circuito = self.get_cleaned_data_for_step('2')['circuito']
-            if circuito == fiscal.escuelas[0].circuito:
+            circuito_original = fiscal.escuelas[0].circuito if fiscal.escuelas else None
+
+            if circuito_original and circuito == circuito_original:
                 escuela = fiscal.escuelas[0]
             else:
                 escuela = None
@@ -151,7 +156,7 @@ class QuieroSerFiscal(SessionWizardView):
         fiscal.agregar_dato_de_contacto('teléfono', data['telefono'])
         fiscal.agregar_dato_de_contacto('email', email)
 
-        body_html = render_to_string('fiscales/email.html', {'nombre': fiscal.nombres})
+        body_html = render_to_string('fiscales/email.html', {'fiscal': fiscal,})
         body_text = html2text(body_html)
 
         send_mail(
@@ -166,6 +171,31 @@ class QuieroSerFiscal(SessionWizardView):
         return render(self.request, 'formtools/wizard/wizard_done.html', {
             'fiscal': fiscal,
         })
+
+
+def confirmar_email(request, uuid):
+    fiscal = get_object_or_None(Fiscal, codigo_confirmacion=uuid)
+    if not fiscal:
+        texto = mark_safe('El código de confirmación es inválido. '
+                          'Por favor copiá y pegá el link que te enviamos'
+                          ' por email en la barra de direcciones'
+                          'Si seguís con problemas, env '
+                          '<a href="mailto:fiscales@cordobaciudadana.org">'
+                          'fiscales@cordobaciudadana.org</a>')
+
+    elif fiscal.email_confirmado:
+        texto = 'Tu email ya estaba confirmado. Gracias.'
+    else:
+        fiscal.email_confirmado = True
+        fiscal.save(update_fields=['email_confirmado'])
+        texto = 'Confirmamos tu email exitosamente. ¡Gracias!'
+
+    return render(
+        request, 'fiscales/confirmar_email.html',
+        {'texto': texto, 'fiscal': fiscal}
+    )
+
+
 
 
 def email(request):

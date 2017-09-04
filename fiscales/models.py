@@ -1,4 +1,5 @@
 import re
+import uuid
 from django.db import models
 from django.conf import settings
 from django.db.models import Q
@@ -14,6 +15,7 @@ from django.contrib.contenttypes.models import ContentType
 from prensa.models import DatoDeContacto
 from model_utils.fields import StatusField
 from model_utils import Choices
+
 
 
 class Organizacion(models.Model):
@@ -40,10 +42,9 @@ class Fiscal(models.Model):
     escuela_donde_vota = models.ForeignKey('elecciones.LugarVotacion', null=True, blank=True)
     disponibilidad = models.CharField(choices=DISPONIBILIDAD, max_length=20, blank=True)
     movilidad = models.NullBooleanField(help_text='Movilidad propia')
-
     tipo = models.CharField(choices=TIPO, max_length=20)
-
-
+    codigo_confirmacion = models.UUIDField(default=uuid.uuid4, editable=False)
+    email_confirmado = models.BooleanField(default=False)
     apellido = models.CharField(max_length=50)
     nombres = models.CharField(max_length=100)
     direccion = models.CharField(max_length=200, blank=True)
