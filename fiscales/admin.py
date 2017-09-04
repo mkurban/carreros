@@ -123,7 +123,7 @@ class FiscalAdmin(AdminRowActionsMixin, admin.ModelAdmin):
         'asignacion_mesa__mesa__lugar_votacion__nombre'
     )
     list_display_links = ('__str__',)
-    list_filter = ('estado', AsignadoFilter, 'tipo', ReferenteFilter, 'organizacion')
+    list_filter = ('estado', 'email_confirmado', AsignadoFilter, 'tipo', ReferenteFilter, 'organizacion')
     readonly_fields = ('mesas_desde_hasta',)
     inlines = [
         ContactoAdminInline,
