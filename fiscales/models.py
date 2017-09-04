@@ -183,6 +183,7 @@ class AsignacionFiscalDeMesa(AsignacionFiscal):
 class AsignacionFiscalGeneral(AsignacionFiscal):
     lugar_votacion = models.ForeignKey(
         'elecciones.LugarVotacion', related_name='asignacion')
+    eleccion = models.ForeignKey('elecciones.Eleccion')
     fiscal = models.ForeignKey('Fiscal',
         limit_choices_to={'tipo': Fiscal.TIPO.general},
         related_name='asignacion_escuela'

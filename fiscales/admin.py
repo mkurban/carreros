@@ -35,8 +35,16 @@ class AsignadoFilter(admin.SimpleListFilter):
         value = self.value()
         if value:
             isnull = value == 'no'
-            general = Q(tipo='general') & Q(asignacion_escuela__isnull=isnull)
-            de_mesa = Q(tipo='de_mesa') & Q(asignacion_mesa__isnull=isnull)
+            general = Q(
+                tipo='general',
+                asignacion_escuela__isnull=isnull,
+                asignacion_escuela__eleccion__slug='generales2017'
+            )
+            de_mesa = Q(
+                tipo='de_mesa',
+                asignacion_mesa__isnull=isnull,
+                asignacion_mesa__mesa__eleccion__slug='generales2017'
+            )
             queryset = queryset.filter(general | de_mesa)
         return queryset
 
@@ -115,7 +123,7 @@ class FiscalAdmin(AdminRowActionsMixin, admin.ModelAdmin):
         'asignacion_mesa__mesa__lugar_votacion__nombre'
     )
     list_display_links = ('__str__',)
-    list_filter = (AsignadoFilter, 'tipo', ReferenteFilter, 'organizacion')
+    list_filter = ('estado', AsignadoFilter, 'tipo', ReferenteFilter, 'organizacion')
     readonly_fields = ('mesas_desde_hasta',)
     inlines = [
         ContactoAdminInline,
@@ -131,20 +139,22 @@ class AsignacionFiscalAdmin(AdminRowActionsMixin, admin.ModelAdmin):
     actions = [asignar_comida]
 
     def get_row_actions(self, obj):
-        row_actions = [
-            {
-                'label': 'Ver fiscal',
-                'url': reverse('admin:fiscales_fiscal_changelist') + f'?id={obj.fiscal.id}',
-                'enabled': True,
-            }
-        ]
+        row_actions = []
+        if obj.fiscal:
+            row_actions.append(
+                {
+                    'label': 'Ver fiscal',
+                    'url': reverse('admin:fiscales_fiscal_changelist') + f'?id={obj.fiscal.id}',
+                    'enabled': True,
+                }
+            )
         row_actions += super().get_row_actions(obj)
         return row_actions
 
 
 class AsignacionFiscalGeneralAdmin(AsignacionFiscalAdmin):
 
-    list_filter = ('lugar_votacion__circuito',) + AsignacionFiscalAdmin.list_filter
+    list_filter = ('eleccion', 'lugar_votacion__circuito',) + AsignacionFiscalAdmin.list_filter
 
     list_display = ('fiscal', 'lugar_votacion', 'ingreso', 'egreso', 'comida')
     search_fields = (
@@ -159,7 +169,7 @@ class AsignacionFiscalGeneralAdmin(AsignacionFiscalAdmin):
 
 class AsignacionFiscalDeMesaAdmin(AsignacionFiscalAdmin):
 
-    list_filter = ('mesa__lugar_votacion__circuito',) + AsignacionFiscalAdmin.list_filter
+    list_filter = ('mesa__eleccion', 'mesa__lugar_votacion__circuito',) + AsignacionFiscalAdmin.list_filter
 
     list_display = ('fiscal', 'mesa', 'ingreso', 'egreso', 'comida')
     raw_id_fields = ("mesa", "fiscal")
