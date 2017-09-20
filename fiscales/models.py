@@ -39,7 +39,7 @@ class Fiscal(models.Model):
 
     estado = StatusField(choices_name='ESTADOS', default='PRE-INSCRIPTO')
     notas = models.TextField(blank=True, help_text='Notas internas, no se muestran')
-    escuela_donde_vota = models.ForeignKey('elecciones.LugarVotacion', null=True, blank=True)
+    escuela_donde_vota = models.ForeignKey('elecciones.LugarVotacion', verbose_name='Escuela preferida para fiscalizar', null=True, blank=True)
     disponibilidad = models.CharField(choices=DISPONIBILIDAD, max_length=20, blank=True)
     movilidad = models.NullBooleanField(help_text='Movilidad propia')
     tipo = models.CharField(choices=TIPO, max_length=20)
@@ -209,7 +209,7 @@ def crear_user_para_fiscal(sender, instance=None, created=False, **kwargs):
             is_active=True,
         )
 
-        user.set_password(settings.DEFAULT_PASS_PREFIX + instance.dni[-3:])
+        # user.set_password(settings.DEFAULT_PASS_PREFIX + instance.dni[-3:])
         user.save()
         instance.user = user
         instance.save(update_fields=['user'])
@@ -231,7 +231,7 @@ def fiscal_contacto(sender, instance=None, created=False, **kwargs):
             last_name=fiscal.apellido,
             is_active=True,
         )
-        user.set_password(settings.DEFAULT_PASS_PREFIX + rawnumber[-3:])
+        # user.set_password(settings.DEFAULT_PASS_PREFIX + rawnumber[-3:])
         user.save()
 
         fiscal.user = user

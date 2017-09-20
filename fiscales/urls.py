@@ -27,4 +27,5 @@ urlpatterns = [
         views.tengo_fiscal, name='mesa-tengo-fiscal'),
     url('^mis-datos/profile$', views.MisDatosUpdate.as_view(), name='mis-datos-update'),
     url('^mis-datos/password$', views.CambiarPassword.as_view(), name='cambiar-password'),
+    url('^_confirmar/(?P<fiscal_id>\d+)$', views.confirmar_fiscal, name='confirmar-fiscal'),
 ]

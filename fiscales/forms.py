@@ -103,7 +103,7 @@ class QuieroSerFiscal2(forms.ModelForm):
         help_text='Marcá la casilla si tenés cómo movilizarte el día de la elección'
     )
     seccion = forms.ModelChoiceField(label='Sección electoral', queryset=Seccion.objects.all(),
-        help_text=mark_safe(f'Sección/departamento donde votás y/o fiscalizás. {LINK}')
+        help_text=mark_safe(f'Sección/departamento donde votás y/o preferís fiscalizar. {LINK}')
     )
 
     layout = Layout(Row('nombre', 'apellido'),
@@ -130,14 +130,39 @@ class QuieroSerFiscal2(forms.ModelForm):
 
 class QuieroSerFiscal3(forms.Form):
     circuito = forms.ModelChoiceField(queryset=Circuito.objects.all(),
-        help_text=mark_safe(f'Circuito/zona donde votás y/o fiscalizás. {LINK}')
+        help_text=mark_safe(f'Circuito/zona donde votás y/o preferís fiscalizar. {LINK}')
     )
 
 
 class QuieroSerFiscal4(forms.Form):
+    error_messages = {
+        'password_mismatch': _("The two password fields didn't match."),
+    }
+
     escuela = forms.ModelChoiceField(queryset=LugarVotacion.objects.all(),
-        help_text=mark_safe(f'Escuela donde votás y/o fiscalizás. {LINK}')
+        help_text=mark_safe(f'Escuela donde votás y/o preferís fiscalizar. {LINK}')
     )
+    new_password1 = forms.CharField(
+        label=_("New password"),
+        widget=forms.PasswordInput,
+        strip=False,
+    )
+    new_password2 = forms.CharField(
+        label=_("New password confirmation"),
+        strip=False,
+        widget=forms.PasswordInput,
+    )
+
+    def clean_new_password2(self):
+        password1 = self.cleaned_data.get('new_password1')
+        password2 = self.cleaned_data.get('new_password2')
+        if password1 and password2:
+            if password1 != password2:
+                raise forms.ValidationError(
+                    self.error_messages['password_mismatch'],
+                    code='password_mismatch',
+                )
+        return password2
 
 
 class VotoMesaModelForm(forms.ModelForm):

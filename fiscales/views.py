@@ -9,6 +9,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.views import PasswordChangeView
 from django.utils import timezone
+from django.utils.safestring import mark_safe
 from django.db.models import Q
 from annoying.functions import get_object_or_None
 from prensa.forms import MinimoContactoInlineFormset
@@ -20,7 +21,7 @@ from formtools.wizard.views import SessionWizardView
 from django.template.loader import render_to_string
 from html2text import html2text
 from django.core.mail import send_mail
-
+from django.contrib.admin.views.decorators import staff_member_required
 from .forms import (
     MisDatosForm,
     FiscalFormSimple,
@@ -155,6 +156,9 @@ class QuieroSerFiscal(SessionWizardView):
         fiscal.save()
         fiscal.agregar_dato_de_contacto('teléfono', data['telefono'])
         fiscal.agregar_dato_de_contacto('email', email)
+
+        fiscal.user.set_password(data['new_password1'])
+        fiscal.user.save()
 
         body_html = render_to_string('fiscales/email.html', {'fiscal': fiscal,})
         body_text = html2text(body_html)
@@ -479,4 +483,14 @@ class CambiarPassword(PasswordChangeView):
         messages.success(self.request, 'Tu contraseña se cambió correctamente')
         return super().form_valid(form)
 
+
+@staff_member_required
+def confirmar_fiscal(request, fiscal_id):
+    fiscal = get_object_or_404(Fiscal, id=fiscal_id, estado='AUTOCONFIRMADO')
+    fiscal.estado = 'CONFIRMADO'
+    fiscal.save()
+    url = reverse('admin:fiscales_fiscal_change', args=(fiscal_id,))
+    msg = f'<a href="{url}">{fiscal}</a> ha sido confirmado en la escuela {fiscal.escuela_donde_vota}'
+    messages.info(request, mark_safe(msg))
+    return redirect(request.META.get('HTTP_REFERER'))
 

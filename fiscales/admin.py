@@ -80,6 +80,15 @@ class FiscalAdmin(AdminRowActionsMixin, admin.ModelAdmin):
                     'enabled': True,
                 }
             )
+        if obj.estado == 'AUTOCONFIRMADO':
+            row_actions.append(
+                {
+                    'label': f'Confirmar Fiscal',
+                    'url': reverse('confirmar-fiscal', args=(obj.id,)),
+                    'enabled': True,
+                    'method': 'POST',
+                }
+            )
 
         label_asignacion = 'Editar asignación a' if  obj.asignacion else 'Asignar a'
         if obj.es_general and obj.asignacion:
@@ -114,15 +123,15 @@ class FiscalAdmin(AdminRowActionsMixin, admin.ModelAdmin):
         if o.asignacion:
             return o.asignacion.lugar_votacion if o.es_general else o.asignacion.mesa
 
-
     form = FiscalForm
-    list_display = ('__str__', 'tipo', 'direccion', 'organizacion', 'dni', telefonos, asignado_a)
+    list_display = ('__str__', 'dni', 'tipo', 'disponibilidad', 'escuela_donde_vota', 'movilidad', telefonos, asignado_a)
     search_fields = (
         'apellido', 'nombres', 'direccion', 'dni',
         'asignacion_escuela__lugar_votacion__nombre',
         'asignacion_mesa__mesa__lugar_votacion__nombre'
     )
     list_display_links = ('__str__',)
+    raw_id_fields = ("escuela_donde_vota",)
     list_filter = ('estado', 'email_confirmado', AsignadoFilter, 'tipo', ReferenteFilter, 'organizacion')
     readonly_fields = ('mesas_desde_hasta',)
     inlines = [
