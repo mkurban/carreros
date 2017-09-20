@@ -146,7 +146,7 @@ class QuieroSerFiscal(SessionWizardView):
         if fiscal:
             fiscal.estado = 'AUTOCONFIRMADO'
         else:
-            fiscal = Fiscal(estado='PRE-INSCRIPTO', tipo='de_mesa', dni=dni)
+            fiscal = Fiscal(estado='AUTOCONFIRMADO', tipo='de_mesa', dni=dni)
 
         fiscal.dni = dni
         fiscal.nombres = data['nombre']
