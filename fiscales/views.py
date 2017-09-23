@@ -315,18 +315,26 @@ class BaseFiscalSimple(LoginRequiredMixin, MiMesaMixin, ConContactosMixin):
             return redirect(self.mesa.get_absolute_url())
         return d
 
+    def get_escuela(self):
+        return get_object_or_404(LugarVotacion, numero=self.kwargs['escuela_numero'])
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['mesa'] = self.get_mesa()
+        if self.kwargs.get('tipo') == 'de_mesa':
+            context['mesa'] = self.get_mesa()
+        else:
+            context['escuela'] = self.get_escuela()
         return context
 
     def form_valid(self, form):
         fiscal = form.save(commit=False)
-        fiscal.tipo = 'de_mesa'
+        fiscal.tipo = self.kwargs.get('tipo')
         fiscal = self.verificar_fiscal_existente(fiscal)
         fiscal.save()
-        mesa = self.get_mesa()
-        asignacion = mesa.asignacion_actual
+        if self.kwargs.get('tipo') == 'de_mesa':
+            asignacion = self.get_mesa().asignacion_actual
+        else:
+            asignacion = self.get_escuela().asignacion_actual
         asignacion.fiscal = fiscal
         asignacion.save()
         messages.success(self.request, 'Fiscal cargado correctamente')
