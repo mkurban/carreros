@@ -27,14 +27,13 @@ urlpatterns = [
     url('^(?P<eleccion_id>\d+)/m(?P<mesa_numero>\d+)/fiscal/registrar$',
         views.tengo_fiscal, {'tipo': 'de_mesa'}, name='mesa-tengo-fiscal'),
 
-    url('^(?P<eleccion_id>\d+)/e(?P<mesa_numero>\d+)/fiscal/crear$',
+    url('^(?P<eleccion_id>\d+)/e(?P<escuela_id>\d+)/fiscal/crear$',
         views.FiscalSimpleCreateView.as_view(), {'tipo': 'general'}, name='escuela-cargar-fiscal'),
-    url('^(?P<eleccion_id>\d+)/e(?P<mesa_numero>\d+)/fiscal/eliminar$',
+    url('^(?P<eleccion_id>\d+)/e(?P<escuela_id>\d+)/fiscal/eliminar$',
         views.eliminar_asignacion, {'tipo': 'general'}, name='escuela-eliminar-asignacion'),
-    url('^(?P<eleccion_id>\d+)/e(?P<mesa_numero>\d+)/fiscal/editar$',
+    url('^(?P<eleccion_id>\d+)/e(?P<escuela_id>\d+)/fiscal/editar$',
         views.FiscalSimpleUpdateView.as_view(), {'tipo': 'general'}, name='escuela-editar-fiscal'),
-    url('^(?P<eleccion_id>\d+)/e(?P<mesa_numero>\d+)/fiscal/registrar$',
-        views.tengo_fiscal, {'tipo': 'general'}, name='escuela-tengo-fiscal'),
+
 
     url('^mis-datos/profile$', views.MisDatosUpdate.as_view(), name='mis-datos-update'),
     url('^mis-datos/password$', views.CambiarPassword.as_view(), name='cambiar-password'),

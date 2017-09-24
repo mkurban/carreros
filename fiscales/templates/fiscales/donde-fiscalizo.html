@@ -46,6 +46,8 @@
             {% csrf_token %}
 
 
+
+
              <table class="table bordered">
                <tr>
                   <th>Sección</th>
@@ -60,6 +62,11 @@
                   <td>{{ escuela.direccion_completa }} <br>
                   <a href="http://maps.google.com/maps?q={{escuela.coordenadas}}">Ver en el mapa</a></td>
               </tr>
+
+              {% if request.user.fiscal.es_referente %}
+                {% include "fiscales/snippet_fiscal_general.html" %}
+              {% endif %}
+
 
               <tr>
                   <th>{% if object.es_general %}

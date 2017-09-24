@@ -98,7 +98,8 @@ class LugarVotacion(models.Model):
 
     @property
     def asignacion_actual(self):
-        return self.asignacion.order_by('-ingreso').last()
+
+        return self.asignacion.exclude(fiscal__es_referente_de_circuito__isnull=False).order_by('-ingreso', '-id').last()
 
     @property
     def color(self):
@@ -238,6 +239,11 @@ class Eleccion(models.Model):
             return cls.objects.last().opciones.all()
         return Opcion.objects.none()
 
+    @classmethod
+    def actual(cls):
+        actual = cls.objects.order_by('-id').last()
+        return actual
+
     class Meta:
         verbose_name = 'Elección'
         verbose_name_plural = 'Elecciones'
@@ -271,17 +277,20 @@ class VotoMesaOficial(AbstractVotoMesa):
 
 @receiver(m2m_changed, sender=Circuito.referentes.through)
 def referentes_cambiaron(sender, instance, action, reverse, model, pk_set, using, **kwargs):
-    # cuando se asigna a un circuito, se crean las asignaciones a todas las escuelas del circuito
-    from fiscales.models import AsignacionFiscalGeneral, Fiscal
+    """cuando se asigna a un circuito, se crean las asignaciones a todas las escuelas del circuito"""
+
+    from fiscales.models import AsignacionFiscalGeneral, Fiscal   # avoid circular import
+    eleccion = Eleccion.actual()
     if action == 'post_remove':
         # quitar a estos fiscales cualquier asignacion a escuelas del circuito
-        AsignacionFiscalGeneral.objects.filter(lugar_votacion__circuito=instance, fiscal__id__in=pk_set).delete()
+        AsignacionFiscalGeneral.objects.filter(eleccion=eleccion,
+            lugar_votacion__circuito=instance, fiscal__id__in=pk_set).delete()
     elif action == 'post_add':
         fiscales = Fiscal.objects.filter(id__in=pk_set)
         escuelas = LugarVotacion.objects.filter(circuito=instance)
         for fiscal in fiscales:
             for escuela in escuelas:
-                AsignacionFiscalGeneral.objects.create(lugar_votacion=escuela, fiscal=fiscal)
+                AsignacionFiscalGeneral.objects.create(eleccion=eleccion, lugar_votacion=escuela, fiscal=fiscal)
 
 
 @receiver(post_save, sender=VotoMesaReportado)
