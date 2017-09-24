@@ -57,6 +57,11 @@ def choice_home(request):
 class BaseFiscal(LoginRequiredMixin, DetailView):
     model = Fiscal
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['eleccion'] = Eleccion.actual()
+        return context
+
     def get_object(self, *args, **kwargs):
         try:
             return self.request.user.fiscal
@@ -263,21 +268,26 @@ def asignacion_estado(request, tipo, pk):
     return redirect('donde-fiscalizo')
 
 
-class MiMesaMixin:
+class MiAsignableMixin:
     def dispatch(self, *args, **kwargs):
         d = super().dispatch(*args, **kwargs)
         self.fiscal = get_object_or_404(Fiscal, tipo='general', user=self.request.user)
-        self.mesa = self.get_mesa()
-        if self.mesa not in self.fiscal.mesas_asignadas:
+
+        self.asignable = self.get_asignable()
+        if (('mesa_numero' in self.kwargs and self.asignable not in self.fiscal.mesas_asignadas) or
+            ('escuela_id' in self.kwargs and self.asignable not in self.fiscal.escuelas)):
             return HttpResponseForbidden()
         return d
 
-    def get_mesa(self):
-        return get_object_or_404(Mesa, eleccion__id=self.kwargs['eleccion_id'], numero=self.kwargs['mesa_numero'])
+    def get_asignable(self):
+        if 'escuela_id' in self.kwargs:
+            return get_object_or_404(LugarVotacion, id=self.kwargs['escuela_id'])
+        else:
+            return get_object_or_404(Mesa, eleccion__id=self.kwargs['eleccion_id'], numero=self.kwargs['mesa_numero'])
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['mesa'] = self.get_mesa()
+        context['asignable'] = self.get_asignable()
         return context
 
     def verificar_fiscal_existente(self, fiscal):
@@ -301,7 +311,7 @@ class MesaActa(BaseFiscal, UpdateView):
         return redirect(self.object.get_absolute_url())
 
 
-class BaseFiscalSimple(LoginRequiredMixin, MiMesaMixin, ConContactosMixin):
+class BaseFiscalSimple(LoginRequiredMixin, MiAsignableMixin, ConContactosMixin):
     """muestras los contactos para un fiscal"""
     form_class = FiscalFormSimple
     inline_formset_class = MinimoContactoInlineFormset
@@ -310,34 +320,44 @@ class BaseFiscalSimple(LoginRequiredMixin, MiMesaMixin, ConContactosMixin):
 
     def dispatch(self, *args, **kwargs):
         d = super().dispatch(*args, **kwargs)
-        if not self.mesa.asignacion_actual:
-            messages.error(self.request, 'No se registra fiscal en esta mesa ')
-            return redirect(self.mesa.get_absolute_url())
+        if 'mesa_numero' in self.kwargs and not self.asignable.asignacion_actual:
+            messages.error(self.request, 'No se registra fiscal')
+            return redirect(self.asignable.get_absolute_url())
         return d
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['mesa'] = self.get_mesa()
+        context['eleccion'] = Eleccion.actual()
+        if self.kwargs.get('tipo') == 'de_mesa':
+            context['mesa'] = self.get_asignable()
+        else:
+            context['escuela'] = self.get_asignable()
         return context
 
     def form_valid(self, form):
         fiscal = form.save(commit=False)
-        fiscal.tipo = 'de_mesa'
+        fiscal.tipo = self.kwargs.get('tipo')
         fiscal = self.verificar_fiscal_existente(fiscal)
         fiscal.save()
-        mesa = self.get_mesa()
-        asignacion = mesa.asignacion_actual
-        asignacion.fiscal = fiscal
-        asignacion.save()
+        asignable = self.get_asignable()
+        eleccion = Eleccion.actual()
+        if asignable.asignacion_actual:
+            asignacion = asignable.asignacion_actual
+            asignacion.fiscal = fiscal
+            asignacion.save()
+        elif isinstance(asignable, LugarVotacion):
+            asignacion = AsignacionFiscalGeneral.objects.create(
+                fiscal=fiscal, lugar_votacion=asignable, eleccion=eleccion )
+
         messages.success(self.request, 'Fiscal cargado correctamente')
-        return redirect(mesa.get_absolute_url())
+        return redirect(asignable.get_absolute_url())
 
 
 class FiscalSimpleCreateView(BaseFiscalSimple, CreateView):
 
     def dispatch(self, *args, **kwargs):
         d = super().dispatch(*args, **kwargs)
-        if not self.mesa.asignacion_actual:
+        if 'mesa_numero' in self.kwargs and not self.asignable.asignacion_actual:
             messages.error(self.request, 'No se registra fiscal en esta mesa ')
             return redirect(self.mesa.get_absolute_url())
         return d
@@ -356,8 +376,8 @@ class FiscalSimpleCreateView(BaseFiscalSimple, CreateView):
 class FiscalSimpleUpdateView(BaseFiscalSimple, UpdateView):
 
     def get_object(self):
-        mesa = self.get_mesa()
-        fiscal = mesa.asignacion_actual.fiscal
+        asignable = self.get_asignable()
+        fiscal = asignable.asignacion_actual.fiscal
         if fiscal:
             return fiscal
         raise Http404
@@ -372,7 +392,6 @@ def eliminar_asignacion(request, eleccion_id, mesa_numero):
     mesa.asignacion_actual.delete()
     messages.success(request, 'La asignación se eliminó')
     return redirect(mesa.get_absolute_url())
-
 
 
 @login_required
@@ -411,11 +430,17 @@ class DondeFiscalizo(BaseFiscal):
     template_name = "fiscales/donde-fiscalizo.html"
 
 
-class MesaDetalle(LoginRequiredMixin, MiMesaMixin, DetailView):
+class MesaDetalle(LoginRequiredMixin, MiAsignableMixin, DetailView):
     template_name = "fiscales/mesa-detalle.html"
     slug_field = 'numero'
-    slug_url_kwarg = 'mesa_numero'
     model = Mesa
+
+    def get_object(self, *args, **kwargs):
+        return get_object_or_404(
+            Mesa, numero=self.kwargs['mesa_numero'],
+            eleccion__id=self.kwargs['eleccion_id']
+        )
+
 
 
 

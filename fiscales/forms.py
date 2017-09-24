@@ -62,8 +62,9 @@ class FiscalFormSimple(FiscalForm):
         model = Fiscal
         fields = [
             'nombres', 'apellido',
-            'dni',
+            'dni'
         ]
+
 
 
 
