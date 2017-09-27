@@ -30,6 +30,11 @@ def append_to_local_settings(path):
         append('./carreros/local_settings.py', f'\n{content}')
 
 
+def rmpyc():
+    with cd('/projects/carreros'):
+        run("find . -type d -name \"__pycache__\" -exec rm -rf {} \;")
+
+
 def loaddata(fixture):
     run("source /virtualenvs/carreros/bin/activate")
     with cd('/projects/carreros'):
@@ -39,6 +44,7 @@ def loaddata(fixture):
 
 def deploy():
     run("source /virtualenvs/carreros/bin/activate")
+    rmpyc()
     with cd('/projects/carreros'):
         run("git pull")
         run("supervisorctl restart carreros")
@@ -46,6 +52,7 @@ def deploy():
 
 def full_deploy():
     run("source /virtualenvs/carreros/bin/activate")
+    rmpyc()
     with cd('/projects/carreros'):
         run("git pull")
         run("/virtualenvs/carreros/bin/pip install -r requirements.txt")

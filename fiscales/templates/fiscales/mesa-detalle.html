@@ -50,7 +50,7 @@
 
                   {% if object.asignacion_actual.fiscal %}
                     {{ object.asignacion_actual.fiscal }}
-                    <a href="{% url 'mesa-editar-fiscal' object.numero %}"  class="waves-effect waves-light btn white-text">
+                    <a href="{% url 'mesa-editar-fiscal' object.eleccion.id object.numero %}"  class="waves-effect waves-light btn white-text">
                     Editar datos
 
                   {% else %}
@@ -62,7 +62,7 @@
 
                   {% endif %}
 
-                    <a title="Eliminar la asignación" class="right-align btn-floating btn waves-effect waves-light red modal-trigger" href="{% url 'mesa-eliminar-asignacion' object.numero %}" onclick="return confirm('¿Estás seguro?', 'lala')"><i class="material-icons tiny">delete</i></a>
+                    <a title="Eliminar la asignación" class="right-align btn-floating btn waves-effect waves-light red modal-trigger" href="{% url 'mesa-eliminar-asignacion' object.eleccion.id object.numero %}" onclick="return confirm('¿Estás seguro?', 'lala')"><i class="material-icons tiny">delete</i></a>
 
                           <!-- Modal Structure -->
                             <div id="modal1" class="modal">
@@ -72,7 +72,7 @@
                                 Si cargaste datos de un fiscal no se perderán, podés asignarlo a otra mesa ingresando el mismo DNI</p>
                               </div>
                               <div class="modal-footer center-align">
-                                <a href="{% url 'mesa-eliminar-asignacion' objeto.eleccion.id object.numero %}" class="modal-action modal-close waves-effect waves-effect btn-flat red white-text">De acuerdo</a>
+                                <a href="{% url 'mesa-eliminar-asignacion' object.eleccion.id object.numero %}" class="modal-action modal-close waves-effect waves-effect btn-flat red white-text">De acuerdo</a>
                               </div>
                             </div>
 
