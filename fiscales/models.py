@@ -10,7 +10,7 @@ from django.utils import timezone
 from django.contrib.auth.models import User
 from django.dispatch import receiver
 from django.db.models.signals import post_save, pre_delete
-from elecciones.models import desde_hasta, Mesa, LugarVotacion
+from elecciones.models import desde_hasta, Mesa, LugarVotacion, Eleccion
 from django.contrib.contenttypes.models import ContentType
 from prensa.models import DatoDeContacto
 from model_utils.fields import StatusField
@@ -88,9 +88,12 @@ class Fiscal(models.Model):
 
     @property
     def mesas_asignadas(self):
+        eleccion = Eleccion.actual()
         if self.es_general:
-            return Mesa.objects.filter(lugar_votacion__asignacion__fiscal=self).order_by('numero')
-        return Mesa.objects.filter(asignacion__fiscal=self).order_by('numero')
+            return Mesa.objects.filter(
+                eleccion=eleccion, lugar_votacion__asignacion__fiscal=self
+            ).order_by('numero')
+        return Mesa.objects.filter(eleccion=eleccion, asignacion__fiscal=self).order_by('numero')
 
     @property
     def escuelas(self):
