@@ -241,7 +241,7 @@ class Eleccion(models.Model):
 
     @classmethod
     def actual(cls):
-        actual = cls.objects.order_by('-id').last()
+        actual = cls.objects.order_by('-id').first()
         return actual
 
     class Meta:
