@@ -44,7 +44,6 @@ def loaddata(fixture):
 
 def deploy():
     run("source /virtualenvs/carreros/bin/activate")
-    rmpyc()
     with cd('/projects/carreros'):
         run("git pull")
         run("supervisorctl restart carreros")
@@ -52,7 +51,6 @@ def deploy():
 
 def full_deploy():
     run("source /virtualenvs/carreros/bin/activate")
-    rmpyc()
     with cd('/projects/carreros'):
         run("git pull")
         run("/virtualenvs/carreros/bin/pip install -r requirements.txt")
