@@ -271,7 +271,7 @@ def asignacion_estado(request, tipo, pk):
 class MiAsignableMixin:
     def dispatch(self, *args, **kwargs):
         d = super().dispatch(*args, **kwargs)
-        self.fiscal = get_object_or_404(Fiscal, tipo='general', user=self.request.user)
+        self.fiscal = get_object_or_404(Fiscal, user=self.request.user)
 
         self.asignable = self.get_asignable()
         if (('mesa_numero' in self.kwargs and self.asignable not in self.fiscal.mesas_asignadas) or
@@ -436,10 +436,11 @@ class MesaDetalle(LoginRequiredMixin, MiAsignableMixin, DetailView):
     model = Mesa
 
     def get_object(self, *args, **kwargs):
-        return get_object_or_404(
+        r = get_object_or_404(
             Mesa, numero=self.kwargs['mesa_numero'],
             eleccion__id=self.kwargs['eleccion_id']
         )
+        return r
 
 
 

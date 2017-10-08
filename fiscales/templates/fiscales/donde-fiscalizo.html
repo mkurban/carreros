@@ -68,20 +68,35 @@
               {% endif %}
 
 
-              <tr>
-                  <th>{% if object.es_general %}
+              {% if object.es_general %}
+
+                <tr>
+                  <th>
                     Mesas en la escuela
-                    {% else %}
-                    Mesa asignada
-                  {% endif %} </th>
+                  </th>
                   <td>
-                  {% for mesa in escuela.mesas.all %}
+                  {% for mesa in escuela.mesas_actuales %}
                     <a class="waves-effect waves-teal btn-flat" href="{{ mesa.get_absolute_url }}">Nº {{ mesa.numero }}</a>
                      {% if not forloop.last %}  {% endif %}
                   {% endfor %}
                   </td>
               </tr>
+              {% else %}
 
+              <tr>
+                  <th>
+                    Mesa asignada
+                  </th>
+                  <td>
+                  {% for mesa in object.mesas_asignadas %}
+                  {# TO DO | la mesa puede no ser de esta escuela? #}
+                    <a class="waves-effect waves-teal btn-flat" href="{{ mesa.get_absolute_url }}">Nº {{ mesa.numero }}</a>
+                     {% if not forloop.last %}  {% endif %}
+
+                  {% endfor %}
+                  </td>
+              </tr>
+              {% endif %}
               {% if  object.asignacion %}
               <tr>
                   <th>

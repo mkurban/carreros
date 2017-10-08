@@ -159,15 +159,16 @@ class AsignacionFiscal(TimeStampedModel):
             return True
         return False
 
-
     class Meta:
         abstract = True
 
 
 class AsignacionFiscalDeMesa(AsignacionFiscal):
-
     mesa = models.ForeignKey(
-        'elecciones.Mesa', related_name='asignacion')
+        'elecciones.Mesa',
+        limit_choices_to={'eleccion__id': 3},
+        related_name='asignacion'
+    )
 
     # es null si el fiscal general dice que la mesa está asignada
     # pero aun no hay datos.
@@ -187,7 +188,9 @@ class AsignacionFiscalDeMesa(AsignacionFiscal):
 class AsignacionFiscalGeneral(AsignacionFiscal):
     lugar_votacion = models.ForeignKey(
         'elecciones.LugarVotacion', related_name='asignacion')
-    eleccion = models.ForeignKey('elecciones.Eleccion')
+    eleccion = models.ForeignKey('elecciones.Eleccion',
+        limit_choices_to={'id': 3},
+    )
     fiscal = models.ForeignKey('Fiscal',
         limit_choices_to={'tipo': Fiscal.TIPO.general},
         related_name='asignacion_escuela'

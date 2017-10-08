@@ -102,6 +102,10 @@ class LugarVotacion(models.Model):
         return self.asignacion.exclude(fiscal__es_referente_de_circuito__isnull=False).order_by('-ingreso', '-id').last()
 
     @property
+    def mesas_actuales(self):
+        return self.mesas.filter(eleccion=Eleccion.actual())
+
+    @property
     def color(self):
         if self.mesa_testigo:
             return 'blue'
@@ -213,7 +217,8 @@ class Opcion(models.Model):
         help_text='Orden en la boleta', null=True, blank=True)
     obligatorio = models.BooleanField(default=False)
     es_contable = models.BooleanField(default=True)
-    codigo_dne = models.PositiveIntegerField(null=True, blank=True)
+    codigo_dne = models.PositiveIntegerField(null=True, blank=True, help_text='Nº de lista')
+    codigo_dne = models.PositiveIntegerField(null=True, blank=True, help_text='Nº asignado en la base de datos de resultados oficiales')
 
 
     class Meta:
@@ -276,8 +281,10 @@ class VotoMesaOficial(AbstractVotoMesa):
 
 
 @receiver(m2m_changed, sender=Circuito.referentes.through)
-def referentes_cambiaron(sender, instance, action, reverse, model, pk_set, using, **kwargs):
-    """cuando se asigna a un circuito, se crean las asignaciones a todas las escuelas del circuito"""
+def referentes_cambiaron(sender, instance, action, reverse,
+                         model, pk_set, using, **kwargs):
+    """cuando se asigna a un circuito, se crean las asignaciones
+    a todas las escuelas del circuito"""
 
     from fiscales.models import AsignacionFiscalGeneral, Fiscal   # avoid circular import
     eleccion = Eleccion.actual()
