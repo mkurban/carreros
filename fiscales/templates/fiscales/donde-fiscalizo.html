@@ -59,8 +59,11 @@
               </tr>
               <tr>
                   <th>Dirección</th>
-                  <td>{{ escuela.direccion_completa }} <br>
-                  <a href="http://maps.google.com/maps?q={{escuela.coordenadas}}">Ver en el mapa</a></td>
+                  <td>{{ escuela.direccion_completa }}     <a href="http://maps.google.com/maps?q={{escuela.coordenadas}}" class="waves-effect waves-light btn white-text"> Ver en el mapa </a> 
+              {% if request.user.is_staff %}
+                  <a href="http://cordobaciudadana.org/admin/elecciones/lugarvotacion/{{escuela.id}}/change/" class="waves-effect waves-light btn white-text">Corregir Datos</a>
+		{% endif %}
+		</td>
               </tr>
 
               {% if request.user.fiscal.es_referente %}
