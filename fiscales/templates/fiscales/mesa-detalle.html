@@ -17,22 +17,6 @@
 
 
             <table class="table bordered">
-              <tr>
-                  <th>Estado de Mesa</th>
-                  <td>{{ object.get_estado_display }}
-
-        {% if object.estado == 'ESCRUTADA' %}
-            <a href="{% url 'mesa-cargar-resultados' object.eleccion.id object.numero %}"  class="waves-effect waves-light btn white-text">Cargar resultados</a>
-
-
-        {% else %}
-              <a href="{% url 'mesa-cambiar-estado' object.eleccion.id object.numero object.proximo_estado %}"  class="waves-effect waves-light btn white-text">
-                    Reportar como {{ object.proximo_estado }}
-                  </a>
-        {%  endif %}
-
-                  </td>
-              </tr>
 
               <tr>
                   <th>Escuela</th>
@@ -141,31 +125,17 @@
               {% endif %}
 
 
-              {% if object.estado == 'ESCRUTADA' %}
-
-
               <tr>
                 <th>
                   Foto del Acta
                 </th>
                 <td>
-                    {% if object.foto_del_acta %}
-                      Subida
-
-                        <a href="{% url 'mesa-acta' object.eleccion.id object.numero %}"  class="waves-effect waves-light btn white-text">Cambiar</a>
-
-                      {% else %}
-                        <a href="{% url 'mesa-acta' object.eleccion.id object.numero %}"  class="waves-effect waves-light btn white-text">Subir</a>
-
-                    {% endif %}
+                    Enviar foto a <a href="mailto:{{ object.numero }}@cordobaciudadana.org"  class="waves-effect waves-light btn white-text">{{ object.numero }}@cordobaciudadana.org</a> o por watsapp o telegram al nro 3512326513.
 
                 </td>
 
               </tr>
-
-
-              {% endif %}
-
+                
 
             </table>
 
