@@ -1,5 +1,6 @@
 from django.contrib import admin
 from django.urls import reverse
+from django.db.models import Q
 from leaflet.admin import LeafletGeoAdmin
 from .models import Seccion, Circuito, LugarVotacion, Mesa, Partido, Opcion, Eleccion, VotoMesaReportado
 from django.http import HttpResponseRedirect
@@ -25,6 +26,29 @@ class HasLatLongListFilter(admin.SimpleListFilter):
         if value:
             isnull = value == 'no'
             queryset = queryset.filter(geom__isnull=isnull)
+        return queryset
+
+
+class TieneResultados(admin.SimpleListFilter):
+    title = 'Tiene resultados'
+    parameter_name = 'tiene_resultados'
+
+    def lookups(self, request, model_admin):
+        return (
+            ('sí', 'sí'),
+            ('no', 'no'),
+        )
+
+    def queryset(self, request, queryset):
+        value = self.value()
+        print("==>> ",value)
+        if value is not None:
+            q = Q(votomesaoficial__votos__gt=0) | Q(votomesareportado__votos__gt=0)
+            if value == "no":
+                queryset = queryset.filter(~q)
+            else:
+                queryset = queryset.filter(q)
+
         return queryset
 
 
@@ -140,7 +164,7 @@ mostrar_resultados_mesas.short_description = "Mostrar resultados de Mesas selecc
 class MesaAdmin(AdminRowActionsMixin, admin.ModelAdmin):
     actions = [resultados_oficiales]
     list_display = ('numero', 'lugar_votacion')
-    list_filter = ('eleccion', TieneFiscal, 'es_testigo', 'lugar_votacion__circuito__seccion', 'lugar_votacion__circuito')
+    list_filter = ('eleccion', TieneFiscal, TieneResultados, 'es_testigo', 'lugar_votacion__circuito__seccion', 'lugar_votacion__circuito')
     search_fields = (
         'numero', 'lugar_votacion__nombre', 'lugar_votacion__direccion',
         'lugar_votacion__ciudad', 'lugar_votacion__barrio',
