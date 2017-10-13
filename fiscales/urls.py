@@ -6,6 +6,7 @@ from . import views
 urlpatterns = [
     url('^mis-datos$', views.MisDatos.as_view(), name='mis-datos'),
     url('^mis-contactos', views.MisContactos.as_view(), name='mis-contactos'),
+    url('^mis-voluntarios', views.MisVoluntarios.as_view(), name='mis-voluntarios'),
     url('^$', views.DondeFiscalizo.as_view(), name='donde-fiscalizo'),
     url('^estado/(?P<tipo>de_mesa|general)/(?P<pk>\d+)$',
         views.asignacion_estado, name='asignacion-estado'),

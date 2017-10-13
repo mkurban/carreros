@@ -98,9 +98,9 @@ class Fiscal(models.Model):
     @property
     def escuelas(self):
         if self.es_general:
-            return LugarVotacion.objects.filter(asignacion__fiscal=self)
+            return LugarVotacion.objects.filter(asignacion__fiscal=self, asignacion__eleccion__id=3)
         else:
-            return LugarVotacion.objects.filter(mesas__asignacion__fiscal=self).distinct()
+            return LugarVotacion.objects.filter(mesas__eleccion__id=3, mesas__asignacion__fiscal=self).distinct()
 
     @property
     def circuitos(self):

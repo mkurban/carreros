@@ -5,6 +5,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.generic.detail import DetailView
 from django.utils.safestring import mark_safe
 from django.views.generic.edit import UpdateView, CreateView, FormView
+from django.views.generic.list import ListView
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.views import PasswordChangeView
@@ -231,6 +232,35 @@ class MisDatosUpdate(ConContactosMixin, UpdateView, BaseFiscal):
 
 class MisContactos(BaseFiscal):
     template_name = "fiscales/mis-contactos.html"
+
+
+
+
+class MisVoluntarios(LoginRequiredMixin, ListView):
+    template_name = "fiscales/mis-voluntarios.html"
+    model = Fiscal
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['eleccion'] = Eleccion.actual()
+        return context
+
+    def get_queryset(self):
+        try:
+            fiscal = get_object_or_404(Fiscal, user=self.request.user, tipo=Fiscal.TIPO.general)
+        except Fiscal.DoesNotExist:
+            raise Http404('no está registrado como fiscal general')
+
+
+        return Fiscal.objects.filter(
+            escuela_donde_vota__in=fiscal.escuelas
+        ).order_by('escuela_donde_vota')
+
+
+
+
+
+
 
 
 @login_required

@@ -8,7 +8,6 @@
                   <td>{{ fiscal }}</td>
               </tr>
 
-
               <tr>
                   <th>Establecimiento{{ fiscal.escuelas.all|pluralize }} </th>
                   <td>
@@ -21,7 +20,12 @@
 
               <tr>
                   <th>Mesas </th>
-                  <td>{{ fiscal.mesas_desde_hasta }}</td>
+
+                  <td>{% if fiscal.mesas_desde_hasta %}
+                    {{ fiscal.mesas_desde_hasta }}
+                    {% else %}
+                    <strong>No asignado</strong>
+                  {% endif %} </td>
               </tr>
 
               <tr>
