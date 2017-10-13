@@ -41,6 +41,7 @@
 
 
               {% if request.user.fiscal and request.user.fiscal.es_general %}
+
               <tr>
                 <th>
                    Fiscal asignado
@@ -48,19 +49,9 @@
                 <td>
                 {% if  object.asignacion_actual %}
 
-                  {% if object.asignacion_actual.fiscal %}
-                    {{ object.asignacion_actual.fiscal }}
-                    <a href="{% url 'mesa-editar-fiscal' object.eleccion.id object.numero %}"  class="waves-effect waves-light btn white-text">
-                    Editar datos
-
-                  {% else %}
-                    Registrado (sin datos)
-
-                    <a href="{% url 'mesa-cargar-fiscal' object.eleccion.id object.numero %}"  class="waves-effect waves-light btn white-text">
+                  <a href="{% url 'mesa-asignar-fiscal' object.eleccion.id object.numero %}"  class="waves-effect waves-light btn white-text">
                     Cargar datos
                   </a>
-
-                  {% endif %}
 
                     <a title="Eliminar la asignación" class="right-align btn-floating btn waves-effect waves-light red modal-trigger" href="{% url 'mesa-eliminar-asignacion' object.eleccion.id object.numero %}" onclick="return confirm('¿Estás seguro?', 'lala')"><i class="material-icons tiny">delete</i></a>
 

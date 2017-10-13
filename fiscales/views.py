@@ -4,10 +4,11 @@ from django.urls import reverse, reverse_lazy
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.generic.detail import DetailView
 from django.utils.safestring import mark_safe
-from django.views.generic.edit import UpdateView, CreateView
+from django.views.generic.edit import UpdateView, CreateView, FormView
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.views import PasswordChangeView
+
 from django.utils import timezone
 from django.utils.safestring import mark_safe
 from django.db.models import Q
@@ -31,6 +32,8 @@ from .forms import (
     QuieroSerFiscal2,
     QuieroSerFiscal3,
     QuieroSerFiscal4,
+    ElegirFiscal,
+    FiscalxDNI,
 )
 from prensa.views import ConContactosMixin
 
@@ -270,14 +273,12 @@ def asignacion_estado(request, tipo, pk):
 
 class MiAsignableMixin:
     def dispatch(self, *args, **kwargs):
-        d = super().dispatch(*args, **kwargs)
         self.fiscal = get_object_or_404(Fiscal, user=self.request.user)
-
         self.asignable = self.get_asignable()
         if (('mesa_numero' in self.kwargs and self.asignable not in self.fiscal.mesas_asignadas) or
             ('escuela_id' in self.kwargs and self.asignable not in self.fiscal.escuelas)):
             return HttpResponseForbidden()
-        return d
+        return super().dispatch(*args, **kwargs)
 
     def get_asignable(self):
         if 'escuela_id' in self.kwargs:
@@ -287,7 +288,15 @@ class MiAsignableMixin:
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['asignable'] = self.get_asignable()
+        context['asignable'] = self.asignable
+        if isinstance(self.asignable, Mesa):
+            context['url_crear_fiscal'] = reverse(
+                'mesa-cargar-fiscal', args=(3, self.asignable.numero)
+            )
+        else:
+            context['url_crear_fiscal'] = reverse(
+                'escuela-cargar-fiscal', args=(3, self.asignable.id)
+            )
         return context
 
     def verificar_fiscal_existente(self, fiscal):
@@ -351,6 +360,34 @@ class BaseFiscalSimple(LoginRequiredMixin, MiAsignableMixin, ConContactosMixin):
 
         messages.success(self.request, 'Fiscal cargado correctamente')
         return redirect(asignable.get_absolute_url())
+
+
+class AsignarFiscalView(MiAsignableMixin, FormView):
+    form_class = ElegirFiscal
+    template_name = "fiscales/asignar-fiscal.html"
+
+    def get_success_url(self):
+        return self.asignable.get_absolute_url()
+
+    def get_form(self, form_class=None):
+        form = super().get_form(form_class)
+        if isinstance(self.asignable, Mesa):
+            # fiscal general puede asignar fiscales de mesa
+            # que prefieren esa escuela
+            escuela = self.asignable.lugar_votacion
+        else:
+            escuela = self.asignable
+        qs = Fiscal.objects.filter(
+            estado=Fiscal.ESTADOS.CONFIRMADO,
+            escuela_donde_vota=escuela
+        ).exclude(id=self.request.user.fiscal.id)
+        form.fields['fiscal'].queryset = qs
+        return form
+
+    def form_valid(self, form):
+        fiscal = form.cleaned_data['fiscal']
+        fiscal.asignar_a(self.asignable)
+        return super().form_valid(form)
 
 
 class FiscalSimpleCreateView(BaseFiscalSimple, CreateView):

@@ -53,7 +53,7 @@ class Circuito(models.Model):
 
 
 class LugarVotacion(models.Model):
-    circuito = models.ForeignKey(Circuito)
+    circuito = models.ForeignKey(Circuito, related_name='escuelas')
     nombre = models.CharField(max_length=100)
     direccion = models.CharField(max_length=100)
     barrio = models.CharField(max_length=100, blank=True)
@@ -185,7 +185,6 @@ class Mesa(models.Model):
         pos = Mesa.ESTADOS_.index(self.estado)
         return Mesa.ESTADOS_[pos + 1]
 
-
     def __str__(self):
         return f"Mesa {self.numero}"
 
@@ -240,8 +239,9 @@ class Eleccion(models.Model):
 
     @classmethod
     def opciones_actuales(cls):
-        if cls.objects.last():
-            return cls.objects.last().opciones.all()
+        e = cls.actual()
+        if e:
+            return e.opciones.all()
         return Opcion.objects.none()
 
     @classmethod

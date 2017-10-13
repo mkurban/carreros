@@ -66,6 +66,23 @@ class FiscalFormSimple(FiscalForm):
         ]
 
 
+class CustomModelChoiceField(forms.ModelChoiceField):
+    def label_from_instance(self, obj):
+        return obj.label_from_instance
+
+
+class ElegirFiscal(forms.Form):
+    fiscal = CustomModelChoiceField(
+        label='Elegir fiscal',
+        queryset=Fiscal.objects.none(),   # seteado dinamicamente
+        widget=forms.RadioSelect,
+        empty_label=None
+    )
+
+
+class FiscalxDNI(forms.ModelForm):
+    dni = ARDNIField(required=True)
+
 
 
 class FiscalForm(forms.ModelForm):

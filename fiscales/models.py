@@ -109,10 +109,30 @@ class Fiscal(models.Model):
     @property
     def asignacion(self):
         if self.es_general:
-            qs = AsignacionFiscalGeneral.objects.filter(fiscal=self)
+            qs = AsignacionFiscalGeneral.objects.filter(fiscal=self, eleccion__id=3)
         else:
-            qs = AsignacionFiscalDeMesa.objects.filter(fiscal=self)
+            qs = AsignacionFiscalDeMesa.objects.filter(fiscal=self, mesa__eleccion__id=3)
         return qs.last()
+
+    @property
+    def label_from_instance(self):
+        if self.asignacion:
+            return f'{self} (asignado a {self.asignacion.asignable})'
+        return f'{self}'
+
+
+    def asignar_a(self, asignable):
+        if isinstance(asignable, Mesa):
+            return AsignacionFiscalDeMesa.objects.get_or_create(mesa=asignable, fiscal=self)[0]
+        elif isinstance(asignable, LugarVotacion):
+            asignacion, _ = AsignacionFiscalGeneral.objects.create(
+                lugar_votacion=asignable, fiscal=self
+            )
+            if not self.es_general:
+                # gana privilegios :o
+                self.tipo = Fiscal.TIPO.general
+                self.save(update_fields['tipo'])
+            return asignacion
 
     @property
     def direccion_completa(self):
@@ -175,6 +195,11 @@ class AsignacionFiscalDeMesa(AsignacionFiscal):
     fiscal = models.ForeignKey('Fiscal', null=True, blank=True,
         limit_choices_to={'tipo': Fiscal.TIPO.de_mesa}, related_name='asignacion_mesa')
 
+
+    @property
+    def asignable(self):
+        return self.mesa
+
     def __str__(self):
         if self.fiscal:
             return f'Asignacion {self.mesa}: {self.fiscal}'
@@ -190,12 +215,16 @@ class AsignacionFiscalGeneral(AsignacionFiscal):
         'elecciones.LugarVotacion', related_name='asignacion')
     eleccion = models.ForeignKey('elecciones.Eleccion',
         limit_choices_to={'id': 3},
+        default=3,
     )
     fiscal = models.ForeignKey('Fiscal',
         limit_choices_to={'tipo': Fiscal.TIPO.general},
         related_name='asignacion_escuela'
     )
 
+    @property
+    def asignable(self):
+        return self.lugar_votacion
 
     def __str__(self):
         return f'{self.fiscal} {self.lugar_votacion}'
