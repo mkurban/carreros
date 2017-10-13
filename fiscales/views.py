@@ -451,14 +451,21 @@ class FiscalSimpleUpdateView(BaseFiscalSimple, UpdateView):
 
 
 @login_required
-def eliminar_asignacion(request, eleccion_id, mesa_numero):
+def eliminar_asignacion(request, eleccion_id, tipo, mesa_numero=None, escuela_id=None):
     fiscal = get_object_or_404(Fiscal, tipo='general', user=request.user)
-    mesa = get_object_or_404(Mesa, eleccion__id=eleccion_id, numero=mesa_numero)
-    if mesa not in fiscal.mesas_asignadas:
-        return HttpResponseForbidden()
-    mesa.asignacion_actual.delete()
+    if escuela_id:
+        circuitos = fiscal.es_referente_de_circuito.all()
+        asignable = get_object_or_404(LugarVotacion, id=escuela_id, circuito__in=circuitos)
+        if asignable not in fiscal.escuelas:
+            return HttpResponseForbidden()
+    else:
+        asignable = get_object_or_404(Mesa, eleccion__id=eleccion_id, numero=mesa_numero)
+        if mesa not in fiscal.mesas_asignadas:
+            return HttpResponseForbidden()
+
+    asignable.asignacion_actual.delete()
     messages.success(request, 'La asignación se eliminó')
-    return redirect(mesa.get_absolute_url())
+    return redirect(asignable.get_absolute_url())
 
 
 @login_required

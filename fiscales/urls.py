@@ -30,7 +30,7 @@ urlpatterns = [
     url('^(?P<eleccion_id>\d+)/m(?P<mesa_numero>\d+)/fiscal/registrar$',
         views.tengo_fiscal, name='mesa-tengo-fiscal'),
 
-    url('^(?P<eleccion_id>\d+)/e(?P<escuela_id>\d+)/fiscal/crear$',
+    url('^(?P<eleccion_id>\d+)/e(?P<escuela_id>\d+)/fiscal/asignar$',
         views.AsignarFiscalView.as_view(), {'tipo': 'general'}, name='escuela-asignar-fiscal'),
     url('^(?P<eleccion_id>\d+)/e(?P<escuela_id>\d+)/fiscal/crear$',
         views.FiscalSimpleCreateView.as_view(), {'tipo': 'general'}, name='escuela-cargar-fiscal'),
