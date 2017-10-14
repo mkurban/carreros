@@ -341,7 +341,7 @@ class MesaActa(BaseFiscal, UpdateView):
 
     def get_object(self):
         return get_object_or_404(Mesa, eleccion__id=self.kwargs['eleccion_id'],
-                                 numero=self.kwargs['mesa_numero'], estado='ESCRUTADA')
+                                 numero=self.kwargs['mesa_numero'])
 
     def form_valid(self, form):
         super().form_valid(form)
