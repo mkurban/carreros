@@ -34,9 +34,9 @@ urlpatterns = [
         views.AsignarFiscalView.as_view(), {'tipo': 'general'}, name='escuela-asignar-fiscal'),
     url('^(?P<eleccion_id>\d+)/e(?P<escuela_id>\d+)/fiscal/crear$',
         views.FiscalSimpleCreateView.as_view(), {'tipo': 'general'}, name='escuela-cargar-fiscal'),
-    url('^(?P<eleccion_id>\d+)/e(?P<escuela_id>\d+)/fiscal/eliminar$',
+    url('^(?P<eleccion_id>\d+)/e(?P<escuela_id>\d+)/(?P<asignacion_id>\d+)/eliminar$',
         views.eliminar_asignacion, {'tipo': 'general'}, name='escuela-eliminar-asignacion'),
-    url('^(?P<eleccion_id>\d+)/e(?P<escuela_id>\d+)/fiscal/editar$',
+    url('^(?P<eleccion_id>\d+)/e(?P<escuela_id>\d+)/(?P<asignacion_id>\d+)/editar$',
         views.FiscalSimpleUpdateView.as_view(), {'tipo': 'general'}, name='escuela-editar-fiscal'),
 
 

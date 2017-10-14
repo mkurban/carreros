@@ -39,7 +39,6 @@ from .forms import (
 from prensa.views import ConContactosMixin
 
 
-
 def choice_home(request):
     """
     redirige a una página en funcion del tipo de usuario
@@ -430,10 +429,11 @@ class FiscalSimpleCreateView(BaseFiscalSimple, CreateView):
         return d
 
     def verificar_fiscal_existente(self, fiscal):
-        existente = get_object_or_None(Fiscal,
-                dni=fiscal.dni,
-                tipo_dni=fiscal.tipo_dni
-            )
+        existente = get_object_or_None(
+            Fiscal,
+            dni=fiscal.dni,
+            tipo_dni=fiscal.tipo_dni
+        )
         if existente:
             fiscal = existente
             messages.info(self.request, 'Ya teniamos datos de esta persona')
@@ -444,26 +444,52 @@ class FiscalSimpleUpdateView(BaseFiscalSimple, UpdateView):
 
     def get_object(self):
         asignable = self.get_asignable()
-        fiscal = asignable.asignacion_actual.fiscal
-        if fiscal:
-            return fiscal
+        asignacion_id = self.kwargs.get('asignacion_id')
+        if isinstance(asignable, LugarVotacion) and asignacion_id:
+            asignacion_id = self.kwargs['asignacion_id']
+            asignacion = get_object_or_404(
+                AsignacionFiscalGeneral,
+                id=asignacion_id,
+                lugar_votacion=asignable)
+        elif isinstance(asignable, Mesa) and asignacion_id:
+            asignacion = get_object_or_404(
+                AsignacionFiscalDeMesa,
+                id=asignacion_id,
+                mesa=asignable)
+        else:
+            asignacion = asignable.asignacion_actual
+        if asignacion.fiscal:
+            return asignacion.fiscal
         raise Http404
 
 
 @login_required
-def eliminar_asignacion(request, eleccion_id, tipo, mesa_numero=None, escuela_id=None):
+def eliminar_asignacion(request, eleccion_id, tipo,
+                        mesa_numero=None, escuela_id=None,
+                        asignacion_id=None):
     fiscal = get_object_or_404(Fiscal, tipo='general', user=request.user)
     if escuela_id:
         circuitos = fiscal.es_referente_de_circuito.all()
-        asignable = get_object_or_404(LugarVotacion, id=escuela_id, circuito__in=circuitos)
+        asignable = get_object_or_404(
+            LugarVotacion, id=escuela_id, circuito__in=circuitos,
+            asignacion__id=asignacion_id
+        )
         if asignable not in fiscal.escuelas:
             return HttpResponseForbidden()
+
+        asignacion = AsignacionFiscalGeneral.objects.get(id=asignacion_id)
+
     else:
-        asignable = get_object_or_404(Mesa, eleccion__id=eleccion_id, numero=mesa_numero)
+        kw = {'asignacion': asignacion_id} if asignacion_id else {}
+        mesa = get_object_or_404(Mesa, eleccion__id=eleccion_id, numero=mesa_numero, **kw)
         if mesa not in fiscal.mesas_asignadas:
             return HttpResponseForbidden()
+        if asignacion_id:
+            asignacion = AsignacionFiscalDeMesa.objects.get(id=asignacion_id)
+        else:
+            asignacion = mesa.asignacion_actual
 
-    asignable.asignacion_actual.delete()
+    asignacion.delete()
     messages.success(request, 'La asignación se eliminó')
     return redirect(asignable.get_absolute_url())
 

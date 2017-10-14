@@ -97,8 +97,11 @@ class LugarVotacion(models.Model):
         return desde_hasta(self.mesas)
 
     @property
-    def asignacion_actual(self):
+    def asignaciones(self):
+        return self.asignacion.exclude(fiscal__es_referente_de_circuito__isnull=False)
 
+    @property
+    def asignacion_actual(self):
         return self.asignacion.exclude(fiscal__es_referente_de_circuito__isnull=False).order_by('-ingreso', '-id').last()
 
     @property
