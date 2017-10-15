@@ -1,0 +1,96 @@
+{% extends "fiscales/base.html" %}
+{% load i18n material_form material_frontend %}
+
+{% block breadcrumbs_items %}
+<a href="{{ object.get_absolute_url }}">{{ object }}</a>
+<a class="active">Acta</a>
+{% endblock %}
+
+
+{% block extrahead %}
+    <style type="text/css">
+
+.left-panel {
+  flex-basis: 50%;
+  margin-left: 0.375rem; }
+  .left-panel.wide {
+    flex-basis: 100%;
+    margin-right: 0.375rem; }
+  .left-panel > .card {
+    margin-bottom: 0.375rem; }
+
+.right-panel {
+  flex-basis: 50%;
+  min-width: 300px;
+  margin-left: 0.375rem;
+  margin-right: 0.375rem; }
+  .right-panel > .card {
+    margin-bottom: 0.5rem; }
+
+@media only screen and (max-width: 993px) {
+  .left-panel {
+    flex-basis: 100%;
+    width: 100%;
+    margin-left: 0;
+    margin-right: 0; }
+  .left-panel > .card {
+    margin-top: 1px; }
+
+    </style>
+{% endblock %}
+
+
+{% block page_title %}Clasificar actas{% endblock %}
+
+{% block left-panel %}
+    {% if not form %}
+        <p>No hay actas nuevas por el momento. Refresca en unos instantes. </p>
+
+    {% else %}
+
+
+    <div class="card">
+
+       <form method="POST" enctype="multipart/form-data">
+        {% csrf_token %}
+        <div class="card-content">
+
+            <div class="card-title">¿De qué mesa es esta acta?</div>
+
+                  {% form %}{% endform %}
+
+
+
+        </div>
+
+
+
+        <div class="card-action">
+
+
+
+
+            <div class="right-align">
+
+               <button class="btn waves-effect waves-light btn white-text" type="submit" tabindex="{{ button_tabindex }}">
+                  Guardar
+               </button>
+            </div>
+        </div>
+
+       </form>
+
+    </div>
+    {% endif %}
+{% endblock left-panel %}
+
+{% block right-panel %}
+    <div class="card">
+
+
+        <div class="card-content">
+           <img class="responsive-img" src="{{ attachment.file.url }}">
+        </div>
+
+    </div>
+{% endblock right-panel %}

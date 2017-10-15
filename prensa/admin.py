@@ -1,10 +1,11 @@
 from django.contrib import admin
 from .models import Persona, Medio, Programa, Aparicion, DatoDeContacto, Rol
-from attachments.admin import AttachmentInlines
+# from attachments.admin import AttachmentInlines
 
 
 class AparicionAdmin(admin.ModelAdmin):
-    inlines = (AttachmentInlines,)
+    # inlines = (AttachmentInlines,)
+    pass
 
 
 admin.site.register(Aparicion, AparicionAdmin)

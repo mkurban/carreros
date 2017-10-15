@@ -1,4 +1,5 @@
 import os
+from itertools import chain
 from django.contrib.auth.models import User
 from django.urls import reverse
 from django.db import models
@@ -180,6 +181,14 @@ class Mesa(models.Model):
     @property
     def tiene_reporte(self):
         return self.votomesareportado_set.aggregate(Sum('votos'))['votos__sum']
+
+    @property
+    def foto_o_attachment(self):
+        from adjuntos.models import Attachment
+        try:
+            return self.foto_del_acta or self.attachment.file
+        except Attachment.DoesNotExist:
+            return None
 
     @property
     def proximo_estado(self):

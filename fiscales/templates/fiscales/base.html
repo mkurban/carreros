@@ -19,6 +19,24 @@
 
         {% endcomment %}
 
+        {% if request.user.is_staff %}
+            <li {% if url in request.path %} class="active"{% endif %}>
+                <a href="{% url "admin:index" %}" class="collapsible-header" data-turbolinks="false">Admin<i class="material-icons">dashboard</i></a>
+            </li>
+
+
+            {% url 'elegir-adjunto' as url %}
+            <li {% if url in request.path %} class="active"{% endif %}>
+                <a href="{{ url }}" class="collapsible-header" data-turbolinks="false">Clasificar actas<i class="material-icons">picture_in_picture</i></a>
+            </li>
+
+            <li></li>
+        {% endif %}
+
+
+
+
+
         {% url 'mis-datos' as url %}
         <li {% if url in request.path %} class="active"{% endif %}>
             <a href="{{ url }}" class="collapsible-header" data-turbolinks="false">Mis datos<i class="material-icons">tag_faces</i></a>
