@@ -4,13 +4,10 @@
     {% include 'material/frontend/includes/material_css.html' %}
     {% include 'material/frontend/includes/material_js.html' %}
     <link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/icon?family=Material+Icons">
-    <link rel="stylesheet" type="text/css" href="https://cdn.rawgit.com/nickpeihl/sidebar-v2/master/css/leaflet-sidebar.min.css">
 
     {% comment %}
         <link rel="stylesheet" type="text/css" href="//maxcdn.bootstrapcdn.com/font-awesome/4.1.0/css/font-awesome.min.css">
     {% endcomment %}
-
-    <script type="text/javascript" src="https://cdn.rawgit.com/nickpeihl/sidebar-v2/master/js/leaflet-sidebar.min.js"></script>
   </head>
   <body>
 
@@ -38,14 +35,6 @@
                   {% include "elecciones/tabla_resultados.html" with responsive=True incluir_votos=True%}
               {% endwith %}
           {% endfor %}
-      </div>
-
-      <div class="sidebar-pane" id="profile">
-          <h1 class="sidebar-header">Profile<span class="sidebar-close"><i class="small material-icons">close</i></span></h1>
-      </div>
-
-      <div class="sidebar-pane" id="settings">
-          <h1 class="sidebar-header">Settings<span class="sidebar-close"><i class="small material-icons">close</i></span></h1>
       </div>
   </body>
 </html>
