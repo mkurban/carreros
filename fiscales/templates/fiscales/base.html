@@ -30,6 +30,12 @@
                 <a href="{{ url }}" class="collapsible-header" data-turbolinks="false">Clasificar actas<i class="material-icons">picture_in_picture</i></a>
             </li>
 
+
+            {% url 'elegir-acta-a-cargar' as url %}
+            <li {% if url in request.path %} class="active"{% endif %}>
+                <a href="{{ url }}" class="collapsible-header" data-turbolinks="false">Cargar resultados<i class="material-icons">dvr</i></a>
+            </li>
+
             <li></li>
         {% endif %}
 

@@ -1,4 +1,6 @@
 from django.db import models
+from django.dispatch import receiver
+from django.db.models.signals import post_save
 from urllib.parse import quote_plus
 import dateparser
 
@@ -40,3 +42,26 @@ class Attachment(models.Model):
 
     def __str__(self):
         return f'{self.file} ({self.mimetype})'
+
+
+@receiver(post_save, sender='elecciones.Mesa')
+def marcar_como_testigo(sender, instance=None, created=False, **kwargs):
+    """
+    cuando se asocia una mesa a un acta o se sube el documento, y es la primera
+    de la escuela, la marcamos como testigo
+    """
+    if not instance.foto_o_attachment and not instance.lugar_votacion.mesa_testigo:
+        mesa.es_testigo = True
+        mesa.save(update_fields=['es_testigo'])
+
+
+@receiver(post_save, sender=Attachment)
+def marcar_como_testigo_via_attach(sender, instance=None, created=False, **kwargs):
+    """
+    cuando se asocia una mesa a un acta o se sube el documento, y es la primera
+    de la escuela, la marcamos como testigo
+    """
+    if instance.mesa and not mesa.lugar_votacion.mesa_testigo:
+        mesa = instance.mesa
+        mesa.es_testigo = True
+        mesa.save(update_fields=['es_testigo'])

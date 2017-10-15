@@ -43,45 +43,35 @@
 {% block page_title %}Clasificar actas{% endblock %}
 
 {% block left-panel %}
-    {% if not form %}
-        <p>No hay actas nuevas por el momento. Refresca en unos instantes. </p>
-
-    {% else %}
-
 
     <div class="card">
-
        <form method="POST" enctype="multipart/form-data">
         {% csrf_token %}
         <div class="card-content">
 
+          {% block card-content %}
+
             <div class="card-title">¿De qué mesa es esta acta?</div>
 
                   {% form %}{% endform %}
-
-
-
-        </div>
-
+            </div>
+          {% endblock card-content %}
 
 
         <div class="card-action">
-
-
-
-
+            {% block card-action %}
             <div class="right-align">
 
                <button class="btn waves-effect waves-light btn white-text" type="submit" tabindex="{{ button_tabindex }}">
                   Guardar
                </button>
             </div>
+            {% endblock card-action %}
         </div>
 
        </form>
 
     </div>
-    {% endif %}
 {% endblock left-panel %}
 
 {% block right-panel %}

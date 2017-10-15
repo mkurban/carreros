@@ -125,7 +125,7 @@ class LugarVotacion(models.Model):
 
     @property
     def mesa_testigo(self):
-        return self.mesas.filter(es_testigo=True).first()
+        return self.mesas.filter(eleccion__id=3, es_testigo=True).first()
 
 
     @property
@@ -165,6 +165,7 @@ class Mesa(models.Model):
     url = models.URLField(blank=True, help_text='url al telegrama')
     foto_del_acta = models.ImageField(upload_to=path_foto_acta, null=True, blank=True)
     electores = models.PositiveIntegerField(null=True, blank=True)
+    taken = models.DateTimeField(null=True)
 
 
     def get_absolute_url(self):
@@ -310,12 +311,3 @@ def referentes_cambiaron(sender, instance, action, reverse,
         for fiscal in fiscales:
             for escuela in escuelas:
                 AsignacionFiscalGeneral.objects.create(eleccion=eleccion, lugar_votacion=escuela, fiscal=fiscal)
-
-
-@receiver(post_save, sender=VotoMesaReportado)
-def marcar_como_testigo(sender, instance=None, created=False, **kwargs):
-    mesa = instance.mesa
-    if not mesa.lugar_votacion.mesa_testigo:
-        mesa.es_testigo = True
-        mesa.save(update_fields=['es_testigo'])
-

@@ -11,6 +11,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.views import PasswordChangeView
 
 from django.utils import timezone
+from datetime import timedelta
 from django.utils.safestring import mark_safe
 from django.db.models import Q
 from annoying.functions import get_object_or_None
@@ -37,6 +38,8 @@ from .forms import (
     FiscalxDNI,
 )
 from prensa.views import ConContactosMixin
+
+WAITING_FOR = 2
 
 
 def choice_home(request):
@@ -543,30 +546,53 @@ class MesaDetalle(LoginRequiredMixin, MiAsignableMixin, DetailView):
         return r
 
 
+@staff_member_required
+def elegir_acta_a_cargar(request):
+    now = timezone.now()
+    desde = now - timedelta(minutes=WAITING_FOR)
+    # se eligen mesas que nunca se intentaron cargar o que se asignaron a
+    # hace más de 3 minutos
+    mesas = Mesa.objects.filter(
+        eleccion__id=3,
+        votomesareportado__isnull=True,
+    ).filter(Q(taken__isnull=True) | Q(taken__lt=desde)
+    ).filter(~Q(foto_del_acta='') | Q(attachment__isnull=False)).order_by('?')
+    if mesas.exists():
+        mesa = mesas[0]
+        # se marca el adjunto
+        mesa.taken = now
+        mesa.save(update_fields=['taken'])
+        return redirect(
+            'mesa-cargar-resultados',
+            eleccion_id=mesa.eleccion.id,
+            mesa_numero=mesa.numero
+        )
+
+    return render(request, 'fiscales/sin-actas.html')
 
 
-@login_required
+
+@staff_member_required
 def cargar_resultados(request, eleccion_id, mesa_numero):
+    fiscal = get_object_or_404(Fiscal, user=request.user)
+
     def fix_opciones(formset):
         # hack para dejar sólo la opcion correspondiente a cada fila
         # se podria hacer "disabled" pero ese caso quita el valor del
         # cleaned_data y luego lo exige por ser requerido.
-        for opcion, form in zip(Eleccion.opciones_actuales(), formset):
+        for i, (opcion, form) in enumerate(
+            zip(Eleccion.opciones_actuales(), formset), 1):
             form.fields['opcion'].choices = [(opcion.id, str(opcion))]
 
+            form.fields['opcion'].widget.attrs['tabindex'] = 99 + i
+            form.fields['votos'].widget.attrs['tabindex'] = i
             # si la opcion es obligatoria, se llenan estos campos
             if opcion.obligatorio:
                 form.fields['votos'].required = True
+            if i == 1:
+                form.fields['votos'].widget.attrs['autofocus'] = True
 
     mesa = get_object_or_404(Mesa, eleccion__id=eleccion_id, numero=mesa_numero)
-    try:
-        fiscal = request.user.fiscal
-    except Fiscal.DoesNotExist:
-        raise Http404()
-
-    if mesa not in fiscal.mesas_asignadas:
-        return HttpResponseForbidden()
-
     data = request.POST if request.method == 'POST' else None
     qs = VotoMesaReportado.objects.filter(mesa=mesa, fiscal=fiscal)
     initial = [{'opcion': o} for o in Eleccion.opciones_actuales()]
@@ -595,10 +621,12 @@ def cargar_resultados(request, eleccion_id, mesa_numero):
         else:
             messages.success(request, 'Guardado correctamente')
 
-        return redirect(mesa)
+        return redirect('elegir-acta-a-cargar')
 
-    return render(request, "fiscales/carga.html",
-        {'formset': formset, 'object': mesa})
+    return render(
+        request, "fiscales/carga.html",
+        {'formset': formset, 'object': mesa}
+    )
 
 
 class CambiarPassword(PasswordChangeView):
