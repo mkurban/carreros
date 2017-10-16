@@ -256,6 +256,8 @@ class MisVoluntarios(LoginRequiredMixin, ListView):
 
         return Fiscal.objects.filter(
             escuela_donde_vota__in=fiscal.escuelas
+        ).exclude(
+            id=fiscal.id
         ).order_by('escuela_donde_vota')
 
 

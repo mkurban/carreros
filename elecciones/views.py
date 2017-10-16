@@ -170,7 +170,7 @@ class MapaResultadosOficiales(StaffOnlyMixing, TemplateView):
                     lookups = Q(id__in=self.filtros)
 
                 elif 'mesa' in self.request.GET:
-                    lookups = Q(mesas__id__in=self.filtros, mesas__eleccion=eleccion)
+                        lookups = Q(mesas__id__in=self.filtros, mesas__eleccion=eleccion)
 
             escuelas = LugarVotacion.objects.filter(lookups).distinct()
             electores = escuelas.aggregate(v=Sum('electores'))['v']
