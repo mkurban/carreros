@@ -23,7 +23,7 @@ class Command(CarrerosBaseCommand):
         imapper = easyimap.connect(
             settings.IMAP_HOST,
             settings.IMAP_USERNAME,
-            settings.IMAP_PASS,
+            settings.IMAP_PASSWORD,
             settings.IMAP_MAILBOX
         )
         if options['include_seen']:

@@ -17,7 +17,7 @@ class Email(models.Model):
         return Email.objects.create(
             body=mail.body,
             title=mail.title,
-            date=dateparser.parse(mail.date),
+            date=mail.date,
             from_address=mail.from_addr,
             uid=mail.uid,
             message_id=mail.message_id
@@ -50,8 +50,8 @@ def marcar_como_testigo(sender, instance=None, created=False, **kwargs):
     de la escuela, la marcamos como testigo
     """
     if not instance.foto_o_attachment and not instance.lugar_votacion.mesa_testigo:
-        mesa.es_testigo = True
-        mesa.save(update_fields=['es_testigo'])
+        instance.es_testigo = True
+        instance.save(update_fields=['es_testigo'])
 
 
 @receiver(post_save, sender=Attachment)
