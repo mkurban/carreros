@@ -25,6 +25,7 @@
 
 
               {% if request.user.fiscal and request.user.fiscal.es_general %}
+
               <tr>
                 <th>
                    Fiscal asignado
@@ -32,19 +33,9 @@
                 <td>
                 {% if  object.asignacion_actual %}
 
-                  {% if object.asignacion_actual.fiscal %}
-                    {{ object.asignacion_actual.fiscal }}
-                    <a href="{% url 'mesa-editar-fiscal' object.eleccion.id object.numero %}"  class="waves-effect waves-light btn white-text">
-                    Editar datos
-
-                  {% else %}
-                    Registrado (sin datos)
-
-                    <a href="{% url 'mesa-cargar-fiscal' object.eleccion.id object.numero %}"  class="waves-effect waves-light btn white-text">
+                  <a href="{% url 'mesa-asignar-fiscal' object.eleccion.id object.numero %}"  class="waves-effect waves-light btn white-text">
                     Cargar datos
                   </a>
-
-                  {% endif %}
 
                     <a title="Eliminar la asignación" class="right-align btn-floating btn waves-effect waves-light red modal-trigger" href="{% url 'mesa-eliminar-asignacion' object.eleccion.id object.numero %}" onclick="return confirm('¿Estás seguro?', 'lala')"><i class="material-icons tiny">delete</i></a>
 
@@ -130,12 +121,24 @@
                   Foto del Acta
                 </th>
                 <td>
-                    Enviar foto a <a href="mailto:{{ object.numero }}@cordobaciudadana.org"  class="waves-effect waves-light btn white-text">{{ object.numero }}@cordobaciudadana.org</a> o por watsapp o telegram al nro 3512326513.
+                    {% if object.foto_del_acta %}
+                      Subida
+
+                        <a href="{% url 'mesa-acta' 3 object.numero %}"  class="waves-effect waves-light btn white-text">Cambiar</a>
+
+                      {% else %}
+                        <a href="{% url 'mesa-acta' 3 object.numero %}"  class="waves-effect waves-light btn white-text">Subir</a>
+
+                        <p>
+                        O enviar foto a <code  class="language-markup"><a href="mailto:escrutinio@cordobaciudadana.org">escrutinio@cordobaciudadana.org</a></code> o por whatsapp/telegram a los números <a href="tel:+54 9 351 3419777">351 2326513</a> o <a href="tel:+54 9 351 2326513">351 2326513</a>.</p>
+
+                    {% endif %}
+
 
                 </td>
 
               </tr>
-                
+
 
             </table>
 

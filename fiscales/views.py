@@ -4,11 +4,14 @@ from django.urls import reverse, reverse_lazy
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.generic.detail import DetailView
 from django.utils.safestring import mark_safe
-from django.views.generic.edit import UpdateView, CreateView
+from django.views.generic.edit import UpdateView, CreateView, FormView
+from django.views.generic.list import ListView
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.views import PasswordChangeView
+
 from django.utils import timezone
+from datetime import timedelta
 from django.utils.safestring import mark_safe
 from django.db.models import Q
 from annoying.functions import get_object_or_None
@@ -31,9 +34,12 @@ from .forms import (
     QuieroSerFiscal2,
     QuieroSerFiscal3,
     QuieroSerFiscal4,
+    ElegirFiscal,
+    FiscalxDNI,
 )
 from prensa.views import ConContactosMixin
 
+WAITING_FOR = 2
 
 
 def choice_home(request):
@@ -230,6 +236,35 @@ class MisContactos(BaseFiscal):
     template_name = "fiscales/mis-contactos.html"
 
 
+
+
+class MisVoluntarios(LoginRequiredMixin, ListView):
+    template_name = "fiscales/mis-voluntarios.html"
+    model = Fiscal
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['eleccion'] = Eleccion.actual()
+        return context
+
+    def get_queryset(self):
+        try:
+            fiscal = get_object_or_404(Fiscal, user=self.request.user, tipo=Fiscal.TIPO.general)
+        except Fiscal.DoesNotExist:
+            raise Http404('no está registrado como fiscal general')
+
+
+        return Fiscal.objects.filter(
+            escuela_donde_vota__in=fiscal.escuelas
+        ).order_by('escuela_donde_vota')
+
+
+
+
+
+
+
+
 @login_required
 def asignacion_estado(request, tipo, pk):
     fiscal = get_object_or_404(Fiscal, user=request.user)
@@ -270,14 +305,12 @@ def asignacion_estado(request, tipo, pk):
 
 class MiAsignableMixin:
     def dispatch(self, *args, **kwargs):
-        d = super().dispatch(*args, **kwargs)
         self.fiscal = get_object_or_404(Fiscal, user=self.request.user)
-
         self.asignable = self.get_asignable()
         if (('mesa_numero' in self.kwargs and self.asignable not in self.fiscal.mesas_asignadas) or
             ('escuela_id' in self.kwargs and self.asignable not in self.fiscal.escuelas)):
             return HttpResponseForbidden()
-        return d
+        return super().dispatch(*args, **kwargs)
 
     def get_asignable(self):
         if 'escuela_id' in self.kwargs:
@@ -287,7 +320,15 @@ class MiAsignableMixin:
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['asignable'] = self.get_asignable()
+        context['asignable'] = self.asignable
+        if isinstance(self.asignable, Mesa):
+            context['url_crear_fiscal'] = reverse(
+                'mesa-cargar-fiscal', args=(3, self.asignable.numero)
+            )
+        else:
+            context['url_crear_fiscal'] = reverse(
+                'escuela-cargar-fiscal', args=(3, self.asignable.id)
+            )
         return context
 
     def verificar_fiscal_existente(self, fiscal):
@@ -303,7 +344,7 @@ class MesaActa(BaseFiscal, UpdateView):
 
     def get_object(self):
         return get_object_or_404(Mesa, eleccion__id=self.kwargs['eleccion_id'],
-                                 numero=self.kwargs['mesa_numero'], estado='ESCRUTADA')
+                                 numero=self.kwargs['mesa_numero'])
 
     def form_valid(self, form):
         super().form_valid(form)
@@ -353,6 +394,34 @@ class BaseFiscalSimple(LoginRequiredMixin, MiAsignableMixin, ConContactosMixin):
         return redirect(asignable.get_absolute_url())
 
 
+class AsignarFiscalView(MiAsignableMixin, FormView):
+    form_class = ElegirFiscal
+    template_name = "fiscales/asignar-fiscal.html"
+
+    def get_success_url(self):
+        return self.asignable.get_absolute_url()
+
+    def get_form(self, form_class=None):
+        form = super().get_form(form_class)
+        if isinstance(self.asignable, Mesa):
+            # fiscal general puede asignar fiscales de mesa
+            # que prefieren esa escuela
+            escuela = self.asignable.lugar_votacion
+        else:
+            escuela = self.asignable
+        qs = Fiscal.objects.filter(
+            estado=Fiscal.ESTADOS.CONFIRMADO,
+            escuela_donde_vota=escuela
+        ).exclude(id=self.request.user.fiscal.id)
+        form.fields['fiscal'].queryset = qs
+        return form
+
+    def form_valid(self, form):
+        fiscal = form.cleaned_data['fiscal']
+        fiscal.asignar_a(self.asignable)
+        return super().form_valid(form)
+
+
 class FiscalSimpleCreateView(BaseFiscalSimple, CreateView):
 
     def dispatch(self, *args, **kwargs):
@@ -363,10 +432,11 @@ class FiscalSimpleCreateView(BaseFiscalSimple, CreateView):
         return d
 
     def verificar_fiscal_existente(self, fiscal):
-        existente = get_object_or_None(Fiscal,
-                dni=fiscal.dni,
-                tipo_dni=fiscal.tipo_dni
-            )
+        existente = get_object_or_None(
+            Fiscal,
+            dni=fiscal.dni,
+            tipo_dni=fiscal.tipo_dni
+        )
         if existente:
             fiscal = existente
             messages.info(self.request, 'Ya teniamos datos de esta persona')
@@ -377,21 +447,54 @@ class FiscalSimpleUpdateView(BaseFiscalSimple, UpdateView):
 
     def get_object(self):
         asignable = self.get_asignable()
-        fiscal = asignable.asignacion_actual.fiscal
-        if fiscal:
-            return fiscal
+        asignacion_id = self.kwargs.get('asignacion_id')
+        if isinstance(asignable, LugarVotacion) and asignacion_id:
+            asignacion_id = self.kwargs['asignacion_id']
+            asignacion = get_object_or_404(
+                AsignacionFiscalGeneral,
+                id=asignacion_id,
+                lugar_votacion=asignable)
+        elif isinstance(asignable, Mesa) and asignacion_id:
+            asignacion = get_object_or_404(
+                AsignacionFiscalDeMesa,
+                id=asignacion_id,
+                mesa=asignable)
+        else:
+            asignacion = asignable.asignacion_actual
+        if asignacion.fiscal:
+            return asignacion.fiscal
         raise Http404
 
 
 @login_required
-def eliminar_asignacion(request, eleccion_id, mesa_numero):
+def eliminar_asignacion(request, eleccion_id, tipo,
+                        mesa_numero=None, escuela_id=None,
+                        asignacion_id=None):
     fiscal = get_object_or_404(Fiscal, tipo='general', user=request.user)
-    mesa = get_object_or_404(Mesa, eleccion__id=eleccion_id, numero=mesa_numero)
-    if mesa not in fiscal.mesas_asignadas:
-        return HttpResponseForbidden()
-    mesa.asignacion_actual.delete()
+    if escuela_id:
+        circuitos = fiscal.es_referente_de_circuito.all()
+        asignable = get_object_or_404(
+            LugarVotacion, id=escuela_id, circuito__in=circuitos,
+            asignacion__id=asignacion_id
+        )
+        if asignable not in fiscal.escuelas:
+            return HttpResponseForbidden()
+
+        asignacion = AsignacionFiscalGeneral.objects.get(id=asignacion_id)
+
+    else:
+        kw = {'asignacion': asignacion_id} if asignacion_id else {}
+        mesa = get_object_or_404(Mesa, eleccion__id=eleccion_id, numero=mesa_numero, **kw)
+        if mesa not in fiscal.mesas_asignadas:
+            return HttpResponseForbidden()
+        if asignacion_id:
+            asignacion = AsignacionFiscalDeMesa.objects.get(id=asignacion_id)
+        else:
+            asignacion = mesa.asignacion_actual
+
+    asignacion.delete()
     messages.success(request, 'La asignación se eliminó')
-    return redirect(mesa.get_absolute_url())
+    return redirect(asignable.get_absolute_url())
 
 
 @login_required
@@ -443,30 +546,53 @@ class MesaDetalle(LoginRequiredMixin, MiAsignableMixin, DetailView):
         return r
 
 
+@staff_member_required
+def elegir_acta_a_cargar(request):
+    now = timezone.now()
+    desde = now - timedelta(minutes=WAITING_FOR)
+    # se eligen mesas que nunca se intentaron cargar o que se asignaron a
+    # hace más de 3 minutos
+    mesas = Mesa.objects.filter(
+        eleccion__id=3,
+        votomesareportado__isnull=True,
+    ).filter(Q(taken__isnull=True) | Q(taken__lt=desde)
+    ).filter(~Q(foto_del_acta='') | Q(attachment__isnull=False)).order_by('?')
+    if mesas.exists():
+        mesa = mesas[0]
+        # se marca el adjunto
+        mesa.taken = now
+        mesa.save(update_fields=['taken'])
+        return redirect(
+            'mesa-cargar-resultados',
+            eleccion_id=mesa.eleccion.id,
+            mesa_numero=mesa.numero
+        )
+
+    return render(request, 'fiscales/sin-actas.html')
 
 
-@login_required
+
+@staff_member_required
 def cargar_resultados(request, eleccion_id, mesa_numero):
+    fiscal = get_object_or_404(Fiscal, user=request.user)
+
     def fix_opciones(formset):
         # hack para dejar sólo la opcion correspondiente a cada fila
         # se podria hacer "disabled" pero ese caso quita el valor del
         # cleaned_data y luego lo exige por ser requerido.
-        for opcion, form in zip(Eleccion.opciones_actuales(), formset):
+        for i, (opcion, form) in enumerate(
+            zip(Eleccion.opciones_actuales(), formset), 1):
             form.fields['opcion'].choices = [(opcion.id, str(opcion))]
 
+            form.fields['opcion'].widget.attrs['tabindex'] = 99 + i
+            form.fields['votos'].widget.attrs['tabindex'] = i
             # si la opcion es obligatoria, se llenan estos campos
             if opcion.obligatorio:
                 form.fields['votos'].required = True
+            if i == 1:
+                form.fields['votos'].widget.attrs['autofocus'] = True
 
     mesa = get_object_or_404(Mesa, eleccion__id=eleccion_id, numero=mesa_numero)
-    try:
-        fiscal = request.user.fiscal
-    except Fiscal.DoesNotExist:
-        raise Http404()
-
-    if mesa not in fiscal.mesas_asignadas:
-        return HttpResponseForbidden()
-
     data = request.POST if request.method == 'POST' else None
     qs = VotoMesaReportado.objects.filter(mesa=mesa, fiscal=fiscal)
     initial = [{'opcion': o} for o in Eleccion.opciones_actuales()]
@@ -495,10 +621,12 @@ def cargar_resultados(request, eleccion_id, mesa_numero):
         else:
             messages.success(request, 'Guardado correctamente')
 
-        return redirect(mesa)
+        return redirect('elegir-acta-a-cargar')
 
-    return render(request, "fiscales/carga.html",
-        {'formset': formset, 'object': mesa})
+    return render(
+        request, "fiscales/carga.html",
+        {'formset': formset, 'object': mesa}
+    )
 
 
 class CambiarPassword(PasswordChangeView):

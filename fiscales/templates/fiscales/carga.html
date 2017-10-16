@@ -1,4 +1,4 @@
-{% extends "fiscales/base.html" %}
+{% extends "adjuntos/asignar-mesa.html" %}
 {% load i18n material_form material_frontend %}
 
 {% block breadcrumbs_items %}
@@ -9,31 +9,41 @@
 
 {% block page_title %}Cargar Acta {% endblock %}
 
-{% block left-panel %}
-    <div class="card">
 
-       <form method="POST" enctype="multipart/form-data">
-        {% csrf_token %}
+{% block card-content %}
+    <div class="card-title"> Mesa {{ object.numero }}</div>
 
-        <div class="card-content">
-            <div class="card-title"> Mesa {{ object.numero }}</div>
+    {{ formset.management_form }}
+    {% for form in formset %}
+        {% form %}{% endform %}
+    {% endfor %}
+{% endblock card-content %}
 
-            {{ formset.management_form }}
-            {% for form in formset %}
-                {% form %}{% endform %}
-            {% endfor %}
-
-        </div>
+{% block card-action %}
 
 
+        <div class="row">
 
-        <div class="card-action">
-            <div class="right-align">
-              <button type="submit" class="waves-effect waves-light btn white-text">{% trans 'Save' %}</button>
+            <div class="col s12">
+                <div class="right-align">
+                    <button class="btn waves-effect waves-light btn white-text" type="submit" tabindex="{{ button_tabindex }}">
+                      Guardar
+                   </button>
+                </div>
             </div>
-        </div>
 
-       </form>
+        </div>
 
     </div>
-{% endblock left-panel %}
+{% endblock card-action %}
+
+{% block right-panel %}
+    <div class="card">
+
+
+        <div class="card-content">
+           <img class="responsive-img" src="{{ object.foto_o_attachment.url }}">
+        </div>
+
+    </div>
+{% endblock right-panel %}

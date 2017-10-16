@@ -4,39 +4,32 @@
                    Fiscal general asignado
                 </th>
                 <td>
-                {% if escuela.asignacion_actual %}
+                 {% for asignacion in escuela.asignaciones %}
 
-                    {{ escuela.asignacion_actual.fiscal }}
 
-                    <a href="{% url 'escuela-editar-fiscal' eleccion.id escuela.id %}"  class="waves-effect waves-light btn white-text">
+
+                    {{ asignacion.fiscal }}
+
+                    <a href="{% url 'escuela-editar-fiscal' eleccion.id escuela.id asignacion.id %}"  class="waves-effect waves-light btn white-text">
                     Editar datos</a>
 
 
 
-                    <a title="Eliminar la asignación" class="right-align btn-floating btn waves-effect waves-light red modal-trigger" href="{% url 'escuela-eliminar-asignacion' eleccion.id escuela.id %}" onclick="return confirm('¿Estás seguro?', 'Esta acción no se puede deshacer')"><i class="material-icons tiny">delete</i></a>
+                    <a title="Eliminar la asignación" class="right-align btn-floating btn waves-effect waves-light red modal-trigger" href="{% url 'escuela-eliminar-asignacion' eleccion.id escuela.id asignacion.id %}" onclick="return confirm('¿Estás seguro?', 'Esta acción no se puede deshacer')"><i class="material-icons tiny">delete</i></a>
 
-                          <!-- Modal Structure -->
-                            <div id="modal1" class="modal">
-                              <div class="modal-content">
-                                <h4>Eliminar la asignación a la escuela  </h4>
-                              </div>
-                              <div class="modal-footer center-align">
-                                <a href="{% url 'escuela-eliminar-asignacion' eleccion.id escuela.id %}" class="modal-action modal-close waves-effect waves-effect btn-flat red white-text">De acuerdo</a>
-                              </div>
-                            </div>
+                     {% if not forloop.last %}
+                      <br>
+                     {% endif %}
 
-
-
-
-                {% else %}
+                {% empty %}
 
                     No Registrado
 
-                    <a href="{% url 'escuela-cargar-fiscal' eleccion.id escuela.id %}"  class="waves-effect waves-light btn white-text">
-                    Cargar datos
+                    <a href="{% url 'escuela-asignar-fiscal' eleccion.id escuela.id %}"  class="waves-effect waves-light btn white-text">
+                    Asignar Fiscal General
                   </a>
 
-                {% endif %}
+                {% endfor %}
 
                 </td>
               </tr>

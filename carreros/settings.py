@@ -58,13 +58,14 @@ INSTALLED_APPS = [
     'hijack',
     'compat',
     'taggit',
-    'attachments',
+    # 'attachments',
     'djgeojson',
     'leaflet',
 
     # nuestras apps
     'elecciones',
     'fiscales',
+    'adjuntos',
     'api',
     'candidatos',
     'geo.apps.GeoConfig',
@@ -212,6 +213,14 @@ CACHES = {
         'LOCATION': '/var/tmp/django_cache',
     }
 }
+
+# config para el comando importar_actas
+IMAP_HOST = 'imap.gmail.com'
+IMAP_USERNAME = 'foo@bar.com'
+IMAP_PASSWORD = '***'
+IMAP_MAILBOX = 'INBOX'
+
+
 
 try:
     from .local_settings import *

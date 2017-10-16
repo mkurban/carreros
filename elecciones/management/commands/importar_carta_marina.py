@@ -15,9 +15,8 @@ def to_float(val):
         return None
 
 
-class Command(BaseCommand):
-    help = "Importar carta marina"
 
+class CarrerosBaseCommand(BaseCommand):
 
     def success(self, msg):
         self.stdout.write(self.style.SUCCESS(msg))
@@ -25,12 +24,15 @@ class Command(BaseCommand):
     def warning(self, msg):
         self.stdout.write(self.style.WARNING(msg))
 
-    def log(self, object, created):
+    def log(self, object, created=True):
         if created:
             self.success(f'creado {object}')
         else:
             self.warning(f'{object} ya existe')
 
+
+class Command(CarrerosBaseCommand):
+    help = "Importar carta marina"
 
     def handle(self, *args, **options):
         reader = DictReader(CSV.open())

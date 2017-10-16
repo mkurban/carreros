@@ -1,4 +1,5 @@
 import os
+from itertools import chain
 from django.contrib.auth.models import User
 from django.urls import reverse
 from django.db import models
@@ -53,7 +54,7 @@ class Circuito(models.Model):
 
 
 class LugarVotacion(models.Model):
-    circuito = models.ForeignKey(Circuito)
+    circuito = models.ForeignKey(Circuito, related_name='escuelas')
     nombre = models.CharField(max_length=100)
     direccion = models.CharField(max_length=100)
     barrio = models.CharField(max_length=100, blank=True)
@@ -97,8 +98,11 @@ class LugarVotacion(models.Model):
         return desde_hasta(self.mesas)
 
     @property
-    def asignacion_actual(self):
+    def asignaciones(self):
+        return self.asignacion.exclude(fiscal__es_referente_de_circuito__isnull=False)
 
+    @property
+    def asignacion_actual(self):
         return self.asignacion.exclude(fiscal__es_referente_de_circuito__isnull=False).order_by('-ingreso', '-id').last()
 
     @property
@@ -121,7 +125,7 @@ class LugarVotacion(models.Model):
 
     @property
     def mesa_testigo(self):
-        return self.mesas.filter(es_testigo=True).first()
+        return self.mesas.filter(eleccion__id=3, es_testigo=True).first()
 
 
     @property
@@ -161,6 +165,7 @@ class Mesa(models.Model):
     url = models.URLField(blank=True, help_text='url al telegrama')
     foto_del_acta = models.ImageField(upload_to=path_foto_acta, null=True, blank=True)
     electores = models.PositiveIntegerField(null=True, blank=True)
+    taken = models.DateTimeField(null=True)
 
 
     def get_absolute_url(self):
@@ -179,12 +184,19 @@ class Mesa(models.Model):
         return self.votomesareportado_set.aggregate(Sum('votos'))['votos__sum']
 
     @property
+    def foto_o_attachment(self):
+        from adjuntos.models import Attachment
+        try:
+            return self.foto_del_acta or self.attachment.file
+        except Attachment.DoesNotExist:
+            return None
+
+    @property
     def proximo_estado(self):
         if self.estado == 'ESCRUTADA':
             return self.estado
         pos = Mesa.ESTADOS_.index(self.estado)
         return Mesa.ESTADOS_[pos + 1]
-
 
     def __str__(self):
         return f"Mesa {self.numero}"
@@ -240,8 +252,9 @@ class Eleccion(models.Model):
 
     @classmethod
     def opciones_actuales(cls):
-        if cls.objects.last():
-            return cls.objects.last().opciones.all()
+        e = cls.actual()
+        if e:
+            return e.opciones.all()
         return Opcion.objects.none()
 
     @classmethod
@@ -298,12 +311,3 @@ def referentes_cambiaron(sender, instance, action, reverse,
         for fiscal in fiscales:
             for escuela in escuelas:
                 AsignacionFiscalGeneral.objects.create(eleccion=eleccion, lugar_votacion=escuela, fiscal=fiscal)
-
-
-@receiver(post_save, sender=VotoMesaReportado)
-def marcar_como_testigo(sender, instance=None, created=False, **kwargs):
-    mesa = instance.mesa
-    if not mesa.lugar_votacion.mesa_testigo:
-        mesa.es_testigo = True
-        mesa.save(update_fields=['es_testigo'])
-
