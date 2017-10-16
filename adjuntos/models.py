@@ -2,11 +2,10 @@ from django.db import models
 from django.dispatch import receiver
 from django.db.models.signals import post_save
 from urllib.parse import quote_plus
-import dateparser
 
 
 class Email(models.Model):
-    date = models.DateTimeField()
+    date = models.CharField(max_length=100)
     from_address = models.CharField(max_length=200)
     body = models.TextField()
     title = models.CharField(max_length=50)
