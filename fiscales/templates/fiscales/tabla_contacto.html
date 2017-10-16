@@ -41,11 +41,17 @@
               <tr>
                   <th>Email</th>
                   <td>
-                    {% for email in fiscal.emails %}
+                  {% for email in fiscal.emails %}
                       <a href="mailto:{{ email }}">{{ email }}</a>
-                    {% if not forloop.last %}<br>{% endif %}
-                    {% endfor %}
+                      {% if not forloop.last %}<br>{% endif %}
+                  {% endfor %}
                   </td>
+              </tr>
+              {% endif %}
+              {% if fiscal.notas %}
+              <tr>
+                  <th>Notas</th>
+                  <td>{{ fiscal.notas }}</td>
               </tr>
               {% endif %}
 
