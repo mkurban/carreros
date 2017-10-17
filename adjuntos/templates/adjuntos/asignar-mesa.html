@@ -53,7 +53,10 @@
 
             <div class="card-title">¿De qué mesa es esta acta?</div>
 
-                  {% form %}{% endform %}
+                  {% form %}
+
+
+                  {% endform %}
             </div>
           {% endblock card-content %}
 
@@ -79,7 +82,7 @@
 
 
         <div class="card-content">
-           <img class="responsive-img" src="{{ attachment.file.url }}">
+           <img class="responsive-img" src="{{ attachment.foto.thumbnail.960x.url }}">
         </div>
 
     </div>

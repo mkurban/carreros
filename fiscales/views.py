@@ -31,7 +31,6 @@ from .forms import (
     MisDatosForm,
     FiscalFormSimple,
     VotoMesaReportadoFormset,
-    ActaMesaModelForm,
     QuieroSerFiscal1,
     QuieroSerFiscal2,
     QuieroSerFiscal3,
@@ -40,6 +39,8 @@ from .forms import (
     FiscalxDNI,
 )
 from prensa.views import ConContactosMixin
+from adjuntos.models import Attachment
+from adjuntos.forms import SubirAttachmentModelForm
 
 WAITING_FOR = 2
 
@@ -343,21 +344,26 @@ class MiAsignableMixin:
         return fiscal
 
 
-class MesaActa(BaseFiscal, UpdateView):
+class MesaActa(BaseFiscal, FormView):
     template_name = "fiscales/cargar-foto.html"
-    slug_field = 'numero'
-    slug_url_kwarg = 'mesa_numero'
-    model = Mesa
-    form_class = ActaMesaModelForm
+    form_class = SubirAttachmentModelForm
 
     def get_object(self):
-        return get_object_or_404(Mesa, eleccion__id=self.kwargs['eleccion_id'],
-                                 numero=self.kwargs['mesa_numero'])
+        return get_object_or_404(Mesa, eleccion__id=self.kwargs['eleccion_id'], numero=self.kwargs['mesa_numero'])
+
+    def get_context_data(self, *args, **kwargs):
+        context = super().get_context_data(*args, **kwargs)
+        context['object'] = self.get_object()
+        return context
 
     def form_valid(self, form):
-        super().form_valid(form)
+        mesa = self.get_object()
+        Attachment.objects.filter(mesa=mesa).delete()
+        attach = form.save(commit=False)
+        attach.mesa = self.get_object()
+        attach.save()
         messages.success(self.request, 'Foto subida correctamente ¡Gracias!')
-        return redirect(self.object.get_absolute_url())
+        return redirect(mesa.get_absolute_url())
 
 
 class BaseFiscalSimple(LoginRequiredMixin, MiAsignableMixin, ConContactosMixin):
@@ -563,8 +569,9 @@ def elegir_acta_a_cargar(request):
     mesas = Mesa.objects.filter(
         eleccion__id=3,
         votomesareportado__isnull=True,
+        attachment__isnull=False
     ).filter(Q(taken__isnull=True) | Q(taken__lt=desde)
-    ).filter(~Q(foto_del_acta='') | Q(attachment__isnull=False)).order_by('?')
+    ).order_by('?')
     if mesas.exists():
         mesa = mesas[0]
         # se marca el adjunto

@@ -10,7 +10,7 @@ from .models import Attachment
 from .forms import AsignarMesaForm
 
 
-WAITING_FOR = 1   # 3 minutos
+WAITING_FOR = 0.   # 3 minutos
 
 
 @staff_member_required

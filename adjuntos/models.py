@@ -3,6 +3,8 @@ from django.dispatch import receiver
 from django.db.models.signals import post_save
 from urllib.parse import quote_plus
 from model_utils import Choices
+from versatileimagefield.fields import VersatileImageField
+
 
 
 class Email(models.Model):
@@ -42,25 +44,30 @@ class Attachment(models.Model):
     )
 
     email = models.ForeignKey('Email', null=True)
-    mimetype = models.CharField(max_length=100)
-    file = models.FileField(upload_to='attachments/', null=True, blank=True)
+    mimetype = models.CharField(max_length=100, null=True)
+    foto = VersatileImageField(upload_to='attachments/',
+        null=True, blank=True,
+        width_field='width',
+        height_field='height'
+        )
+    height = models.PositiveIntegerField(
+        'Image Height',
+        blank=True,
+        null=True
+    )
+    width = models.PositiveIntegerField(
+        'Image Width',
+        blank=True,
+        null=True
+    )
     mesa = models.OneToOneField('elecciones.Mesa', null=True, related_name='attachment')
     taken = models.DateTimeField(null=True)
     problema = models.CharField(max_length=100, null=True, blank=True, choices=PROBLEMAS)
 
+
     def __str__(self):
-        return f'{self.file} ({self.mimetype})'
+        return f'{self.foto} ({self.mimetype})'
 
-
-@receiver(post_save, sender='elecciones.Mesa')
-def marcar_como_testigo(sender, instance=None, created=False, **kwargs):
-    """
-    cuando se asocia una mesa a un acta o se sube el documento, y es la primera
-    de la escuela, la marcamos como testigo
-    """
-    if not instance.foto_o_attachment and not instance.lugar_votacion.mesa_testigo:
-        instance.es_testigo = True
-        instance.save(update_fields=['es_testigo'])
 
 
 @receiver(post_save, sender=Attachment)

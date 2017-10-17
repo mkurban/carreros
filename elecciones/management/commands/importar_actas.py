@@ -51,6 +51,6 @@ class Command(CarrerosBaseCommand):
                     mimetype=attachment[2]
                 )
                 content = ContentFile(attachment[1])
-                instance.file.save(attachment[0], content, save=False)
+                instance.foto.save(attachment[0], content, save=False)
                 instance.save()
                 self.log(instance)

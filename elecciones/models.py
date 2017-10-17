@@ -163,7 +163,6 @@ class Mesa(models.Model):
     circuito = models.ForeignKey(Circuito)  #
     lugar_votacion = models.ForeignKey(LugarVotacion, verbose_name='Lugar de votacion', null=True, related_name='mesas')
     url = models.URLField(blank=True, help_text='url al telegrama')
-    foto_del_acta = models.ImageField(upload_to=path_foto_acta, null=True, blank=True)
     electores = models.PositiveIntegerField(null=True, blank=True)
     taken = models.DateTimeField(null=True, editable=False)
 
@@ -184,10 +183,10 @@ class Mesa(models.Model):
         return self.votomesareportado_set.aggregate(Sum('votos'))['votos__sum']
 
     @property
-    def foto_o_attachment(self):
+    def foto_del_acta(self):
         from adjuntos.models import Attachment
         try:
-            return self.foto_del_acta or self.attachment.file
+            return self.attachment.foto
         except Attachment.DoesNotExist:
             return None
 

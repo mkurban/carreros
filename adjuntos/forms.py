@@ -25,7 +25,7 @@ class AsignarMesaForm(forms.ModelForm):
             return numero
         try:
             mesa = Mesa.objects.get(
-                numero=numero, eleccion__id=3, attachment__isnull=True, foto_del_acta=''
+                numero=numero, eleccion__id=3, attachment__isnull=True
             )
         except Mesa.DoesNotExist:
             raise forms.ValidationError('Esta mesa ya tiene acta adjunta')
@@ -46,3 +46,9 @@ class AsignarMesaForm(forms.ModelForm):
                 'problema', 'Dejá el número en blanco si hay un problema'
             )
             return cleaned_data
+
+
+class SubirAttachmentModelForm(forms.ModelForm):
+    class Meta:
+        model = Attachment
+        fields = ['foto']

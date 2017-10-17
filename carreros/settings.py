@@ -61,6 +61,7 @@ INSTALLED_APPS = [
     # 'attachments',
     'djgeojson',
     'leaflet',
+    'versatileimagefield',
 
     # nuestras apps
     'elecciones',

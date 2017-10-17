@@ -42,7 +42,17 @@
 
 
         <div class="card-content">
-           <img class="responsive-img" src="{{ object.foto_o_attachment.url }}">
+
+
+
+            {% if object.foto_del_acta %}
+
+           <img class="responsive-img" src="{{ object.foto_del_acta.thumbnail.960x.url }}">
+
+            {% else %}
+                <p>no hay foto de esta acta</p>
+
+            {% endif %}
         </div>
 
     </div>

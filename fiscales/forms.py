@@ -257,7 +257,3 @@ EstadoMesaModelForm = modelform_factory(
 )
 
 
-ActaMesaModelForm = modelform_factory(
-    Mesa,
-    fields=['foto_del_acta'],
-)
