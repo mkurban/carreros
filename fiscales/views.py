@@ -52,14 +52,18 @@ def choice_home(request):
     user = request.user
     if not user.is_authenticated:
         return redirect('login')
-    try:
-        user.fiscal
+
+    es_fiscal = Fiscal.objects.filter(user=request.user).exists()
+
+    if user.is_staff and es_fiscal:
+        return redirect('elegir-acta-a-cargar')
+
+    elif es_fiscal:
         return redirect('donde-fiscalizo')
-    except Fiscal.DoesNotExist:
-        if user.groups.filter(name='prensa').exists():
-            return redirect('/prensa/')
-        elif user.is_staff:
-            return redirect('/admin/')
+    elif user.groups.filter(name='prensa').exists():
+        return redirect('/prensa/')
+    else:
+        return redirect('/admin/')
 
 
 class BaseFiscal(LoginRequiredMixin, DetailView):

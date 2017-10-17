@@ -95,12 +95,18 @@ class Fiscal(models.Model):
                 lugar_votacion__asignacion__fiscal=self,
                 lugar_votacion__asignacion__eleccion=eleccion
             ).order_by('numero')
-        return Mesa.objects.filter(eleccion=eleccion, asignacion__fiscal=self).order_by('numero')
+        return Mesa.objects.filter(
+            eleccion=eleccion,
+            asignacion__fiscal=self
+        ).order_by('numero')
 
     @property
     def escuelas(self):
         if self.es_general:
-            return LugarVotacion.objects.filter(asignacion__fiscal=self, asignacion__eleccion__id=3)
+            return LugarVotacion.objects.filter(
+                asignacion__fiscal=self,
+                asignacion__eleccion__id=3
+            )
         else:
             return LugarVotacion.objects.filter(mesas__eleccion__id=3, mesas__asignacion__fiscal=self).distinct()
 
