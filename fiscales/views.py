@@ -1,3 +1,5 @@
+from io import StringIO
+import sys
 from django.http import Http404, HttpResponseForbidden, HttpResponse
 from django.shortcuts import redirect, get_object_or_404, render
 from django.urls import reverse, reverse_lazy
@@ -9,7 +11,7 @@ from django.views.generic.list import ListView
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.views import PasswordChangeView
-
+from django.core.management import call_command
 from django.utils import timezone
 from datetime import timedelta
 from django.utils.safestring import mark_safe
@@ -649,4 +651,15 @@ def confirmar_fiscal(request, fiscal_id):
     msg = f'<a href="{url}">{fiscal}</a> ha sido confirmado en la escuela {fiscal.escuela_donde_vota}'
     messages.info(request, mark_safe(msg))
     return redirect(request.META.get('HTTP_REFERER'))
+
+
+@staff_member_required
+def exportar_emails(request):
+    out = StringIO()
+    call_command('export_emails', f='email', stdout=out)
+
+    text = '\n'.join(l for l in out.getvalue().split('\n') if '@' in l)
+    return HttpResponse(text, content_type="text/plain; charset=utf-8")
+
+
 

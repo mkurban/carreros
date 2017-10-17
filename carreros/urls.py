@@ -5,7 +5,7 @@ from django.contrib import admin
 from material.frontend import urls as frontend_urls
 from elecciones import urls as elecciones_urls
 from fiscales import urls as fiscales_urls
-from fiscales.views import choice_home, QuieroSerFiscal, email, confirmar_email
+from fiscales.views import choice_home, QuieroSerFiscal, email, confirmar_email, exportar_emails
 from elecciones import views as views_elecciones
 from fiscales.forms import AuthenticationFormCustomError
 from django.contrib.auth import views as auth_views
@@ -24,12 +24,14 @@ urlpatterns = [
     url(r'^hijack/', include('hijack.urls')),
     url(r'^api-auth/', include('rest_framework.urls', namespace='rest_framework')),
     url(r'^api/v1/', include('api.urls', namespace='api_v1')),
+    url(r'^admin/exportar-emails/', exportar_emails),
     url(r'^admin/asignar_referentes/', views_elecciones.asignar_referentes, name='asignar-referentes'),
     url(r'^admin/', admin.site.urls),
     url(r'^elecciones/', include(elecciones_urls)),
     url(r'^fiscales/', include(fiscales_urls)),
     # url(r'^attachments/', include('attachments.urls', namespace='attachments')),
     url(r'^clasificar-actas/', include('adjuntos.urls')),
+
 ]
 
 if settings.DEBUG:
