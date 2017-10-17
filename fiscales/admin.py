@@ -1,3 +1,4 @@
+import csv
 from django.db.models import Q
 from django.urls import reverse
 from django.contrib import admin
@@ -8,6 +9,9 @@ from prensa.models import DatoDeContacto
 from prensa.forms import DatoDeContactoModelForm
 from django_admin_row_actions import AdminRowActionsMixin
 from django.contrib.admin.filters import DateFieldListFilter
+
+
+ARCHIVO_EMAILS_FISCALES = 'emails_fiscales.csv'
 
 
 class FechaIsNull(DateFieldListFilter):
@@ -67,9 +71,24 @@ class ReferenteFilter(admin.SimpleListFilter):
         return queryset
 
 
+def exportar_email_fiscales(modeladmin, request, queryset):
+    emails_fiscales = []
+    for fiscal in queryset.all():
+        for contacto in fiscal.datos_de_contacto.all():
+            if contacto.tipo == 'email':
+                emails_fiscales.append(contacto.valor)
+
+    with open(ARCHIVO_EMAILS_FISCALES, 'w') as csvfile:
+        spamwriter = csv.writer(csvfile)
+        spamwriter.writerow(emails_fiscales)
+
+    return queryset
+
+exportar_email_fiscales.short_description = "Exportar Email Fiscales"
+
 
 class FiscalAdmin(AdminRowActionsMixin, admin.ModelAdmin):
-
+    actions = [exportar_email_fiscales]
     def get_row_actions(self, obj):
         row_actions = []
         if obj.user:
