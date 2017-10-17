@@ -165,7 +165,7 @@ class Mesa(models.Model):
     url = models.URLField(blank=True, help_text='url al telegrama')
     foto_del_acta = models.ImageField(upload_to=path_foto_acta, null=True, blank=True)
     electores = models.PositiveIntegerField(null=True, blank=True)
-    taken = models.DateTimeField(null=True)
+    taken = models.DateTimeField(null=True, editable=False)
 
 
     def get_absolute_url(self):
