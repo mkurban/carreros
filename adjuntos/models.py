@@ -2,6 +2,7 @@ from django.db import models
 from django.dispatch import receiver
 from django.db.models.signals import post_save
 from urllib.parse import quote_plus
+from model_utils import Choices
 
 
 class Email(models.Model):
@@ -33,11 +34,19 @@ class Email(models.Model):
 
 
 class Attachment(models.Model):
+    PROBLEMAS = Choices(
+        'acta repetida',
+        'no es una foto válida',
+        'no se entiende',
+        'foto rotada',
+    )
+
     email = models.ForeignKey('Email', null=True)
     mimetype = models.CharField(max_length=100)
     file = models.FileField(upload_to='attachments/', null=True, blank=True)
     mesa = models.OneToOneField('elecciones.Mesa', null=True, related_name='attachment')
     taken = models.DateTimeField(null=True)
+    problema = models.CharField(max_length=100, null=True, blank=True, choices=PROBLEMAS)
 
     def __str__(self):
         return f'{self.file} ({self.mimetype})'
@@ -60,7 +69,7 @@ def marcar_como_testigo_via_attach(sender, instance=None, created=False, **kwarg
     cuando se asocia una mesa a un acta o se sube el documento, y es la primera
     de la escuela, la marcamos como testigo
     """
-    if instance.mesa and not mesa.lugar_votacion.mesa_testigo:
+    if instance.mesa and not instance.mesa.lugar_votacion.mesa_testigo:
         mesa = instance.mesa
         mesa.es_testigo = True
         mesa.save(update_fields=['es_testigo'])

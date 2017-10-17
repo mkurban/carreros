@@ -1,6 +1,6 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
-from django.views.generic.edit import FormView
+from django.views.generic.edit import UpdateView
 from django.db.models import Q
 from elecciones.views import StaffOnlyMixing
 from django.contrib.admin.views.decorators import staff_member_required
@@ -10,7 +10,7 @@ from .models import Attachment
 from .forms import AsignarMesaForm
 
 
-WAITING_FOR = 3   # 3 minutos
+WAITING_FOR = 1   # 3 minutos
 
 
 @staff_member_required
@@ -21,6 +21,7 @@ def elegir_adjunto(request):
     # se eligen actas que nunca se intentaron cargar o que se asignaron a
     # hace más de 3 minutos
     attachments = Attachment.objects.filter(
+        Q(problema__isnull=True),
         Q(taken__isnull=True) | Q(taken__lt=desde, mesa__isnull=True)
     ).order_by('?')
     if attachments.exists():
@@ -34,25 +35,27 @@ def elegir_adjunto(request):
 
 
 
-class AsignarMesaAdjunto(StaffOnlyMixing, FormView):
+class AsignarMesaAdjunto(StaffOnlyMixing, UpdateView):
     form_class = AsignarMesaForm
     template_name = "adjuntos/asignar-mesa.html"
+    pk_url_kwarg = 'attachment_id'
+    model = Attachment
 
     def dispatch(self, *args, **kwargs):
-        self.attachment = get_object_or_404(Attachment, id=self.kwargs['attachment_id'])
         return super().dispatch(*args, **kwargs)
 
     def get_success_url(self):
         return reverse('elegir-adjunto')
 
     def get_context_data(self, **kwargs):
-
         context = super().get_context_data(**kwargs)
-        context['attachment'] = self.attachment
+        context['attachment'] = self.object
+        context['button_tabindex'] = 2
         return context
 
     def form_valid(self, form):
-        self.attachment.mesa = form.cleaned_data['mesa']
-        self.attachment.save(update_fields=['mesa'])
+        form.save()
+        # self.instance.mesa = form.cleaned_data['mesa']
+        # self.attachment.save(update_fields=['mesa'])
         return super().form_valid(form)
 

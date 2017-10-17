@@ -91,7 +91,9 @@ class Fiscal(models.Model):
         eleccion = Eleccion.actual()
         if self.es_general:
             return Mesa.objects.filter(
-                eleccion=eleccion, lugar_votacion__asignacion__fiscal=self
+                eleccion=eleccion,
+                lugar_votacion__asignacion__fiscal=self,
+                lugar_votacion__asignacion__eleccion=eleccion
             ).order_by('numero')
         return Mesa.objects.filter(eleccion=eleccion, asignacion__fiscal=self).order_by('numero')
 
