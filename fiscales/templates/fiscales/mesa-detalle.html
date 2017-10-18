@@ -37,7 +37,11 @@
                     Cargar datos
                   </a>
 
-                    <a title="Eliminar la asignación" class="right-align btn-floating btn waves-effect waves-light red modal-trigger" href="{% url 'mesa-eliminar-asignacion' object.eleccion.id object.numero %}" onclick="return confirm('¿Estás seguro?', 'lala')"><i class="material-icons tiny">delete</i></a>
+                    <a title="Eliminar la asignación"
+                       class="right-align btn-floating btn waves-effect waves-light red modal-trigger"
+                       href="{% url 'mesa-eliminar-asignacion' object.eleccion.id object.numero %}"
+                       onclick="return confirm('¿Estás seguro?', 'lala')"><i class="material-icons tiny">delete</i>
+                    </a>
 
                           <!-- Modal Structure -->
                             <div id="modal1" class="modal">

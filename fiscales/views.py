@@ -481,31 +481,34 @@ class FiscalSimpleUpdateView(BaseFiscalSimple, UpdateView):
 
 
 @login_required
-def eliminar_asignacion(request, eleccion_id, tipo,
-                        mesa_numero=None, escuela_id=None,
-                        asignacion_id=None):
-    fiscal = get_object_or_404(Fiscal, tipo='general', user=request.user)
-    if escuela_id:
-        circuitos = fiscal.es_referente_de_circuito.all()
-        asignable = get_object_or_404(
-            LugarVotacion, id=escuela_id, circuito__in=circuitos,
-            asignacion__id=asignacion_id
-        )
-        if asignable not in fiscal.escuelas:
-            return HttpResponseForbidden()
+def eliminar_asignacion_f_mesa(request, eleccion_id, mesa_numero=None):
+    mesa    = get_object_or_404(Mesa, eleccion__id=eleccion_id, numero=mesa_numero)
 
-        asignacion = AsignacionFiscalGeneral.objects.get(id=asignacion_id)
-
+    asignacion = mesa.asignacion_actual
+    if asignacion:
+        asignacion.delete()
+        messages.success(request, 'La asignación se eliminó')
     else:
-        kw = {'asignacion': asignacion_id} if asignacion_id else {}
-        mesa = get_object_or_404(Mesa, eleccion__id=eleccion_id, numero=mesa_numero, **kw)
-        if mesa not in fiscal.mesas_asignadas:
-            return HttpResponseForbidden()
-        if asignacion_id:
-            asignacion = AsignacionFiscalDeMesa.objects.get(id=asignacion_id)
-        else:
-            asignacion = mesa.asignacion_actual
+        messages.error(request, 'La asignación NO se eliminó')
 
+    return redirect(mesa.get_absolute_url())#redirect('donde-fiscalizo')
+
+
+@login_required
+def eliminar_asignacion_f_general(request, eleccion_id, escuela_id=None, asignacion_id=None):
+
+    fiscal = get_object_or_404(Fiscal, user=request.user)
+    circuitos = fiscal.es_referente_de_circuito.all()
+    asignable = get_object_or_404(LugarVotacion,
+                                  id=escuela_id,
+                                  circuito__in=circuitos,
+                                  asignacion__id=asignacion_id)
+    if asignable not in fiscal.escuelas:
+        return HttpResponseForbidden()
+
+    asignacion = AsignacionFiscalGeneral.objects.get(id=asignacion_id)
+
+    print('asignacion: ', asignacion)
     asignacion.delete()
     messages.success(request, 'La asignación se eliminó')
     return redirect(asignable.get_absolute_url())
