@@ -12,7 +12,7 @@ from django.contrib.auth import views as auth_views
 from fancy_cache import cache_page
 
 
-cached = cache_page(3600)
+# cached = cache_page(3600)
 
 
 urlpatterns = [
@@ -30,7 +30,7 @@ urlpatterns = [
     url(r'^api-auth/', include('rest_framework.urls', namespace='rest_framework')),
     url(r'^api/v1/', include('api.urls', namespace='api_v1')),
     url(r'^admin/exportar-emails/', exportar_emails),
-    url(r'^admin/fiscales-por-seccion/', cached(datos_fiscales_por_seccion)),
+    url(r'^admin/fiscales-por-seccion/', datos_fiscales_por_seccion),
     url(r'^admin/asignar_referentes/', views_elecciones.asignar_referentes, name='asignar-referentes'),
     url(r'^admin/', admin.site.urls),
     url(r'^elecciones/', include(elecciones_urls)),
