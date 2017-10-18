@@ -680,9 +680,8 @@ def datos_fiscales_por_seccion(request):
     de_mesa = {}
     for seccion in Seccion.objects.all():
 
-
-        generales[seccion] = Fiscal.objects.filter(tipo='general', asignacion_escuela__eleccion__id=3, asignacion_escuela__lugar_votacion__circuito__seccion=seccion).distinct()
-        de_mesa[seccion] = Fiscal.objects.filter(tipo='de_mesa', asignacion_mesa__mesa__eleccion__id=3, asignacion_mesa__mesa__lugar_votacion__circuito__seccion=seccion).distinct()
+        generales[seccion] = Fiscal.objects.filter(tipo='general', escuela_donde_vota__circuito__seccion=seccion).distinct()
+        de_mesa[seccion] = Fiscal.objects.filter(tipo='de_mesa', escuela_donde_vota__circuito__seccion=seccion).distinct()
 
 
     return render(request, 'fiscales/datos_fiscales_por_seccion.html', {'generales': generales, 'de_mesa': de_mesa})

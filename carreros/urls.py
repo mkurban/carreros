@@ -12,12 +12,13 @@ from django.contrib.auth import views as auth_views
 from fancy_cache import cache_page
 
 
-cached = cache_page(3600)
+# cached = cache_page(3600)
 
 
 urlpatterns = [
     url(r'^$', choice_home, name="home"),
     url(r'^_email/$', email),
+    url(r'^_fancy-cache', include('fancy_cache.urls')),
     url(r'^quiero-ser-fiscal/$', QuieroSerFiscal.as_view(), name='quiero-ser-fiscal'),
     url(r'^quiero-ser-fiscal/confirmar-email/(?P<uuid>[0-9a-f-]+)$', confirmar_email, name='confirmar-email'),
     url(r'^login/$', auth_views.LoginView.as_view(authentication_form=AuthenticationFormCustomError)),
@@ -29,7 +30,7 @@ urlpatterns = [
     url(r'^api-auth/', include('rest_framework.urls', namespace='rest_framework')),
     url(r'^api/v1/', include('api.urls', namespace='api_v1')),
     url(r'^admin/exportar-emails/', exportar_emails),
-    url(r'^admin/fiscales-por-seccion/', cached(datos_fiscales_por_seccion)),
+    url(r'^admin/fiscales-por-seccion/', datos_fiscales_por_seccion),
     url(r'^admin/asignar_referentes/', views_elecciones.asignar_referentes, name='asignar-referentes'),
     url(r'^admin/', admin.site.urls),
     url(r'^elecciones/', include(elecciones_urls)),
