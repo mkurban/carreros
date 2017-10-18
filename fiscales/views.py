@@ -505,6 +505,7 @@ def eliminar_asignacion(request, eleccion_id, tipo,
             asignacion = AsignacionFiscalDeMesa.objects.get(id=asignacion_id)
         else:
             asignacion = mesa.asignacion_actual
+        asignable = mesa.lugar_votacion
 
     asignacion.delete()
     messages.success(request, 'La asignación se eliminó')
