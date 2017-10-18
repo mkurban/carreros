@@ -20,7 +20,7 @@ from annoying.functions import get_object_or_None
 from prensa.forms import MinimoContactoInlineFormset
 from .models import Fiscal, AsignacionFiscalGeneral, AsignacionFiscalDeMesa
 from elecciones.models import (
-    Mesa, Eleccion, VotoMesaReportado, Circuito, LugarVotacion
+    Mesa, Eleccion, VotoMesaReportado, Circuito, LugarVotacion, Seccion
 )
 from formtools.wizard.views import SessionWizardView
 from django.template.loader import render_to_string
@@ -672,6 +672,21 @@ def exportar_emails(request):
 
     text = '\n'.join(l for l in out.getvalue().split('\n') if '@' in l)
     return HttpResponse(text, content_type="text/plain; charset=utf-8")
+
+
+@staff_member_required
+def datos_fiscales_por_seccion(request):
+    generales = {}
+    de_mesa = {}
+    for seccion in Seccion.objects.all():
+
+
+        generales[seccion] = Fiscal.objects.filter(tipo='general', asignacion_escuela__eleccion__id=3, asignacion_escuela__lugar_votacion__circuito__seccion=seccion).distinct()
+        de_mesa[seccion] = Fiscal.objects.filter(tipo='de_mesa', asignacion_mesa__mesa__eleccion__id=3, asignacion_mesa__mesa__lugar_votacion__circuito__seccion=seccion).distinct()
+
+
+    return render(request, 'fiscales/datos_fiscales_por_seccion.html', {'generales': generales, 'de_mesa': de_mesa})
+
 
 
 
