@@ -17,6 +17,8 @@ urlpatterns = [
     url('^mapa/(?P<elecciones_slug>\w+)/resultados.geojson$', cached(views.ResultadosOficialesGeoJSON.as_view()), name='resultados-geojson'),
 
     url('^resultados/mapa$', cached(views.MapaResultadosOficiales.as_view()), name='resultados-mapa'),
+    url('^resultados/(?P<eleccion_id>\d+)/$', cached(views.ResultadosOficialesEleccion.as_view()), name='resultados-eleccion'),
+    url('^resultados$', cached(views.ResultadosOficialesElecciones.as_view()), name='resultados'),
 
     # url('^resultados$', views.resultados, name='resultados'),
     # url('^resultados/mesa/(?P<nro>\d+)$', views.resultados_mesa, name='resultados_mesa'),
