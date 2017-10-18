@@ -491,7 +491,7 @@ def eliminar_asignacion_f_mesa(request, eleccion_id, mesa_numero=None):
     else:
         messages.error(request, 'La asignación NO se eliminó')
 
-    return redirect(mesa.get_absolute_url())#redirect('donde-fiscalizo')
+    return redirect(mesa.get_absolute_url())
 
 
 @login_required
