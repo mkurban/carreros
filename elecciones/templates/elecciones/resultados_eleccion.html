@@ -1,0 +1,38 @@
+<table class="borderless responsive">
+    <tr>
+        <td title="Presentismo" width="25%">
+            <table class="borderless" style="font-size: 0.7em">
+                <tr>
+                    <th title="Electores"><i class="small material-icons">person_outline</i></th>
+                    <td title="Electores">{{ resultados.electores}} </td>
+                </tr>
+                <tr>
+                    <th title="Escrutados"><i class="small material-icons">person</i></th>
+                    <td title="Escrutados">{{ resultados.escrutados }} </td>
+                </tr>
+                <tr>
+                    <th title="Positivos"><i class="small material-icons">person_add</i></th>
+                    <td title="Positivos">{{ resultados.positivos}}</td>
+                </tr>
+                <tr>
+                    <th title="Participación"><i class="small material-icons">timeline</i></th>
+                    <td title="Participación">{{ resultados.participacion}} %</td>
+                </tr>
+            </table>
+        </td>
+        <td title="Resultados">
+            <table class="striped bordered">
+                <thead>
+                <tr>
+                    <th>Partido</th>
+                    <th>Votos</th>
+                    <th>%</th>
+                </tr>
+                </thead>
+                {% with resultados.tabla as resultados %}
+                    {% include "elecciones/tabla_resultados_es.html" with responsive=True incluir_votos=True%}
+                {% endwith %}
+            </table>
+        </td>
+    </tr>
+</table>
