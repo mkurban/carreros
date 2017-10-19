@@ -18,7 +18,6 @@ from fancy_cache import cache_page
 urlpatterns = [
     url(r'^$', choice_home, name="home"),
     url(r'^_email/$', email),
-    url(r'^_fancy-cache', include('fancy_cache.urls')),
     url(r'^quiero-ser-fiscal/$', QuieroSerFiscal.as_view(), name='quiero-ser-fiscal'),
     url(r'^quiero-ser-fiscal/confirmar-email/(?P<uuid>[0-9a-f-]+)$', confirmar_email, name='confirmar-email'),
     url(r'^login/$', auth_views.LoginView.as_view(authentication_form=AuthenticationFormCustomError)),

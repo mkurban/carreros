@@ -768,6 +768,8 @@ def fiscal_mesa(request):
 
     return render(request, 'elecciones/add_referentes.html', {'form':form})
 
+
+
 class Resultados(StaffOnlyMixing, TemplateView):
     template_name = "elecciones/resultados.html"
 
@@ -809,22 +811,19 @@ class Resultados(StaffOnlyMixing, TemplateView):
             if self.filtros:
 
                 if 'mesa' in self.request.GET:
-                    lookups = Q(mesas__id__in=self.filtros, mesas__eleccion=eleccion)
-
-                elif 'lugarvotacion' in self.request.GET:
                     lookups = Q(id__in=self.filtros)
 
+                elif 'lugarvotacion' in self.request.GET:
+                    lookups = Q(lugar_votacion__in=self.filtros)
+
                 elif 'circuito' in self.request.GET:
-                    lookups = Q(circuito__in=self.filtros)
+                    lookups = Q(lugar_votacion__circuito__in=self.filtros)
 
                 elif 'seccion' in self.request.GET:
-                    lookups = Q(circuito__seccion__in=self.filtros)
+                    lookups = Q(lugar_votacion__circuito__seccion__in=self.filtros)
 
-            escuelas = LugarVotacion.objects.filter(lookups).distinct()
-            electores = escuelas.aggregate(v=Sum('electores'))['v']
-            if electores and 'mesa' in self.request.GET:
-                # promediamos los electores por mesa
-                electores = electores * self.filtros.count() // Mesa.objects.filter(lugar_votacion__in=escuelas, eleccion=eleccion).count()
+            mesas = Mesa.objects.filter(eleccion=eleccion).filter(lookups).distinct()
+            electores = mesas.aggregate(v=Sum('electores'))['v']
             meta[eleccion] = electores or 0
         return meta
 

@@ -220,7 +220,6 @@ class Opcion(models.Model):
     AGREGACIONES = {f'{id}': Sum(Case(When(opcion__id=id, then=F('votos')),
                              output_field=IntegerField())) for id in MOSTRABLES}
 
-    orden = models.PositiveIntegerField(help_text='Orden en el acta')
     nombre = models.CharField(max_length=100)
     nombre_corto = models.CharField(max_length=10, default='')
     partido = models.ForeignKey(Partido, null=True, blank=True)   # blanco, / recurrido / etc
@@ -228,7 +227,6 @@ class Opcion(models.Model):
         help_text='Orden en la boleta', null=True, blank=True)
     obligatorio = models.BooleanField(default=False)
     es_contable = models.BooleanField(default=True)
-    codigo_dne = models.PositiveIntegerField(null=True, blank=True, help_text='Nº de lista')
     codigo_dne = models.PositiveIntegerField(null=True, blank=True, help_text='Nº asignado en la base de datos de resultados oficiales')
 
 
@@ -260,6 +258,10 @@ class Eleccion(models.Model):
     def actual(cls):
         actual = cls.objects.order_by('-id').first()
         return actual
+
+    @property
+    def electores(self):
+        return Mesa.objects.filter(eleccion=self).aggregate(v=Sum('electores'))['v']
 
     class Meta:
         verbose_name = 'Elección'
