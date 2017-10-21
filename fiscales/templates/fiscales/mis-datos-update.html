@@ -8,7 +8,7 @@
     <form method="POST" enctype="multipart/form-data">
         {% csrf_token %}
         <div class="card-content">
-            <div class="card-title"> {{ object }} (Holas) </div>
+            <div class="card-title"> {{ object }} </div>
             {% block form %}
                 {% if view.layout or form.layout %}
                     {% if view.layout %}

@@ -20,7 +20,7 @@ from annoying.functions import get_object_or_None
 from prensa.forms import MinimoContactoInlineFormset
 from .models import Fiscal, AsignacionFiscalGeneral, AsignacionFiscalDeMesa
 from elecciones.models import (
-    Mesa, Eleccion, VotoMesaReportado, Circuito, LugarVotacion
+    Mesa, Eleccion, VotoMesaReportado, Circuito, LugarVotacion, Seccion
 )
 from formtools.wizard.views import SessionWizardView
 from django.template.loader import render_to_string
@@ -447,14 +447,14 @@ class FiscalSimpleCreateView(BaseFiscalSimple, CreateView):
             tipo_dni=fiscal.tipo_dni
         )
 
+        if existente:
+            fiscal = existente
+            messages.info(self.request, 'Ya teniamos datos de esta persona')
+
         fiscal.estado = "CONFIRMADO"
         if 'mesa_numero' in self.kwargs:
             fiscal.escuela_donde_vota = self.asignable.lugar_votacion
         fiscal.save()
-
-        if existente:
-            fiscal = existente
-            messages.info(self.request, 'Ya teniamos datos de esta persona')
         return fiscal
 
 
@@ -699,6 +699,20 @@ def exportar_emails(request):
 
     text = '\n'.join(l for l in out.getvalue().split('\n') if '@' in l)
     return HttpResponse(text, content_type="text/plain; charset=utf-8")
+
+
+@staff_member_required
+def datos_fiscales_por_seccion(request):
+    generales = {}
+    de_mesa = {}
+    for seccion in Seccion.objects.all():
+
+        generales[seccion] = Fiscal.objects.filter(tipo='general', escuela_donde_vota__circuito__seccion=seccion).distinct()
+        de_mesa[seccion] = Fiscal.objects.filter(tipo='de_mesa', escuela_donde_vota__circuito__seccion=seccion).distinct()
+
+
+    return render(request, 'fiscales/datos_fiscales_por_seccion.html', {'generales': generales, 'de_mesa': de_mesa})
+
 
 
 
