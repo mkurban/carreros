@@ -509,7 +509,6 @@ def eliminar_asignacion_f_general(request, eleccion_id, escuela_id=None, asignac
 
     asignacion = AsignacionFiscalGeneral.objects.get(id=asignacion_id)
 
-    print('asignacion: ', asignacion)
     asignacion.delete()
     messages.success(request, 'La asignación se eliminó')
     return redirect(asignable.get_absolute_url())
@@ -574,8 +573,8 @@ class MesaDetalle(LoginRequiredMixin, MiAsignableMixin, DetailView):
 
         qs_voluntarios = self.get_voluntarios_queryset()
         context['qs_voluntarios'] = qs_voluntarios
-        for v in context['qs_voluntarios']:
-            print(type(v), v, v.pk)
+        #for v in context['qs_voluntarios']:
+        #    print(type(v), v, v.pk)
 
         return context
 
