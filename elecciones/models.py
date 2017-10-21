@@ -235,10 +235,20 @@ class Opcion(models.Model):
         verbose_name_plural = 'Opciones'
         ordering = ['orden']
 
+
+    @property
+    def color(self):
+        if self.partido:
+            return self.partido.color or '#FFFFFF'
+        return '#FFFFFF'
+
+
     def __str__(self):
         if self.partido:
             return f'{self.partido} - {self.nombre}'
         return self.nombre
+
+
 
 
 class Eleccion(models.Model):
