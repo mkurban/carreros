@@ -6,6 +6,10 @@
     <div class="card">
             <form action="" method="post">{% csrf_token %}
                 <div class="card-content">
+
+
+                {% comment %}
+
                     <span class="card-title grey-text text-darken-2">Paso {{ wizard.steps.step1 }} de {{ wizard.steps.count }}</span>
                     {{ wizard.management_form }}
 
@@ -17,7 +21,15 @@
                     {% else %}
                         {% form form=wizard.form %}{% endform %}
                     {% endif %}
+
+                     {% endcomment %}
+
+
+                     <p>La inscripción de fiscales ha concluído. Gracias por tu interés, y ¡esperamos tu apoyo el domingo!</p>
+
                 </div>
+                {% comment %}
+
                 <div class="card-action right-align">
                     {% if wizard.steps.prev %}
                     <button class="btn" name="wizard_goto_step" type="submit" value="{{ wizard.steps.prev }}">
@@ -32,6 +44,7 @@
 
                     </button>
                 </div>
+                {% endcomment %}
             </form>
         </div>
 
