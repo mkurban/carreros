@@ -5,7 +5,7 @@ from django.contrib import messages
 from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib.auth.decorators import user_passes_test
 from django.db.models import Q, F, Sum
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
 from django.utils.decorators import method_decorator
 from django.utils.text import get_text_list
@@ -352,13 +352,17 @@ class ResultadosEleccion(StaffOnlyMixing, TemplateView):
 
         total = sum(result.values())
         result = {k: (v, f'{v*100/total:.2f}') for k, v in result.items()}
-        result_piechart = [{'key': str(k), 'y': v[0]} for k, v in result.items()]
+        result_piechart = [
+            {'key': str(k),
+             'y': v[0],
+             'color': k.color  if not isinstance(k, str) else '#FFFFFF'} for k, v in result.items()
+        ]
         resultados = {'tabla': result,
-                        'result_piechart': result_piechart,
-                        'electores': electores,
-                        'positivos': positivos,
-                        'escrutados': total,
-                        'participacion': f'{total*100/electores:.2f}'} if electores else '-'
+                      'result_piechart': result_piechart,
+                      'electores': electores,
+                      'positivos': positivos,
+                      'escrutados': total,
+                      'participacion': f'{total*100/electores:.2f}'} if electores else '-'
         return resultados
 
     def get_context_data(self, **kwargs):
@@ -368,14 +372,25 @@ class ResultadosEleccion(StaffOnlyMixing, TemplateView):
         else:
             context['para'] = 'Córdoba'
 
+        context['object'] = get_object_or_404(Eleccion, id=self.kwargs["eleccion_id"])
         context['eleccion_id'] = self.kwargs["eleccion_id"]
         context['resultados'] = self.get_resultados(self.kwargs["eleccion_id"])
         return context
 
     def render_to_response(self, context, **response_kwargs):
         d = {}
-        d['chart']  = context['resultados']['result_piechart']
+        chart = context['resultados']['result_piechart']
+
+        d['chart_values'] = [v['y'] for v in chart]
+        d['chart_keys'] = [v['key'] for v in chart]
+        d['chart_colors'] = [v['color'] for v in chart]
+
         d['content'] = render_to_string(self.template_name, context, request=self.request)
+        d['metadata'] = render_to_string(
+            'elecciones/tabla_resultados_metadata.html',
+            context,
+            request=self.request
+        )
         return JsonResponse(d)
 
 

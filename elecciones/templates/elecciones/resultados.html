@@ -1,14 +1,17 @@
 {% extends "fiscales/base.html" %}
+{% load staticfiles %}
 
 {% block title %}Resultados según Fiscales{% endblock %}
 
 {% block page_title %}<h5>Resultados según Fiscales</h5><h7>{{para}}</h7>{% endblock %}
 
+ {% block head %}
+    {{ block.super }}
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+ {% endblock %}
+
+
 {% block left-panel %}
-    <link href="/static/elecciones/lib/nv.d3.min.css" rel="stylesheet" type="text/css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.17/d3.min.js" charset="utf-8"></script>
-    <script src="/static/elecciones/lib/nv.d3.min.js"></script>
-    <script src="/static/elecciones/lib/stream_layers.js"></script>
 
     <ul class="tabs">
         {% for eleccion in elecciones %}
@@ -26,6 +29,19 @@
     {% endfor %}
 {% endblock %}
 
+{% block right-panel %}
+ <div class="card">
+    <div id="metadata" class="card-content">
+
+    </div>
+</div>
+
+
+
+{% endblock right-panel %}
+
+
+
 {% block messages %}
 {{ block.super }}
 
@@ -33,10 +49,31 @@
 
 function show_content(tab){
     var eleccion_id = tab.data('id');
-    console.log(eleccion_id);
-    $.get("/elecciones/resultados/" + eleccion_id + "/?{{request.GET.urlencode}}", function(data){
-        console.log(eleccion_id);
-        $("#frame" + eleccion_id).html(data.content);
+
+    $.get("/elecciones/resultados/" + eleccion_id + "/?{{request.GET.urlencode}}",
+        function(data){
+            console.log(data);
+
+            // muestra tabla
+            $("#frame" + eleccion_id).html(data.content);
+            $('#metadata').html(data.metadata);
+            // genera grafico
+
+            var data = [{
+              values: data.chart_values,
+              labels: data.chart_keys,
+              type: 'pie',
+              marker: {
+                colors: data.chart_colors
+              }
+            }];
+
+            var layout = {
+              height: 900,
+              width: 900
+            };
+
+            Plotly.newPlot('piechart-' + eleccion_id, data, layout);
     });
 }
 
