@@ -106,7 +106,7 @@ class Fiscal(models.Model):
             return LugarVotacion.objects.filter(
                 asignacion__fiscal=self,
                 asignacion__eleccion__id=3
-            )
+            ).distinct()
         else:
             return LugarVotacion.objects.filter(mesas__eleccion__id=3, mesas__asignacion__fiscal=self).distinct()
 

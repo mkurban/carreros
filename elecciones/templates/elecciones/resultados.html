@@ -1,18 +1,53 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Title</title>
-</head>
-<body>
-    {% if mesas_list %}
-    <ul>
-        {% for mesa in mesas_list %}
-        <li><a href="/elecciones/resultados/mesa/{{ mesa.numero }}">{{ mesa.numero }} - {{ mesa.lugarvotacion.nombre }} </a></li>
+{% extends "fiscales/base.html" %}
+
+{% block title %}Resultados según Fiscales{% endblock %}
+
+{% block page_title %}<h5>Resultados según Fiscales</h5><h7>{{para}}</h7>{% endblock %}
+
+{% block left-panel %}
+    <link href="/static/elecciones/lib/nv.d3.min.css" rel="stylesheet" type="text/css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.17/d3.min.js" charset="utf-8"></script>
+    <script src="/static/elecciones/lib/nv.d3.min.js"></script>
+    <script src="/static/elecciones/lib/stream_layers.js"></script>
+
+    <ul class="tabs">
+        {% for eleccion in elecciones %}
+        <li class="tab col s3" >
+            <a href="#{{eleccion.slug}}" {% if forloop.first %}class="active"{% endif %}>{{ eleccion.nombre }}</a>
+        </li>
         {% endfor %}
     </ul>
-    {% else %}
-    <p>Sin Mesas disponibles?.</p>
-    {% endif %}
-</body>
-</html>
+
+    {% for eleccion in elecciones %}
+        <div class="card" id="{{eleccion.slug}}" data-id="{{ eleccion.id }}">
+            <div class="card-content" id="frame{{eleccion.id}}">
+            </div>
+        </div>
+    {% endfor %}
+{% endblock %}
+
+{% block messages %}
+{{ block.super }}
+
+<script type="text/javascript">
+
+function show_content(tab){
+    var eleccion_id = tab.data('id');
+    console.log(eleccion_id);
+    $.get("/elecciones/resultados/" + eleccion_id + "/?{{request.GET.urlencode}}", function(data){
+        console.log(eleccion_id);
+        $("#frame" + eleccion_id).html(data.content);
+    });
+}
+
+$(function() {
+    $('ul.tabs').tabs({
+        onShow: show_content
+    });
+
+
+    // invocar contenido de la pestaña activa por primera vez
+    show_content($($('a.active').attr('href')));
+});
+</script>
+{% endblock messages %}

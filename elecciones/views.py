@@ -1,5 +1,6 @@
 from functools import lru_cache
-
+from django.http import JsonResponse
+from django.template.loader import render_to_string
 from django.contrib import messages
 from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib.auth.decorators import user_passes_test
@@ -230,6 +231,10 @@ class MapaResultadosOficiales(StaffOnlyMixing, TemplateView):
 
             total = sum(result.values())
             result = {k: (v, f'{v*100/total:.2f}') for k, v in result.items()}
+
+            result = {k: (v, f'{v*100/total:.2f}') for k, v in result.items()}
+            result_piechart = [{'key': k, 'y': v[0]} for k, v in result.items()]
+
             resultados[eleccion] = {'tabla': result,
                                     'electores': electores,
                                     'positivos': positivos,
@@ -250,136 +255,7 @@ class MapaResultadosOficiales(StaffOnlyMixing, TemplateView):
         return context
 
 
-class ResultadosOficiales(StaffOnlyMixing, TemplateView):
-    template_name = "elecciones/resultados_es.html"
-
-    @classmethod
-    @lru_cache(128)
-    def agregaciones_por_partido(cls):
-        sum_por_partido = {}
-        otras_opciones = {}
-        for id in Partido.objects.values_list('id', flat=True):
-            sum_por_partido[str(id)] = Sum(Case(When(opcion__partido__id=id, then=F('votos')),
-                                                output_field=IntegerField()))
-
-        for nombre, id in Opcion.objects.filter(id__in=[16, 17, 18, 19]).values_list('nombre', 'id'):
-            otras_opciones[nombre] = Sum(Case(When(opcion__id=id, then=F('votos')),
-                                              output_field=IntegerField()))
-
-        return sum_por_partido, otras_opciones
-
-    @property
-    @lru_cache(128)
-    def filtros(self):
-        """a partir de los argumentos de urls, devuelve
-        listas de seccion / circuito etc. para filtrar """
-        if 'seccion' in self.request.GET:
-            return Seccion.objects.filter(id__in=self.request.GET.getlist('seccion'))
-        elif 'circuito' in self.request.GET:
-            return Circuito.objects.filter(id__in=self.request.GET.getlist('circuito'))
-        elif 'lugarvotacion' in self.request.GET:
-            return LugarVotacion.objects.filter(id__in=self.request.GET.getlist('lugarvotacion'))
-        elif 'mesa' in self.request.GET:
-            return Mesa.objects.filter(id__in=self.request.GET.getlist('mesa'))
-
-    @property
-    @lru_cache(128)
-    def electores(self):
-        lookups = Q()
-        meta = {}
-        for eleccion in Eleccion.objects.all():
-
-            if self.filtros:
-                if 'seccion' in self.request.GET:
-                    lookups = Q(circuito__seccion__in=self.filtros)
-
-                elif 'circuito' in self.request.GET:
-                    lookups = Q(circuito__in=self.filtros)
-
-                elif 'lugarvotacion' in self.request.GET:
-                    lookups = Q(id__in=self.filtros)
-
-                elif 'mesa' in self.request.GET:
-                    lookups = Q(mesas__id__in=self.filtros, mesas__eleccion=eleccion)
-
-            escuelas = LugarVotacion.objects.filter(lookups).distinct()
-            electores = escuelas.aggregate(v=Sum('electores'))['v']
-            if electores and 'mesa' in self.request.GET:
-                # promediamos los electores por mesa
-                electores = electores * self.filtros.count() // Mesa.objects.filter(lugar_votacion__in=escuelas, eleccion=eleccion).count()
-            meta[eleccion] = electores or 0
-        return meta
-
-
-    def get_resultados(self):
-        lookups = Q()
-        resultados = {}
-        sum_por_partido, otras_opciones = ResultadosOficiales.agregaciones_por_partido()
-        for eleccion in Eleccion.objects.all():
-
-            if self.filtros:
-                if 'seccion' in self.request.GET:
-                    lookups = Q(mesa__lugar_votacion__circuito__seccion__in=self.filtros)
-
-                elif 'circuito' in self.request.GET:
-                    lookups = Q(mesa__lugar_votacion__circuito__in=self.filtros)
-
-                elif 'lugarvotacion' in self.request.GET:
-                    lookups = Q(mesa__lugar_votacion__in=self.filtros)
-
-                elif 'mesa' in self.request.GET:
-                    lookups = Q(mesa__id__in=self.filtros)
-
-            electores = self.electores[eleccion]
-            # primero para partidos
-            result = VotoMesaReportado.objects.filter(
-                Q(mesa__eleccion=eleccion) & lookups
-            ).aggregate(
-                **sum_por_partido
-            )
-            result = {Partido.objects.get(id=k): v for k, v in result.items() if v is not None}
-
-            positivos = sum(result.values())
-
-            # no positivos
-            result_opc = VotoMesaReportado.objects.filter(
-                Q(mesa__eleccion=eleccion) & lookups
-            ).aggregate(
-                **otras_opciones
-            )
-            result_opc = {k: v for k, v in result_opc.items() if v is not None}
-            result.update(result_opc)
-
-            total = sum(result.values())
-            result = {k: (v, f'{v*100/total:.2f}') for k, v in result.items()}
-            result_piechart = [{'key': k, 'y': v[0]} for k, v in result.items()]
-            resultados[eleccion] = {'tabla': result,
-                                    'result_piechart': result_piechart,
-                                    'electores': electores,
-                                    'positivos': positivos,
-                                    'escrutados': total,
-                                    'participacion': f'{total*100/electores:.2f}'} if electores else '-'
-        return resultados
-
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        if self.filtros:
-            context['para'] = get_text_list(list(self.filtros), " y ")
-        else:
-            context['para'] = 'Córdoba'
-
-        results = self.get_resultados()
-        context['resultados'] = results
-        return context
-
-
-class TextTemplateView(TemplateView):
-    def render_to_response(self, context, **response_kwargs):
-        response_kwargs['content_type'] = 'text/plain'
-        return super(TemplateView, self).render_to_response(context, **response_kwargs)
-
-class ResultadosOficialesEleccion(StaffOnlyMixing, TextTemplateView):
+class ResultadosEleccion(StaffOnlyMixing, TemplateView):
     template_name = "elecciones/resultados_eleccion.html"
 
     @classmethod
@@ -439,7 +315,7 @@ class ResultadosOficialesEleccion(StaffOnlyMixing, TextTemplateView):
     def get_resultados(self, eleccion_id):
         lookups = Q()
         resultados = {}
-        sum_por_partido, otras_opciones = ResultadosOficiales.agregaciones_por_partido()
+        sum_por_partido, otras_opciones = ResultadosEleccion.agregaciones_por_partido()
 
         if self.filtros:
             if 'seccion' in self.request.GET:
@@ -476,7 +352,7 @@ class ResultadosOficialesEleccion(StaffOnlyMixing, TextTemplateView):
 
         total = sum(result.values())
         result = {k: (v, f'{v*100/total:.2f}') for k, v in result.items()}
-        result_piechart = [{'key': k, 'y': v[0]} for k, v in result.items()]
+        result_piechart = [{'key': str(k), 'y': v[0]} for k, v in result.items()]
         resultados = {'tabla': result,
                         'result_piechart': result_piechart,
                         'electores': electores,
@@ -484,7 +360,6 @@ class ResultadosOficialesEleccion(StaffOnlyMixing, TextTemplateView):
                         'escrutados': total,
                         'participacion': f'{total*100/electores:.2f}'} if electores else '-'
         return resultados
-
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -497,24 +372,15 @@ class ResultadosOficialesEleccion(StaffOnlyMixing, TextTemplateView):
         context['resultados'] = self.get_resultados(self.kwargs["eleccion_id"])
         return context
 
+    def render_to_response(self, context, **response_kwargs):
+        d = {}
+        d['chart']  = context['resultados']['result_piechart']
+        d['content'] = render_to_string(self.template_name, context, request=self.request)
+        return JsonResponse(d)
 
-class ResultadosOficialesElecciones(StaffOnlyMixing, TemplateView):
-    template_name = "elecciones/resultados_elecciones.html"
 
-    @classmethod
-    @lru_cache(128)
-    def agregaciones_por_partido(cls):
-        sum_por_partido = {}
-        otras_opciones = {}
-        for id in Partido.objects.values_list('id', flat=True):
-            sum_por_partido[str(id)] = Sum(Case(When(opcion__partido__id=id, then=F('votos')),
-                                                output_field=IntegerField()))
-
-        for nombre, id in Opcion.objects.filter(id__in=[16, 17, 18, 19]).values_list('nombre', 'id'):
-            otras_opciones[nombre] = Sum(Case(When(opcion__id=id, then=F('votos')),
-                                              output_field=IntegerField()))
-
-        return sum_por_partido, otras_opciones
+class Resultados(StaffOnlyMixing, TemplateView):
+    template_name = "elecciones/resultados.html"
 
     @property
     @lru_cache(128)
@@ -530,84 +396,13 @@ class ResultadosOficialesElecciones(StaffOnlyMixing, TemplateView):
         elif 'mesa' in self.request.GET:
             return Mesa.objects.filter(id__in=self.request.GET.getlist('mesa'))
 
-    @property
-    @lru_cache(128)
-    def electores(self):
-        lookups = Q()
-        meta = {}
-        for eleccion in Eleccion.objects.all():
-
-            if self.filtros:
-                if 'seccion' in self.request.GET:
-                    lookups = Q(circuito__seccion__in=self.filtros)
-
-                elif 'circuito' in self.request.GET:
-                    lookups = Q(circuito__in=self.filtros)
-
-                elif 'lugarvotacion' in self.request.GET:
-                    lookups = Q(id__in=self.filtros)
-
-                elif 'mesa' in self.request.GET:
-                    lookups = Q(mesas__id__in=self.filtros, mesas__eleccion=eleccion)
-
-            escuelas = LugarVotacion.objects.filter(lookups).distinct()
-            electores = escuelas.aggregate(v=Sum('electores'))['v']
-            if electores and 'mesa' in self.request.GET:
-                # promediamos los electores por mesa
-                electores = electores * self.filtros.count() // Mesa.objects.filter(lugar_votacion__in=escuelas, eleccion=eleccion).count()
-            meta[eleccion] = electores or 0
-        return meta
-
-
-    def get_resultados(self):
-        lookups = Q()
-        resultados = {}
-        sum_por_partido, otras_opciones = ResultadosOficiales.agregaciones_por_partido()
-        for eleccion in Eleccion.objects.all():
-
-            if self.filtros:
-                if 'seccion' in self.request.GET:
-                    lookups = Q(mesa__lugar_votacion__circuito__seccion__in=self.filtros)
-
-                elif 'circuito' in self.request.GET:
-                    lookups = Q(mesa__lugar_votacion__circuito__in=self.filtros)
-
-                elif 'lugarvotacion' in self.request.GET:
-                    lookups = Q(mesa__lugar_votacion__in=self.filtros)
-
-                elif 'mesa' in self.request.GET:
-                    lookups = Q(mesa__id__in=self.filtros)
-
-            electores = self.electores[eleccion]
-            # primero para partidos
-            result = VotoMesaReportado.objects.filter(
-                Q(mesa__eleccion=eleccion) & lookups
-            ).aggregate(
-                **sum_por_partido
-            )
-            result = {Partido.objects.get(id=k): v for k, v in result.items() if v is not None}
-
-            positivos = sum(result.values())
-
-            # no positivos
-            result_opc = VotoMesaReportado.objects.filter(
-                Q(mesa__eleccion=eleccion) & lookups
-            ).aggregate(
-                **otras_opciones
-            )
-            result_opc = {k: v for k, v in result_opc.items() if v is not None}
-            result.update(result_opc)
-
-            total = sum(result.values())
-            result = {k: (v, f'{v*100/total:.2f}') for k, v in result.items()}
-            result_piechart = [{'key': k.nombre_corto if isinstance(k, Partido) else str(k), 'y': v[0]} for k, v in result.items()]
-            resultados[eleccion] = {'tabla': result,
-                                    'result_piechart': result_piechart,
-                                    'electores': electores,
-                                    'positivos': positivos,
-                                    'escrutados': total,
-                                    'participacion': f'{total*100/electores:.2f}'} if electores else '-'
-        return resultados
+    def menu_activo(self):
+        if not self.filtros:
+            return []
+        elif isinstance(self.filtros[0], Seccion):
+            return (self.filtros[0], None)
+        elif isinstance(self.filtros[0], Circuito):
+            return (self.filtros[0].seccion, self.filtros[0])
 
 
     def get_context_data(self, **kwargs):
@@ -616,125 +411,12 @@ class ResultadosOficialesElecciones(StaffOnlyMixing, TemplateView):
             context['para'] = get_text_list(list(self.filtros), " y ")
         else:
             context['para'] = 'Córdoba'
-        context['resultados'] = self.get_resultados()
+        context['elecciones'] = Eleccion.objects.all().order_by('-id')
+        context['secciones'] = Seccion.objects.all()
+        context['menu_activo'] = self.menu_activo()
+
         return context
 
-"""
-
-def resultados(request):
-    mesas_list = Mesa.objects.filter(votomesaoficial__eleccion__isnull=False)
-    mesas_list2 = Mesa.objects.filter(votomesareportado__eleccion__isnull=False)
-    mesas_list = set(set(mesas_list) | set(mesas_list2))
-    template = loader.get_template('elecciones/resultados.html')
-    context = {
-        'mesas_list': mesas_list,
-    }
-    return HttpResponse(template.render(context, request))
-
-def resultados_mesa(request, nro):
-    def extrac_chart_data(ops):
-        return json.dumps([{'key': op.opcion.nombre_corto, 'y': op.votos} for op in ops if not op.opcion.nombre.find("TOTAL")==0])
-    mesa = Mesa.objects.get(numero=nro)
-    reporte = VotoMesaReportado.objects.filter(mesa__numero=mesa.numero, votos__isnull=False)
-    rep_chart = extrac_chart_data(reporte)
-    parte = VotoMesaOficial.objects.filter(mesa__numero=mesa.numero, votos__isnull=False)
-    par_chart = extrac_chart_data(parte)
-    template = loader.get_template('elecciones/resultados_mesa.html')
-    context = {
-        'mesa': mesa,
-        'reporte': reporte,
-        'rep_chart': rep_chart,
-        'parte_de_mesa':parte,
-        'par_chart': par_chart
-    }
-    return HttpResponse(template.render(context, request))
-
-def resultados_mesas_ids(request):
-    idss = []
-    if 'ids' in request.GET:
-        query = request.GET.urlencode()
-        ids = f'?{query}'
-        ids = parse.unquote(ids)
-        idss = ids[5:].split(",")
-        mesas = Mesa.objects.filter(id__in=idss)
-    else:
-        mesas = Mesa.objects.filter(es_testigo=True)
-
-    if len(mesas) > 0:
-        nums = [str(m.numero) for m in mesas]
-        return redirect('/elecciones/resultados/mesas?ids=' + ",".join(nums))
-    else:
-        raise Http404("Error, Mesas no encontradas")
-
-
-def resultados_mesas(request):
-    idss = []
-
-    if 'ids' in request.GET:
-        query = request.GET.urlencode()
-        ids = f'?{query}'
-        ids = parse.unquote(ids)
-        idss = ids[5:].split(",")
-        mesas = Mesa.objects.filter(numero__in=idss)
-    else:
-        mesas = Mesa.objects.filter(es_testigo=True)
-
-    if len(mesas) > 0:
-        reporte = VotoMesaReportado.objects.filter(mesa__numero__in=idss, opcion__obligatorio=True, votos__isnull=False)\
-            .values('opcion__nombre','opcion__nombre_corto','opcion__partido__nombre_corto') \
-            .annotate(votos=Sum("votos")) \
-            .order_by("-votos")
-        rep_otros = VotoMesaReportado.objects.filter(mesa__numero__in=idss, opcion__obligatorio=False, votos__isnull=False) \
-            .aggregate(Sum("votos"))
-        reporte_l = [o for o in reporte]
-        reporte_l = reporte_l + ([{'opcion__nombre':"Otros", "votos": rep_otros["votos__sum"]}] if rep_otros["votos__sum"] else [])
-        if len(reporte_l) > 0:
-            total_votos= float(reporte_l[0]["votos"])
-            for e in reporte_l:
-                if total_votos > 0:
-                    e["porcentaje"] = "{:10.2f}".format(100.0 * (float(e["votos"]) / total_votos))
-                else:
-                    e["porcentaje"] = 0.0
-        reporte_l = (reporte_l[1:] + [reporte_l[0]] if reporte_l else reporte_l)
-
-        parte = VotoMesaOficial.objects.filter(mesa__numero__in=idss, opcion__obligatorio=True, votos__isnull=False) \
-            .values('opcion__nombre','opcion__nombre_corto','opcion__partido__nombre_corto') \
-            .annotate(votos=Sum("votos")) \
-            . order_by("-votos")
-        par_otros = VotoMesaOficial.objects.filter(mesa__numero__in=idss, opcion__obligatorio=False, votos__isnull=False) \
-            .aggregate(Sum("votos"))
-        parte_l = [o for o in parte]
-        parte_l = parte_l + ([{'opcion__nombre':"Otros", "votos": par_otros["votos__sum"]}] if par_otros["votos__sum"] else [])
-        if len(parte_l) > 0:
-            total_votos_p= float(parte_l[0]["votos"])
-            for e in parte_l:
-                if total_votos_p > 0:
-                    e["porcentaje"] = "{:10.2f}".format(100.0 * (float(e["votos"]) / total_votos))
-                else:
-                    e["porcentaje"] = 0.0
-        parte_l = (parte_l[1:] + [parte_l[0]] if parte_l else parte_l)
-
-        def extract_chart_data(ops, is_parte):
-            return json.dumps([{'key': op["opcion__nombre_corto"], 'y': op["votos"]} \
-                               for op in ops \
-                               if not op["opcion__nombre"].find("TOTAL")==0] \
-                              + ([{'key':"Otros", 'y':rep_otros["votos__sum"]}] if not is_parte else [{'key':"Otros", 'y':par_otros["votos__sum"]}]))
-        rep_chart = extract_chart_data(reporte, False)
-        par_chart = extract_chart_data(parte, True)
-
-        template = loader.get_template('elecciones/resultados_mesas.html')
-        context = {
-            'ids': idss,
-            'mesas': mesas,
-            'reporte': reporte_l,
-            'rep_chart': rep_chart,
-            'parte_de_mesa':parte_l,
-            'par_chart': par_chart,
-        }
-        return HttpResponse(template.render(context, request))
-    else:
-        raise Http404("Error, Mesas no encontradas")
-"""
 
 @user_passes_test(lambda u: u.is_superuser)
 def asignar_referentes(request):
@@ -768,126 +450,3 @@ def fiscal_mesa(request):
 
     return render(request, 'elecciones/add_referentes.html', {'form':form})
 
-
-
-class Resultados(StaffOnlyMixing, TemplateView):
-    template_name = "elecciones/resultados.html"
-
-
-    @classmethod
-    @lru_cache(128)
-    def agregaciones(cls):
-
-        opciones = {}
-
-        for id in Opcion.objects.values_list('id', flat=True):
-            opciones[str(id)] = Sum(Case(When(opcion__id=id, then=F('votos')),
-                                         output_field=IntegerField()))
-
-        return opciones
-
-    @property
-    @lru_cache(128)
-    def filtros(self):
-        """a partir de los argumentos de urls, devuelve
-        listas de seccion / circuito etc. para filtrar """
-        if 'mesa' in self.request.GET:
-            return Mesa.objects.filter(id__in=self.request.GET.getlist('mesa'))
-        elif 'lugarvotacion' in self.request.GET:
-            return LugarVotacion.objects.filter(id__in=self.request.GET.getlist('lugarvotacion'))
-        elif 'circuito' in self.request.GET:
-            return Circuito.objects.filter(id__in=self.request.GET.getlist('circuito'))
-        elif 'seccion' in self.request.GET:
-            return Seccion.objects.filter(id__in=self.request.GET.getlist('seccion'))
-
-
-    @property
-    @lru_cache(128)
-    def electores(self):
-        lookups = Q()
-        meta = {}
-        for eleccion in Eleccion.objects.all():
-
-            if self.filtros:
-
-                if 'mesa' in self.request.GET:
-                    lookups = Q(id__in=self.filtros)
-
-                elif 'lugarvotacion' in self.request.GET:
-                    lookups = Q(lugar_votacion__in=self.filtros)
-
-                elif 'circuito' in self.request.GET:
-                    lookups = Q(lugar_votacion__circuito__in=self.filtros)
-
-                elif 'seccion' in self.request.GET:
-                    lookups = Q(lugar_votacion__circuito__seccion__in=self.filtros)
-
-            mesas = Mesa.objects.filter(eleccion=eleccion).filter(lookups).distinct()
-            electores = mesas.aggregate(v=Sum('electores'))['v']
-            meta[eleccion] = electores or 0
-        return meta
-
-
-    def get_resultados(self):
-        lookups = Q()
-        resultados = {}
-        agregaciones = Resultados.agregaciones()
-        for eleccion in Eleccion.objects.all():
-
-            if self.filtros:
-
-                if 'mesa' in self.request.GET:
-                    lookups = Q(mesa__in=self.filtros)
-
-                elif 'lugarvotacion' in self.request.GET:
-                    lookups = Q(mesa__lugar_votacion__in=self.filtros)
-
-                elif 'circuito' in self.request.GET:
-                    lookups = Q(mesa__circuito__in=self.filtros)
-
-                elif 'seccion' in self.request.GET:
-                    lookups = Q(mesa__circuito__seccion__in=self.filtros)
-
-
-            electores = self.electores[eleccion]
-            # primero para partidos
-            result = VotoMesaReportado.objects.filter(
-                Q(mesa__eleccion=eleccion) & lookups
-            ).aggregate(
-                **agregaciones
-            )
-            result = {Opcion.objects.get(id=k): v for k, v in result.items() if v is not None}
-
-            positivos = sum(v for k, v in result.items() if k.es_partido)
-
-            total = sum(result.values())
-            result = {k: (v, f'{v*100/total:.2f}') for k, v in result.items()}
-            resultados[eleccion] = {'tabla': result,
-                                    'electores': electores,
-                                    'positivos': positivos,
-                                    'escrutados': total,
-                                    'participacion': f'{total*100/electores:.2f}' if electores else '-'
-                                    }
-        return resultados
-
-
-    def menu_activo(self):
-        if not self.filtros:
-            return []
-        elif isinstance(self.filtros[0], Seccion):
-            return (self.filtros[0], None)
-        elif isinstance(self.filtros[0], Circuito):
-            return (self.filtros[0].seccion, self.filtros[0])
-
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        if self.filtros:
-            context['para'] = get_text_list(list(self.filtros), " y ")
-        else:
-            context['para'] = 'Buenos Aires'
-
-        context['secciones'] = Seccion.objects.all()
-        context['resultados'] = self.get_resultados()
-        context['menu_activo'] = self.menu_activo()
-        return context
