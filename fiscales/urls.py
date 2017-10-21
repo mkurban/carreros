@@ -27,7 +27,7 @@ urlpatterns = [
     url('^(?P<eleccion_id>\d+)/m(?P<mesa_numero>\d+)/fiscal/crear$',
         views.FiscalSimpleCreateView.as_view(), {'tipo': 'de_mesa'}, name='mesa-cargar-fiscal'),
     url('^(?P<eleccion_id>\d+)/m(?P<mesa_numero>\d+)/fiscal/eliminar$',
-        views.eliminar_asignacion, {'tipo': 'de_mesa'}, name='mesa-eliminar-asignacion'),
+        views.eliminar_asignacion_f_mesa, name='mesa-eliminar-asignacion'),
     url('^(?P<eleccion_id>\d+)/m(?P<mesa_numero>\d+)/fiscal/editar$',
         views.FiscalSimpleUpdateView.as_view(), {'tipo': 'de_mesa'}, name='mesa-editar-fiscal'),
     url('^(?P<eleccion_id>\d+)/m(?P<mesa_numero>\d+)/fiscal/registrar$',
@@ -38,7 +38,7 @@ urlpatterns = [
     url('^(?P<eleccion_id>\d+)/e(?P<escuela_id>\d+)/fiscal/crear$',
         views.FiscalSimpleCreateView.as_view(), {'tipo': 'general'}, name='escuela-cargar-fiscal'),
     url('^(?P<eleccion_id>\d+)/e(?P<escuela_id>\d+)/(?P<asignacion_id>\d+)/eliminar$',
-        views.eliminar_asignacion, {'tipo': 'general'}, name='escuela-eliminar-asignacion'),
+        views.eliminar_asignacion_f_general, name='escuela-eliminar-asignacion'),
     url('^(?P<eleccion_id>\d+)/e(?P<escuela_id>\d+)/(?P<asignacion_id>\d+)/editar$',
         views.FiscalSimpleUpdateView.as_view(), {'tipo': 'general'}, name='escuela-editar-fiscal'),
 

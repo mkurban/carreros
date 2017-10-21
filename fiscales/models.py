@@ -250,7 +250,7 @@ def crear_user_para_fiscal(sender, instance=None, created=False, **kwargs):
             first_name=instance.nombres,
             last_name=instance.apellido,
             is_active=True,
-            email=instance.emails[0] if instance.emails else None
+            email=instance.emails[0] if instance.emails else ""
         )
 
         # user.set_password(settings.DEFAULT_PASS_PREFIX + instance.dni[-3:])

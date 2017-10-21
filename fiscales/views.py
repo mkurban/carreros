@@ -27,6 +27,7 @@ from django.template.loader import render_to_string
 from html2text import html2text
 from django.core.mail import send_mail
 from django.contrib.admin.views.decorators import staff_member_required
+from django import forms
 from .forms import (
     MisDatosForm,
     FiscalFormSimple,
@@ -243,8 +244,6 @@ class MisContactos(BaseFiscal):
     template_name = "fiscales/mis-contactos.html"
 
 
-
-
 class MisVoluntarios(LoginRequiredMixin, ListView):
     template_name = "fiscales/mis-voluntarios.html"
     model = Fiscal
@@ -266,12 +265,6 @@ class MisVoluntarios(LoginRequiredMixin, ListView):
         ).exclude(
             id=fiscal.id
         ).order_by('escuela_donde_vota')
-
-
-
-
-
-
 
 
 @login_required
@@ -401,8 +394,10 @@ class BaseFiscalSimple(LoginRequiredMixin, MiAsignableMixin, ConContactosMixin):
             asignacion.fiscal = fiscal
             asignacion.save()
         elif isinstance(asignable, LugarVotacion):
-            asignacion = AsignacionFiscalGeneral.objects.create(
-                fiscal=fiscal, lugar_votacion=asignable, eleccion=eleccion )
+            asignacion = AsignacionFiscalGeneral.objects.create(fiscal=fiscal,
+                                                                lugar_votacion=asignable,
+                                                                eleccion=eleccion )
+            asignacion.save()
 
         messages.success(self.request, 'Fiscal cargado correctamente')
         return redirect(asignable.get_absolute_url())
@@ -451,9 +446,15 @@ class FiscalSimpleCreateView(BaseFiscalSimple, CreateView):
             dni=fiscal.dni,
             tipo_dni=fiscal.tipo_dni
         )
+
         if existente:
             fiscal = existente
             messages.info(self.request, 'Ya teniamos datos de esta persona')
+
+        fiscal.estado = "CONFIRMADO"
+        if 'mesa_numero' in self.kwargs:
+            fiscal.escuela_donde_vota = self.asignable.lugar_votacion
+        fiscal.save()
         return fiscal
 
 
@@ -481,31 +482,32 @@ class FiscalSimpleUpdateView(BaseFiscalSimple, UpdateView):
 
 
 @login_required
-def eliminar_asignacion(request, eleccion_id, tipo,
-                        mesa_numero=None, escuela_id=None,
-                        asignacion_id=None):
-    fiscal = get_object_or_404(Fiscal, tipo='general', user=request.user)
-    if escuela_id:
-        circuitos = fiscal.es_referente_de_circuito.all()
-        asignable = get_object_or_404(
-            LugarVotacion, id=escuela_id, circuito__in=circuitos,
-            asignacion__id=asignacion_id
-        )
-        if asignable not in fiscal.escuelas:
-            return HttpResponseForbidden()
+def eliminar_asignacion_f_mesa(request, eleccion_id, mesa_numero=None):
+    mesa    = get_object_or_404(Mesa, eleccion__id=eleccion_id, numero=mesa_numero)
 
-        asignacion = AsignacionFiscalGeneral.objects.get(id=asignacion_id)
-
+    asignacion = mesa.asignacion_actual
+    if asignacion:
+        asignacion.delete()
+        messages.success(request, 'La asignación se eliminó')
     else:
-        kw = {'asignacion': asignacion_id} if asignacion_id else {}
-        mesa = get_object_or_404(Mesa, eleccion__id=eleccion_id, numero=mesa_numero, **kw)
-        if mesa not in fiscal.mesas_asignadas:
-            return HttpResponseForbidden()
-        if asignacion_id:
-            asignacion = AsignacionFiscalDeMesa.objects.get(id=asignacion_id)
-        else:
-            asignacion = mesa.asignacion_actual
-        asignable = mesa.lugar_votacion
+        messages.error(request, 'La asignación NO se eliminó')
+
+    return redirect(mesa.get_absolute_url())
+
+
+@login_required
+def eliminar_asignacion_f_general(request, eleccion_id, escuela_id=None, asignacion_id=None):
+
+    fiscal = get_object_or_404(Fiscal, user=request.user)
+    circuitos = fiscal.es_referente_de_circuito.all()
+    asignable = get_object_or_404(LugarVotacion,
+                                  id=escuela_id,
+                                  circuito__in=circuitos,
+                                  asignacion__id=asignacion_id)
+    if asignable not in fiscal.escuelas:
+        return HttpResponseForbidden()
+
+    asignacion = AsignacionFiscalGeneral.objects.get(id=asignacion_id)
 
     asignacion.delete()
     messages.success(request, 'La asignación se eliminó')
@@ -552,13 +554,38 @@ class MesaDetalle(LoginRequiredMixin, MiAsignableMixin, DetailView):
     template_name = "fiscales/mesa-detalle.html"
     slug_field = 'numero'
     model = Mesa
+    fiscal_sel_field = None
+
+    def get_voluntarios_queryset(self):
+        try:
+            fiscal = get_object_or_404(Fiscal, user=self.request.user, tipo=Fiscal.TIPO.general)
+        except Fiscal.DoesNotExist:
+            raise Http404('no está registrado como fiscal general')
+
+        return Fiscal.objects.filter(
+            escuela_donde_vota__in=fiscal.escuelas
+        ).exclude(
+            id=fiscal.id
+        ).order_by('escuela_donde_vota')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        qs_voluntarios = self.get_voluntarios_queryset()
+        context['qs_voluntarios'] = qs_voluntarios
+        #for v in context['qs_voluntarios']:
+        #    print(type(v), v, v.pk)
+
+        return context
 
     def get_object(self, *args, **kwargs):
-        r = get_object_or_404(
-            Mesa, numero=self.kwargs['mesa_numero'],
+        mesa_numero = self.kwargs['mesa_numero']
+
+        return get_object_or_404(
+            Mesa,
+            numero=mesa_numero,
             eleccion__id=self.kwargs['eleccion_id']
         )
-        return r
 
 
 @staff_member_required
