@@ -470,21 +470,46 @@ class ResultadosProyectadosEleccion(StaffOnlyMixing, TemplateView):
         for nc in ["Total", "Cambiemos", "UPC", "FCC"]:
             resumen[nc] = valor_resultado(nc)
 
-        votos_no_positivos = sum([valor_resultado(n) for n in ["NULOS", "RECURRIDOS", "IMPUGNADOS", "En Blanco"]])
+        votos_no_positivos = sum([valor_resultado(n)
+                                  for n in ["NULOS", "RECURRIDOS", "IMPUGNADOS", "En Blanco"]]) # ToDo: agregar los "no-positivos" que corresponda
         resumen["Positivos"] = resumen["Total"] - votos_no_positivos
+
+        resumen["Otros"] = 0
+        for nc in ["FIT"]: # ToDo: agregar los "positivos menores" que corresponda
+            resumen["Otros"] += valor_resultado(nc)
+
+        for nc in ["Cambiemos", "UPC", "FCC", "Otros"]:
+            if resumen["Positivos"] > 0:
+                resumen[nc+"_porcentaje"] = resumen[nc] / resumen["Positivos"]
+            else:
+                resumen[nc+"_porcentaje"] = "n.a."
 
         return resumen
 
+    def nombre_grupo(self, g):
+        return ("Seccion" if isinstance(g, Seccion) else "Circuito")+" No "+str(g.numero)
+
     def resumen_grupo(self, grupo):
-        resumen = [self.resumen_mesa(m) for m in self.mesas_para_grupo(grupo)]
+        resumen = {}
+        resumen["grupo"] = self.nombre_grupo(grupo)
+        resumen["resumenes_mesas"] = [self.resumen_mesa(m) for m in self.mesas_para_grupo(grupo)]
+        for c in ["electores", "Total", "Positivos", "Cambiemos", "UPC", "FCC", "Otros"]:
+            resumen[c] = 0
+
+        for rm in resumen["resumenes_mesas"]:
+            for c in ["electores", "Total", "Positivos", "Cambiemos", "UPC", "FCC", "Otros"]:
+                resumen[c]    += rm[c]
+
+        if resumen["Positivos"] > 0:
+            for c in ["Cambiemos", "UPC", "FCC", "Otros"]:
+                resumen[c] += resumen[c] / resumen["Positivos"]
+
         return resumen
 
     @property
     @lru_cache(128)
     def filas_tabla(self):
-        return {("Seccion" if isinstance(g, Seccion) else "Circuito")+" No "+str(g.numero)
-                : self.resumen_grupo(g)
-                for g in self.grupos}
+        return [self.resumen_grupo(g) for g in self.grupos]
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)

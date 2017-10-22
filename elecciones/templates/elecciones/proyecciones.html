@@ -27,9 +27,23 @@
         <th>FCC (%)</th>
         <th>Otros (%)</th>
     </tr>
-{% for grupo, res_grupo in filas_tabla.items %}
-    <tr><th>{{grupo}}</th><td></td></tr>
-    {% for resumen_mesa in res_grupo %}
+{% for res_grupo in filas_tabla %}
+    <tr>
+        <th>{{res_grupo.grupo}}</th>
+        <td></td><!-- Peso-->
+        <td>{{res_grupo.electores}}</td>
+        <td>{{res_grupo.Total}}</td>
+        <td>{{res_grupo.Positivos}}</td>
+        <td>{{res_grupo.Cambiemos}}</td>
+        <td>{{res_grupo.UPC}}</td>
+        <td>{{res_grupo.FCC}}</td>
+        <td>{{res_grupo.Otros}}</td>
+        <td>{{res_grupo.Cambiemos_procentaje}}</td>
+        <td>{{res_grupo.UPC_procentaje}}</td>
+        <td>{{res_grupo.FCC_procentaje}}</td>
+        <td>{{res_grupo.Otros_procentaje}}</td>
+    </tr>
+    {% for resumen_mesa in res_grupo.resumenes_mesas %}
         <tr>
             <th>{{ resumen_mesa.mesa }}</th>
             <td></td>
@@ -39,11 +53,11 @@
             <td>{{ resumen_mesa.Cambiemos }}</td>
             <td>{{ resumen_mesa.UPC }}</td>
             <td>{{ resumen_mesa.FCC }}</td>
-            <th></th>
-            <th></th>
-            <th></th>
-            <th></th>
-            <th></th>
+            <td>{{ resumen_mesa.Otros }}</td>
+            <td>{{ resumen_mesa.Cambiemos_porcentaje }}</td>
+            <td>{{ resumen_mesa.UPC_porcentaje }}</td>
+            <td>{{ resumen_mesa.FCC_porcentaje }}</td>
+            <td>{{ resumen_mesa.Otros_porcentaje }}</td>
         </tr>
     {% endfor %}
 {% endfor %}
