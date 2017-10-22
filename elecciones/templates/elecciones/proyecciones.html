@@ -1,0 +1,90 @@
+{% extends "fiscales/base.html" %}
+{% load staticfiles %}
+
+{% block title %}Resultados Proyectados{% endblock %}
+
+{% block page_title %}<h5>Resultados Proyectados</h5><h7>{{para}}</h7>{% endblock %}
+
+ {% block head %}
+    {{ block.super }}
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+ {% endblock %}
+
+
+{% block left-panel %}
+
+    <ul class="tabs">
+        {% for eleccion in elecciones %}
+        <li class="tab col s3" >
+            <a href="#{{eleccion.slug}}" {% if forloop.first %}class="active"{% endif %}>{{ eleccion.nombre }}</a>
+        </li>
+        {% endfor %}
+    </ul>
+
+    {% for eleccion in elecciones %}
+        <div class="card" id="{{eleccion.slug}}" data-id="{{ eleccion.id }}">
+            <div class="card-content" id="frame{{eleccion.id}}">
+            </div>
+        </div>
+    {% endfor %}
+{% endblock %}
+
+{% block right-panel %}
+ <div class="card">
+    <div id="metadata" class="card-content">
+
+    </div>
+</div>
+
+
+
+{% endblock right-panel %}
+
+
+
+{% block messages %}
+{{ block.super }}
+
+<script type="text/javascript">
+
+function show_content(tab){
+    var eleccion_id = tab.data('id');
+
+    $.get("/elecciones/resultados/" + eleccion_id + "/?{{request.GET.urlencode}}",
+        function(data){
+            console.log(data);
+
+            // muestra tabla
+            $("#frame" + eleccion_id).html(data.content);
+            $('#metadata').html(data.metadata);
+            // genera grafico
+
+            var data = [{
+              values: data.chart_values,
+              labels: data.chart_keys,
+              type: 'pie',
+              marker: {
+                colors: data.chart_colors
+              }
+            }];
+
+            var layout = {
+              height: 900,
+              width: 900
+            };
+
+            Plotly.newPlot('piechart-' + eleccion_id, data, layout);
+    });
+}
+
+$(function() {
+    $('ul.tabs').tabs({
+        onShow: show_content
+    });
+
+
+    // invocar contenido de la pestaña activa por primera vez
+    show_content($($('a.active').attr('href')));
+});
+</script>
+{% endblock messages %}

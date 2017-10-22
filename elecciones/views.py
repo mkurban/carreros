@@ -28,14 +28,6 @@ class StaffOnlyMixing:
     def dispatch(self, *args, **kwargs):
         return super().dispatch(*args, **kwargs)
 
-#    def options(self, request, *args, **kwargs):
-#        response = super().options(request, *args, **kwargs)
-#        print("Holas...")
-#        print(response)
-#        response.content_type='text/plain'
-#        print(response)
-#        return response
-
 
 class LugaresVotacionGeoJSON(GeoJSONLayerView):
     model = LugarVotacion
@@ -74,7 +66,6 @@ class ResultadosOficialesGeoJSON(GeoJSONLayerView):
         return qs
 
 
-
 class EscuelaDetailView(StaffOnlyMixing, DetailView):
     template_name = "elecciones/detalle_escuela.html"
     model = LugarVotacion
@@ -107,8 +98,6 @@ class ResultadoEscuelaDetailView(StaffOnlyMixing, DetailView):
         return context
 
 
-
-# Create your views here.
 class Mapa(StaffOnlyMixing, TemplateView):
     template_name = "elecciones/mapa.html"
 
@@ -396,6 +385,45 @@ class ResultadosEleccion(StaffOnlyMixing, TemplateView):
 
 class Resultados(StaffOnlyMixing, TemplateView):
     template_name = "elecciones/resultados.html"
+
+    @property
+    @lru_cache(128)
+    def filtros(self):
+        """a partir de los argumentos de urls, devuelve
+        listas de seccion / circuito etc. para filtrar """
+        if 'seccion' in self.request.GET:
+            return Seccion.objects.filter(id__in=self.request.GET.getlist('seccion'))
+        elif 'circuito' in self.request.GET:
+            return Circuito.objects.filter(id__in=self.request.GET.getlist('circuito'))
+        elif 'lugarvotacion' in self.request.GET:
+            return LugarVotacion.objects.filter(id__in=self.request.GET.getlist('lugarvotacion'))
+        elif 'mesa' in self.request.GET:
+            return Mesa.objects.filter(id__in=self.request.GET.getlist('mesa'))
+
+    def menu_activo(self):
+        if not self.filtros:
+            return []
+        elif isinstance(self.filtros[0], Seccion):
+            return (self.filtros[0], None)
+        elif isinstance(self.filtros[0], Circuito):
+            return (self.filtros[0].seccion, self.filtros[0])
+
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        if self.filtros:
+            context['para'] = get_text_list(list(self.filtros), " y ")
+        else:
+            context['para'] = 'Córdoba'
+        context['elecciones'] = Eleccion.objects.all().order_by('-id')
+        context['secciones'] = Seccion.objects.all()
+        context['menu_activo'] = self.menu_activo()
+
+        return context
+
+
+class ResultadosProyectadosEleccion(StaffOnlyMixing, TemplateView):
+    template_name = "elecciones/proyecciones.html"
 
     @property
     @lru_cache(128)
