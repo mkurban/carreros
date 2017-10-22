@@ -278,8 +278,15 @@ class ResultadosEleccion(StaffOnlyMixing, TemplateView):
     def filtros(self):
         """a partir de los argumentos de urls, devuelve
         listas de seccion / circuito etc. para filtrar """
-        if 'seccion' in self.request.GET:
+        if self.kwargs.get('tipo') == 'seccion':
+            return Seccion.objects.filter(numero=self.kwargs.get('numero'))
+        if self.kwargs.get('tipo') == 'circuito':
+            return Circuito.objects.filter(numero=self.kwargs.get('numero'))
+
+        elif 'seccion' in self.request.GET:
             return Seccion.objects.filter(id__in=self.request.GET.getlist('seccion'))
+
+
         elif 'circuito' in self.request.GET:
             return Circuito.objects.filter(id__in=self.request.GET.getlist('circuito'))
         elif 'lugarvotacion' in self.request.GET:
@@ -289,13 +296,14 @@ class ResultadosEleccion(StaffOnlyMixing, TemplateView):
 
     @lru_cache(128)
     def electores(self, eleccion_id):
+
         lookups = Q()
         meta = {}
         if self.filtros:
-            if 'seccion' in self.request.GET:
+            if self.filtros.model is Seccion:
                 lookups = Q(circuito__seccion__in=self.filtros)
 
-            elif 'circuito' in self.request.GET:
+            elif self.filtros.models is Circuito:
                 lookups = Q(circuito__in=self.filtros)
 
             elif 'lugarvotacion' in self.request.GET:
