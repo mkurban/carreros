@@ -639,7 +639,6 @@ def cargar_resultados(request, eleccion_id, mesa_numero):
     data = request.POST if request.method == 'POST' else None
     qs = VotoMesaReportado.objects.filter(mesa=mesa, fiscal=fiscal)
     initial = [{'opcion': o} for o in Eleccion.opciones_actuales()]
-    import ipdb; ipdb.set_trace()
     formset = VotoMesaReportadoFormset(data, queryset=qs, initial=initial)
 
     fix_opciones(formset)

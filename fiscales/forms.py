@@ -10,6 +10,8 @@ from django.contrib.auth.forms import AuthenticationForm
 from django.utils.translation import ugettext_lazy as _
 from prensa.forms import validar_telefono
 import phonenumbers
+from elecciones.views import POSITIVOS, TOTAL
+
 
 
 OPCION_CANTIDAD_DE_SOBRES = 22
@@ -206,41 +208,35 @@ class BaseVotoMesaReportadoFormSet(BaseModelFormSet):
         super().__init__(*args, **kwargs)
         self.warnings = []
 
-
     def clean(self):
         super().clean()
         suma = 0
         for form in self.forms:
             opcion = form.cleaned_data['opcion']
-            if opcion.id == OPCION_CANTIDAD_DE_SOBRES:
-                cantidad_sobres = form.cleaned_data.get('votos') or 0
-            elif opcion.id == OPCION_HAN_VOTADO:
-                han_votado = form.cleaned_data.get('votos') or 0
-            elif opcion.id == OPCION_DIFERENCIA:
-                diferencia = form.cleaned_data.get('votos') or 0
-                form_opcion_dif = form
-            elif opcion.id == OPCION_TOTAL_VOTOS:
+
+            if opcion.nombre == TOTAL:
                 form_opcion_total = form
-                total_en_acta = form.cleaned_data.get('votos') or 0
+                total = form.cleaned_data.get('votos') or 0
+            elif opcion.nombre == POSITIVOS:
+                form_opcion_positivos = form
+                positivos = form.cleaned_data.get('votos') or 0
+
             else:
                 suma += form.cleaned_data.get('votos') or 0
 
-        if abs(diferencia) != abs(cantidad_sobres - han_votado):
-
-            # form_opcion_dif.add_error('votos', 'Diferencia no válida')
-            self.warnings.append((form_opcion_dif, 'votos', 'Diferencia no valida'))
-
-        if suma != total_en_acta:
+        if suma > positivos:
             #form_opcion_total.add_error(
             #    'votos', 'La sumatoria no se corresponde con el total'
             #)
-            self.warnings.append((form_opcion_total, 'votos', 'La sumatoria no se corresponde con el total'))
+            form_opcion_positivos.add_error('votos',
+                f'Positivos deberia ser igual o mayor a {suma}')
 
-        if cantidad_sobres != total_en_acta:
+        if positivos > total:
             # form_opcion_total.add_error(
             #    'votos', 'El total no corresponde a la cantidad de sobres'
             # )
-            self.warnings.append((form_opcion_total, 'votos', 'El total no corresponde a la cantidad de sobres'))
+            form_opcion_total.add_error('votos',
+                f'Total deberia ser igual o mayor a {positivos}')
 
 
 VotoMesaReportadoFormset = modelformset_factory(
