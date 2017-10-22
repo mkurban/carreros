@@ -441,13 +441,13 @@ class ResultadosProyectadosEleccion(StaffOnlyMixing, TemplateView):
     @property
     @lru_cache(128)
     def mesas(self):
-        return Mesa.objects.filter(eleccion_id=3).order_by("numero")
+        return Mesa.objects.filter(eleccion__id=3).order_by("numero")
 
     @property
     @lru_cache(128)
     def grupos(self):
         secciones_no_capital = list(Seccion.objects.all().exclude(id=1).order_by("numero"))
-#        circuitos_capital= list(Circuito.objects.filter(seccion__id=1).order_by("numero"))
+        circuitos_capital= list(Circuito.objects.filter(seccion__id=1).order_by("numero"))
         return secciones_no_capital # + circuitos_capital
 
     def mesas_para_grupo(self, grupo):
@@ -524,17 +524,17 @@ class ResultadosProyectadosEleccion(StaffOnlyMixing, TemplateView):
         for rg in context['filas_tabla']:
             rg["peso_escrutado"]= (rg["electores_escrutados"] / context['total_electores']) if context['total_electores'] > 0 else 0.0
             for c in ["Positivos", "Cambiemos", "UPC", "FCC", "Otros"]:
-                rg[c+"_proy"] = len(rg["resumenes_mesas"]) * (rg[c] * rg["peso_escrutado"])
+                rg[c+"_proy"] = int(len(rg["resumenes_mesas"]) * (rg[c] * rg["peso_escrutado"]))
 
         for c in ["Positivos", "Cambiemos", "UPC", "FCC", "Otros"]:
             context[c + "_proy_total"] = 0
         for rg in context['filas_tabla']:
             for c in ["Positivos", "Cambiemos", "UPC", "FCC", "Otros"]:
-                context[c+ "_proy_total"] += rg[c+"_proy"]
+                context[c+ "_proy_total"] += int(rg[c+"_proy"])
 
         if context["Positivos_proy_total"] > 0:
             for c in ["Cambiemos", "UPC", "FCC", "Otros"]:
-                context[c + "_proy_total_proc"] =  context[c+ "_proy_total"] / context["Positivos_proy_total"]
+                context[c + "_proy_total_proc"] =  int(context[c+ "_proy_total"] / context["Positivos_proy_total"])
 
         return context
 
