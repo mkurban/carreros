@@ -43,8 +43,7 @@ from prensa.views import ConContactosMixin
 from adjuntos.models import Attachment
 from adjuntos.forms import SubirAttachmentModelForm
 
-WAITING_FOR = 2
-
+WAITING_FOR = 1
 
 def choice_home(request):
     """
@@ -597,9 +596,10 @@ def elegir_acta_a_cargar(request):
     mesas = Mesa.objects.filter(
         eleccion__id=3,
         votomesareportado__isnull=True,
-        attachment__isnull=False
+        attachment__isnull=False,
+        orden_de_carga__gte=1
     ).filter(Q(taken__isnull=True) | Q(taken__lt=desde)
-    ).order_by('?')
+    ).order_by('orden_de_carga')
     if mesas.exists():
         mesa = mesas[0]
         # se marca el adjunto
@@ -639,6 +639,7 @@ def cargar_resultados(request, eleccion_id, mesa_numero):
     data = request.POST if request.method == 'POST' else None
     qs = VotoMesaReportado.objects.filter(mesa=mesa, fiscal=fiscal)
     initial = [{'opcion': o} for o in Eleccion.opciones_actuales()]
+    import ipdb; ipdb.set_trace()
     formset = VotoMesaReportadoFormset(data, queryset=qs, initial=initial)
 
     fix_opciones(formset)

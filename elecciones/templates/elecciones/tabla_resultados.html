@@ -3,7 +3,7 @@
         <tr {% if partido.color %}style="background-color: {{ partido.color}};"{% endif %}>
             <th>{{ partido }}</th>
             {% if incluir_votos %}
-                <td> {{ votos.0 }}</td>
+                <td id="votos_{{ partido.id|default:partido|lower }}"> {{ votos.0 }}</td>
             {% endif %}
             <td> {{ votos.1 }}%</td>
         </tr>

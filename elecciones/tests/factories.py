@@ -1,5 +1,7 @@
 import factory
 from factory.django import DjangoModelFactory
+from faker import Faker
+from elecciones.views import TOTAL, POSITIVOS
 fake = Faker('es_ES')
 
 
@@ -36,11 +38,11 @@ class EleccionFactory(DjangoModelFactory):
             for opcion in extracted:
                 self.opciones.add(opcion)
         else:
-            self.opciones.add(OpcionFactory(nombre='total votantes', partido=None))
-            self.opciones.add(OpcionFactory(nombre='total positivos', partido=None))
-            self.opciones.add(OpcionFactory())
-            self.opciones.add(OpcionFactory())
-            self.opciones.add(OpcionFactory())
+            self.opciones.add(OpcionFactory(nombre=TOTAL, partido=None))
+            self.opciones.add(OpcionFactory(nombre=POSITIVOS, partido=None))
+            self.opciones.add(OpcionFactory(nombre='opc1'))
+            self.opciones.add(OpcionFactory(nombre='opc2'))
+            self.opciones.add(OpcionFactory(nombre='opc3'))
 
 
 
@@ -79,14 +81,6 @@ class MesaFactory(DjangoModelFactory):
     electores = 100
 
 
-class VotoMesaReportadoFactory(DjangoModelFactory):
-    class Meta:
-        model = 'elecciones.VotoMesaReportado'
-    mesa = factory.SubFactory(MesaFactory)
-    opcion = factory.SubFactory(OpcionFactory)
-
-
-
 class FiscalGeneralFactory(DjangoModelFactory):
     class Meta:
         model = 'fiscales.Fiscal'
@@ -99,6 +93,15 @@ class FiscalGeneralFactory(DjangoModelFactory):
 
 class FiscalDeMesaFactory(FiscalGeneralFactory):
     tipo = 'de_mesa'
+
+
+
+class VotoMesaReportadoFactory(DjangoModelFactory):
+    class Meta:
+        model = 'elecciones.VotoMesaReportado'
+    mesa = factory.SubFactory(MesaFactory)
+    opcion = factory.SubFactory(OpcionFactory)
+    fiscal = factory.SubFactory(FiscalDeMesaFactory)
 
 
 class AsignacionFiscalGeneralFactory(DjangoModelFactory):
@@ -116,5 +119,7 @@ class AsignacionFiscalDeMesaFactory(DjangoModelFactory):
     fiscal = factory.SubFactory(FiscalDeMesaFactory)
 
 
-
+class AttachmentFactory(DjangoModelFactory):
+    class Meta:
+        model = 'adjuntos.Attachment'
 
