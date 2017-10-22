@@ -13,6 +13,36 @@
 {% block content %}
 <table>
     <tr>
+        <th> Proyección </th>
+        <th> </th>
+        <th>Electores</th>
+        <th> </th>
+        <th>Votos positivos</th>
+        <th>Cambiemos</th>
+        <th>UPC</th>
+        <th>FCC</th>
+        <th>Otros</th>
+        <th>Cambiemos</th>
+        <th>UPC</th>
+        <th>FCC</th>
+        <th>Otros</th>
+    </tr>
+    <tr>
+        <th> Proyección </th>
+        <th> </th>
+        <th>Electores</th>
+        <th> </th>
+        <th>{{Positivos_proy_total}}</th>
+        <th>{{Cambiemos_proy_total}}</th>
+        <th>{{UPC_proy_total}}</th>
+        <th>{{FCC_proy_total}}</th>
+        <th>{{Otros_proy_total}}</th>
+        <th>{{Cambiemos_proy_total_porc}}</th>
+        <th>{{UPC_proy_total_porc}}</th>
+        <th>{{FCC_proy_total_porc}}</th>
+        <th>{{Otros_proy_total_porc}}</th>
+    </tr>
+    <tr>
         <th>Grupo / Mesa </th>
         <th>Peso</th>
         <th>Electores</th>
@@ -30,18 +60,18 @@
 {% for res_grupo in filas_tabla %}
     <tr>
         <th>{{res_grupo.grupo}}</th>
-        <td></td><!-- Peso-->
+        <td>{{res_grupo.peso_escrutado}}</td>
         <td>{{res_grupo.electores}}</td>
         <td>{{res_grupo.Total}}</td>
         <td>{{res_grupo.Positivos}}</td>
-        <td>{{res_grupo.Cambiemos}}</td>
-        <td>{{res_grupo.UPC}}</td>
-        <td>{{res_grupo.FCC}}</td>
-        <td>{{res_grupo.Otros}}</td>
-        <td>{{res_grupo.Cambiemos_procentaje}}</td>
-        <td>{{res_grupo.UPC_procentaje}}</td>
-        <td>{{res_grupo.FCC_procentaje}}</td>
-        <td>{{res_grupo.Otros_procentaje}}</td>
+        <td>{{res_grupo.Cambiemos}} -> {{res_grupo.Cambiemos_proy}}</td>
+        <td>{{res_grupo.UPC}} -> {{res_grupo.UPC_proy}}</td>
+        <td>{{res_grupo.FCC}} -> {{res_grupo.FCC_proy}}</td>
+        <td>{{res_grupo.Otros}} -> {{res_grupo.Otros_proy}}</td>
+        <td>{{res_grupo.Cambiemos_porcentaje}}</td>
+        <td>{{res_grupo.UPC_porcentaje}}</td>
+        <td>{{res_grupo.FCC_porcentaje}}</td>
+        <td>{{res_grupo.Otros_porcentaje}}</td>
     </tr>
     {% for resumen_mesa in res_grupo.resumenes_mesas %}
         <tr>

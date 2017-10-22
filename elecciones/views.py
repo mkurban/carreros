@@ -458,6 +458,7 @@ class ResultadosProyectadosEleccion(StaffOnlyMixing, TemplateView):
         resumen = {}
         resumen["mesa"] = str(mesa)
         resumen["electores"] = mesa.electores
+        resumen["escrutada"] = False
 
         def valor_resultado(nom_corto):
             res = 0
@@ -467,24 +468,25 @@ class ResultadosProyectadosEleccion(StaffOnlyMixing, TemplateView):
                 pass
             return res
 
-        for nc in ["Total", "Cambiemos", "UPC", "FCC"]:
-            resumen[nc] = valor_resultado(nc)
+        resumen["Positivos"] = valor_resultado("Positivos")
 
-        votos_no_positivos = sum([valor_resultado(n)
-                                  for n in ["NULOS", "RECURRIDOS", "IMPUGNADOS", "En Blanco"]]) # ToDo: agregar los "no-positivos" que corresponda
-        resumen["Positivos"] = resumen["Total"] - votos_no_positivos
+        if resumen["Positivos"] > 0:
+            resumen["escrutada"] = True
 
-        resumen["Otros"] = 0
-        for nc in ["FIT"]: # ToDo: agregar los "positivos menores" que corresponda
-            resumen["Otros"] += valor_resultado(nc)
+            for nc in ["Total", "Cambiemos", "UPC", "FCC"]:
+                resumen[nc] = valor_resultado(nc)
 
-        for nc in ["Cambiemos", "UPC", "FCC", "Otros"]:
-            if resumen["Positivos"] > 0:
-                resumen[nc+"_porcentaje"] = resumen[nc] / resumen["Positivos"]
-            else:
-                resumen[nc+"_porcentaje"] = "n.a."
+            resumen["Otros"] = resumen["Positivos"]\
+                               - (resumen["Cambiemos"] + resumen["UPC"] + resumen["FCC"])
+
+            for nc in ["Cambiemos", "UPC", "FCC", "Otros"]:
+                resumen[nc+"_porcentaje"] = 100.0 * (resumen[nc] / resumen["Positivos"])
+        else:
+            for nc in ["Total", "Cambiemos", "UPC", "FCC", "Otros"]:
+                resumen[nc] = 0
 
         return resumen
+
 
     def nombre_grupo(self, g):
         return ("Seccion" if isinstance(g, Seccion) else "Circuito")+" No "+str(g.numero)
@@ -493,16 +495,16 @@ class ResultadosProyectadosEleccion(StaffOnlyMixing, TemplateView):
         resumen = {}
         resumen["grupo"] = self.nombre_grupo(grupo)
         resumen["resumenes_mesas"] = [self.resumen_mesa(m) for m in self.mesas_para_grupo(grupo)]
+
         for c in ["electores", "Total", "Positivos", "Cambiemos", "UPC", "FCC", "Otros"]:
             resumen[c] = 0
 
         for rm in resumen["resumenes_mesas"]:
             for c in ["electores", "Total", "Positivos", "Cambiemos", "UPC", "FCC", "Otros"]:
-                resumen[c]    += rm[c]
+                resumen[c] += rm[c]
 
-        if resumen["Positivos"] > 0:
-            for c in ["Cambiemos", "UPC", "FCC", "Otros"]:
-                resumen[c] += resumen[c] / resumen["Positivos"]
+        resumen["resumenes_mesas"] = [rm for rm in resumen["resumenes_mesas"] if rm["escrutada"]]
+        resumen["electores_escrutados"] = sum([rm["electores"] for rm in resumen["resumenes_mesas"]])
 
         return resumen
 
@@ -517,6 +519,22 @@ class ResultadosProyectadosEleccion(StaffOnlyMixing, TemplateView):
         context['para'] = 'Córdoba'
         context['eleccion'] = Eleccion.objects.filter(id=3)
         context['filas_tabla'] = self.filas_tabla
+
+        context['total_electores'] = sum([rg["electores"] for rg in context['filas_tabla']])
+        for rg in context['filas_tabla']:
+            rg["peso_escrutado"]= (rg["electores_escrutados"] / context['total_electores']) if context['total_electores'] > 0 else 0.0
+            for c in ["Positivos", "Cambiemos", "UPC", "FCC", "Otros"]:
+                rg[c+"_proy"] = len(rg["resumenes_mesas"]) * (rg[c] * rg["peso_escrutado"])
+
+        for c in ["Positivos", "Cambiemos", "UPC", "FCC", "Otros"]:
+            context[c + "_proy_total"] = 0
+        for rg in context['filas_tabla']:
+            for c in ["Positivos", "Cambiemos", "UPC", "FCC", "Otros"]:
+                context[c+ "_proy_total"] += rg[c+"_proy"]
+
+        if context["Positivos_proy_total"] > 0:
+            for c in ["Cambiemos", "UPC", "FCC", "Otros"]:
+                context[c + "_proy_total_proc"] =  context[c+ "_proy_total"] / context["Positivos_proy_total"]
 
         return context
 
