@@ -8,6 +8,8 @@ from django.conf import settings
 from djgeojson.fields import PointField
 from django.template.loader import render_to_string
 from django.utils.safestring import mark_safe
+from django.utils.text import slugify
+
 from django.dispatch import receiver
 from django.db.models.signals import m2m_changed, post_save
 from model_utils.fields import StatusField, MonitorField
@@ -31,6 +33,12 @@ class Seccion(models.Model):
         verbose_name = 'Sección electoral'
         verbose_name_plural = 'Secciones electorales'
 
+
+    def resultados_url(self):
+        #return reverse('resultados-por', args=('seccion', self.numero, slugify(self.nombre)))
+        return reverse('resultados') + f'?seccion={self.id}'
+
+
     def __str__(self):
         return f"{self.numero} - {self.nombre}"
 
@@ -51,6 +59,15 @@ class Circuito(models.Model):
 
     def __str__(self):
         return f"{self.numero} - {self.nombre}"
+
+
+    def resultados_url(self):
+        # return reverse(
+        #    'resultados-por',
+        #    args=('circuito', self.numero, slugify(self.nombre))
+        #)
+        return reverse('resultados') + f'?circuito={self.id}'
+
 
 
 class LugarVotacion(models.Model):

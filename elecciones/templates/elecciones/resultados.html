@@ -10,6 +10,33 @@
     <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
  {% endblock %}
 
+{% block sidenav_items %}
+
+      <li><a href="{% url "resultados" %}">Provincia</a></li>
+
+      {% for seccion in secciones %}
+
+      <li><a href="{{ seccion.resultados_url }}">{{ seccion }}</a></li>
+      <li class="no-padding">
+        <ul class="collapsible collapsible-accordion">
+          <li>
+            <a class="collapsible-header"><i class="material-icons">arrow_drop_down</i></a>
+            <div class="collapsible-body">
+              <ul>
+                {% for circuito in seccion.circuito_set.all %}
+                    <li><a href="{{ circuito.resultados_url }}">{{ circuito }}</a></li>
+                {% endfor %}
+              </ul>
+            </div>
+          </li>
+        </ul>
+      </li>
+      {% endfor %}
+
+
+{% endblock %}
+
+
 
 {% block left-panel %}
 

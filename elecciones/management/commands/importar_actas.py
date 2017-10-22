@@ -26,6 +26,7 @@ class Command(CarrerosBaseCommand):
             settings.IMAP_PASSWORD,
             settings.IMAP_MAILBOX
         )
+        self.success('Loggueado')
         if options['include_seen']:
             # read every email not present in the db
             imap_ids = {int(i) for i in imapper.listids()}
