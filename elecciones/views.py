@@ -428,35 +428,62 @@ class ResultadosProyectadosEleccion(StaffOnlyMixing, TemplateView):
     @property
     @lru_cache(128)
     def filtros(self):
-        """a partir de los argumentos de urls, devuelve
-        listas de seccion / circuito etc. para filtrar """
-        if 'seccion' in self.request.GET:
-            return Seccion.objects.filter(id__in=self.request.GET.getlist('seccion'))
-        elif 'circuito' in self.request.GET:
-            return Circuito.objects.filter(id__in=self.request.GET.getlist('circuito'))
-        elif 'lugarvotacion' in self.request.GET:
-            return LugarVotacion.objects.filter(id__in=self.request.GET.getlist('lugarvotacion'))
-        elif 'mesa' in self.request.GET:
-            return Mesa.objects.filter(id__in=self.request.GET.getlist('mesa'))
+        pass
 
-    def menu_activo(self):
-        if not self.filtros:
-            return []
-        elif isinstance(self.filtros[0], Seccion):
-            return (self.filtros[0], None)
-        elif isinstance(self.filtros[0], Circuito):
-            return (self.filtros[0].seccion, self.filtros[0])
+    @property
+    @lru_cache(128)
+    def mesas(self):
+        return Mesa.objects.filter(eleccion_id=3).order_by("numero")
 
+    @property
+    @lru_cache(128)
+    def grupos(self):
+        secciones_no_capital = list(Seccion.objects.all().exclude(id=1).order_by("numero"))
+#        circuitos_capital= list(Circuito.objects.filter(seccion__id=1).order_by("numero"))
+        return secciones_no_capital # + circuitos_capital
+
+    def mesas_para_grupo(self, grupo):
+        return [mesa for mesa in self.mesas if mesa.grupo_tabla_proyecciones == grupo]
+
+    def resumen_mesa(self, mesa):
+        resultados = mesa.votomesareportado_set.all()
+        resumen = {}
+        resumen["mesa"] = str(mesa)
+        resumen["electores"] = mesa.electores
+
+        def valor_resultado(nom_corto):
+            res = 0
+            try:
+                res = resultados.get(opcion__nombre_corto=nom_corto)
+            except:
+                pass
+            return res
+
+        for nc in ["Total", "Cambiemos", "UPC", "FCC"]:
+            resumen[nc] = valor_resultado(nc)
+
+        votos_no_positivos = sum([valor_resultado(n) for n in ["NULOS", "RECURRIDOS", "IMPUGNADOS", "En Blanco"]])
+        resumen["Positivos"] = resumen["Total"] - votos_no_positivos
+
+        return resumen
+
+    def resumen_grupo(self, grupo):
+        resumen = [self.resumen_mesa(m) for m in self.mesas_para_grupo(grupo)]
+        return resumen
+
+    @property
+    @lru_cache(128)
+    def filas_tabla(self):
+        return {("Seccion" if isinstance(g, Seccion) else "Circuito")+" No "+str(g.numero)
+                : self.resumen_grupo(g)
+                for g in self.grupos}
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        if self.filtros:
-            context['para'] = get_text_list(list(self.filtros), " y ")
-        else:
-            context['para'] = 'Córdoba'
-        context['elecciones'] = Eleccion.objects.all().order_by('-id')
-        context['secciones'] = Seccion.objects.all()
-        context['menu_activo'] = self.menu_activo()
+
+        context['para'] = 'Córdoba'
+        context['eleccion'] = Eleccion.objects.filter(id=3)
+        context['filas_tabla'] = self.filas_tabla
 
         return context
 

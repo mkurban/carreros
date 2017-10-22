@@ -264,6 +264,9 @@ class VotoMesaReportadoAdmin(admin.ModelAdmin):
     #list_filter = ('eleccion', TieneFiscal)
     search_fields = ['mesa__numero', 'mesa__lugar_votacion__nombre', 'mesa__lugar_votacion__ciudad']
 
+class OpcionAdmin(admin.ModelAdmin):
+    list_display = ['nombre_corto', 'partido', 'nombre']
+
 
 admin.site.register(Seccion, SeccionAdmin)
 admin.site.register(Circuito, CircuitoAdmin)
@@ -271,8 +274,9 @@ admin.site.register(Partido, PartidoAdmin)
 admin.site.register(LugarVotacion, LugarVotacionAdmin)
 admin.site.register(Mesa, MesaAdmin)
 admin.site.register(VotoMesaReportado, VotoMesaReportadoAdmin)
+admin.site.register(Opcion, OpcionAdmin)
 
-for model in (Opcion, Eleccion):
+for model in [Eleccion]:
     admin.site.register(model)
 
 

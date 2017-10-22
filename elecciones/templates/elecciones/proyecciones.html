@@ -5,86 +5,47 @@
 
 {% block page_title %}<h5>Resultados Proyectados</h5><h7>{{para}}</h7>{% endblock %}
 
- {% block head %}
+{% block head %}
     {{ block.super }}
     <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
- {% endblock %}
-
-
-{% block left-panel %}
-
-    <ul class="tabs">
-        {% for eleccion in elecciones %}
-        <li class="tab col s3" >
-            <a href="#{{eleccion.slug}}" {% if forloop.first %}class="active"{% endif %}>{{ eleccion.nombre }}</a>
-        </li>
-        {% endfor %}
-    </ul>
-
-    {% for eleccion in elecciones %}
-        <div class="card" id="{{eleccion.slug}}" data-id="{{ eleccion.id }}">
-            <div class="card-content" id="frame{{eleccion.id}}">
-            </div>
-        </div>
-    {% endfor %}
 {% endblock %}
 
-{% block right-panel %}
- <div class="card">
-    <div id="metadata" class="card-content">
-
-    </div>
-</div>
-
-
-
-{% endblock right-panel %}
-
-
-
-{% block messages %}
-{{ block.super }}
-
-<script type="text/javascript">
-
-function show_content(tab){
-    var eleccion_id = tab.data('id');
-
-    $.get("/elecciones/resultados/" + eleccion_id + "/?{{request.GET.urlencode}}",
-        function(data){
-            console.log(data);
-
-            // muestra tabla
-            $("#frame" + eleccion_id).html(data.content);
-            $('#metadata').html(data.metadata);
-            // genera grafico
-
-            var data = [{
-              values: data.chart_values,
-              labels: data.chart_keys,
-              type: 'pie',
-              marker: {
-                colors: data.chart_colors
-              }
-            }];
-
-            var layout = {
-              height: 900,
-              width: 900
-            };
-
-            Plotly.newPlot('piechart-' + eleccion_id, data, layout);
-    });
-}
-
-$(function() {
-    $('ul.tabs').tabs({
-        onShow: show_content
-    });
-
-
-    // invocar contenido de la pestaña activa por primera vez
-    show_content($($('a.active').attr('href')));
-});
-</script>
-{% endblock messages %}
+{% block content %}
+<table>
+    <tr>
+        <th>Grupo / Mesa </th>
+        <th>Peso</th>
+        <th>Electores</th>
+        <th>Total de votos</th>
+        <th>Votos positivos</th>
+        <th>Cambiemos (v)</th>
+        <th>UPC (v)</th>
+        <th>FCC (v)</th>
+        <th>Otros (v)</th>
+        <th>Cambiemos (%)</th>
+        <th>UPC (%)</th>
+        <th>FCC (%)</th>
+        <th>Otros (%)</th>
+    </tr>
+{% for grupo, res_grupo in filas_tabla.items %}
+    <tr><th>{{grupo}}</th><td></td></tr>
+    {% for resumen_mesa in res_grupo %}
+        <tr>
+            <th>{{ resumen_mesa.mesa }}</th>
+            <td></td>
+            <td>{{ resumen_mesa.electores }}</td>
+            <td>{{ resumen_mesa.Total }}</td>
+            <td>{{ resumen_mesa.Positivos }}</td>
+            <td>{{ resumen_mesa.Cambiemos }}</td>
+            <td>{{ resumen_mesa.UPC }}</td>
+            <td>{{ resumen_mesa.FCC }}</td>
+            <th></th>
+            <th></th>
+            <th></th>
+            <th></th>
+            <th></th>
+        </tr>
+    {% endfor %}
+{% endfor %}
+</table>
+{% endblock %}
