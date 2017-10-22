@@ -437,7 +437,7 @@ class FiscalSimpleCreateView(BaseFiscalSimple, CreateView):
         d = super().dispatch(*args, **kwargs)
         if 'mesa_numero' in self.kwargs and not self.asignable.asignacion_actual:
             messages.error(self.request, 'No se registra fiscal en esta mesa ')
-            return redirect(self.mesa.get_absolute_url())
+            return redirect(self.asignable.get_absolute_url())
         return d
 
     def verificar_fiscal_existente(self, fiscal):
