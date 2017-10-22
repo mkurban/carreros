@@ -71,12 +71,11 @@ class Attachment(models.Model):
 
 
 @receiver(post_save, sender=Attachment)
-def marcar_como_testigo_via_attach(sender, instance=None, created=False, **kwargs):
+def asignar_order_de_carga(sender, instance=None, created=False, **kwargs):
     """
-    cuando se asocia una mesa a un acta o se sube el documento, y es la primera
-    de la escuela, la marcamos como testigo
+    cuando se clasifica el attach, se le asigna el orden siguiente del circuito
     """
-    if instance.mesa and not instance.mesa.lugar_votacion.mesa_testigo:
+    if instance.mesa:
         mesa = instance.mesa
-        mesa.es_testigo = True
-        mesa.save(update_fields=['es_testigo'])
+        mesa.orden_de_carga = mesa.circuito.proximo_orden_de_carga
+        mesa.save(update_fields=['orden_de_carga'])

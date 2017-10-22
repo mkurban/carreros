@@ -69,6 +69,17 @@ class Circuito(models.Model):
         return reverse('resultados') + f'?circuito={self.id}'
 
 
+    @property
+    def proximo_orden_de_carga(self):
+        ordenes = Mesa.objects.filter(
+            eleccion__id=3,
+            lugar_votacion__circuito=self
+        ).values_list(
+            'orden_de_carga',
+            flat=True
+        )
+        return max(ordenes) + 1
+
 
 class LugarVotacion(models.Model):
     circuito = models.ForeignKey(Circuito, related_name='escuelas')
@@ -182,7 +193,7 @@ class Mesa(models.Model):
     url = models.URLField(blank=True, help_text='url al telegrama')
     electores = models.PositiveIntegerField(null=True, blank=True)
     taken = models.DateTimeField(null=True, editable=False)
-
+    orden_de_carga = models.PositiveIntegerField(default=0, editable=False)
 
     def get_absolute_url(self):
         return reverse('detalle-mesa', args=(self.eleccion.id, self.numero,))
@@ -244,7 +255,7 @@ class Opcion(models.Model):
 
     nombre = models.CharField(max_length=100)
     nombre_corto = models.CharField(max_length=10, default='')
-    partido = models.ForeignKey(Partido, null=True, blank=True)   # blanco, / recurrido / etc
+    partido = models.ForeignKey(Partido, null=True, blank=True, related_name='opciones')   # blanco, / recurrido / etc
     orden = models.PositiveIntegerField(
         help_text='Orden en la boleta', null=True, blank=True)
     obligatorio = models.BooleanField(default=False)
@@ -277,13 +288,13 @@ class Eleccion(models.Model):
     slug = models.SlugField(max_length=50, unique=True)
     nombre = models.CharField(max_length=50)
     fecha = models.DateTimeField(blank=True, null=True)
-    opciones = models.ManyToManyField(Opcion)
+    opciones = models.ManyToManyField(Opcion, related_name='elecciones')
 
     @classmethod
     def opciones_actuales(cls):
-        e = cls.actual()
-        if e:
-            return e.opciones.all()
+        e = cls.objects.filter(id=3)
+        if e.exists():
+            return e.first().opciones.order_by('orden')
         return Opcion.objects.none()
 
     @classmethod

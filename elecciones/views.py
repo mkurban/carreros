@@ -12,6 +12,7 @@ from django.utils.text import get_text_list
 from django.views.generic.base import TemplateView
 from django.views.generic.detail import DetailView
 from djgeojson.views import GeoJSONLayerView
+from django.contrib.auth.mixins import LoginRequiredMixin
 
 from django.http import HttpResponse
 from django.views import View
@@ -21,6 +22,9 @@ from .forms import ReferentesForm, LoggueConMesaForm
 from .models import *
 from .models import LugarVotacion, Circuito
 
+
+POSITIVOS = 'TOTAL DE VOTOS AGRUPACIONES POLÍTICAS'
+TOTAL = 'TOTAL DE VOTOS'
 
 class StaffOnlyMixing:
 
@@ -205,9 +209,10 @@ class MapaResultadosOficiales(StaffOnlyMixing, TemplateView):
             ).aggregate(
                 **sum_por_partido
             )
-            result = {Partido.objects.get(id=k): v for k, v in result.items() if v is not None}
+            result = {
+                Partido.objects.get(id=k): v for k, v in result.items() if v is not None
+            }
 
-            positivos = sum(result.values())
 
             # no positivos
             result_opc = VotoMesaReportado.objects.filter(
@@ -216,19 +221,18 @@ class MapaResultadosOficiales(StaffOnlyMixing, TemplateView):
                 **otras_opciones
             )
             result_opc = {k: v for k, v in result_opc.items() if v is not None}
-            result.update(result_opc)
+            # result.update(result_opc)
 
-            total = sum(result.values())
-            result = {k: (v, f'{v*100/total:.2f}') for k, v in result.items()}
 
             result = {k: (v, f'{v*100/total:.2f}') for k, v in result.items()}
+
             result_piechart = [{'key': k, 'y': v[0]} for k, v in result.items()]
 
             resultados[eleccion] = {'tabla': result,
                                     'electores': electores,
                                     'positivos': positivos,
                                     'escrutados': total,
-                                    'participacion': f'{total*100/electores:.2f}'} if electores else '-'
+                                    'porcentaje_escrutado': f'{total*100/electores:.2f}'} if electores else '-'
         return resultados
 
 
@@ -244,19 +248,20 @@ class MapaResultadosOficiales(StaffOnlyMixing, TemplateView):
         return context
 
 
-class ResultadosEleccion(StaffOnlyMixing, TemplateView):
+class ResultadosEleccion(LoginRequiredMixin, TemplateView):
     template_name = "elecciones/resultados_eleccion.html"
 
     @classmethod
     @lru_cache(128)
-    def agregaciones_por_partido(cls):
+    def agregaciones_por_partido(cls, eleccion_id):
         sum_por_partido = {}
         otras_opciones = {}
-        for id in Partido.objects.values_list('id', flat=True):
+
+        for id in Partido.objects.filter(opciones__elecciones__id=eleccion_id).distinct().values_list('id', flat=True):
             sum_por_partido[str(id)] = Sum(Case(When(opcion__partido__id=id, then=F('votos')),
                                                 output_field=IntegerField()))
 
-        for nombre, id in Opcion.objects.filter(id__in=[16, 17, 18, 19]).values_list('nombre', 'id'):
+        for nombre, id in Opcion.objects.filter(elecciones__id=eleccion_id, partido__isnull=True).values_list('nombre', 'id'):
             otras_opciones[nombre] = Sum(Case(When(opcion__id=id, then=F('votos')),
                                               output_field=IntegerField()))
 
@@ -290,29 +295,25 @@ class ResultadosEleccion(StaffOnlyMixing, TemplateView):
         meta = {}
         if self.filtros:
             if self.filtros.model is Seccion:
-                lookups = Q(circuito__seccion__in=self.filtros)
+                lookups = Q(lugar_votacion__circuito__seccion__in=self.filtros)
 
-            elif self.filtros.models is Circuito:
-                lookups = Q(circuito__in=self.filtros)
+            elif self.filtros.model is Circuito:
+                lookups = Q(lugar_votacion__circuito__in=self.filtros)
 
             elif 'lugarvotacion' in self.request.GET:
-                lookups = Q(id__in=self.filtros)
+                lookups = Q(lugar_votacion__id__in=self.filtros)
 
             elif 'mesa' in self.request.GET:
-                lookups = Q(mesas__id__in=self.filtros, mesas__eleccion_id=eleccion_id)
-
-        escuelas = LugarVotacion.objects.filter(lookups).distinct()
-        electores = escuelas.aggregate(v=Sum('electores'))['v']
-        if electores and 'mesa' in self.request.GET:
-            # promediamos los electores por mesa
-            electores = electores * self.filtros.count() // Mesa.objects.filter(lugar_votacion__in=escuelas, eleccion_id=eleccion_id).count()
+                lookups = Q(id__in=self.filtros)
+        mesas = Mesa.objects.filter(eleccion__id=eleccion_id).filter(lookups).distinct()
+        electores = mesas.aggregate(v=Sum('electores'))['v']
         return electores or 0
 
 
     def get_resultados(self, eleccion_id):
         lookups = Q()
         resultados = {}
-        sum_por_partido, otras_opciones = ResultadosEleccion.agregaciones_por_partido()
+        sum_por_partido, otras_opciones = ResultadosEleccion.agregaciones_por_partido(eleccion_id)
 
         if self.filtros:
             if 'seccion' in self.request.GET:
@@ -330,13 +331,11 @@ class ResultadosEleccion(StaffOnlyMixing, TemplateView):
         electores = self.electores(eleccion_id)
         # primero para partidos
         result = VotoMesaReportado.objects.filter(
-            Q(mesa__eleccion_id=eleccion_id) & lookups
+            Q(mesa__eleccion__id=eleccion_id) & lookups
         ).aggregate(
             **sum_por_partido
         )
         result = {Partido.objects.get(id=k): v for k, v in result.items() if v is not None}
-
-        positivos = sum(result.values())
 
         # no positivos
         result_opc = VotoMesaReportado.objects.filter(
@@ -345,21 +344,26 @@ class ResultadosEleccion(StaffOnlyMixing, TemplateView):
             **otras_opciones
         )
         result_opc = {k: v for k, v in result_opc.items() if v is not None}
-        result.update(result_opc)
 
-        total = sum(result.values())
-        result = {k: (v, f'{v*100/total:.2f}') for k, v in result.items()}
+
+        positivos = result_opc.get(POSITIVOS, 0)
+        total = result_opc.get(TOTAL, 0)
+        result['Otros partidos'] = positivos - sum(result.values())
+        result['Blancos, impugnados, etc'] = total - positivos
+
+
+        result = {k: (v, f'{v*100/total:.2f}', f'{v*100/positivos:.2f}' ) for k, v in result.items()}
         result_piechart = [
             {'key': str(k),
              'y': v[0],
-             'color': k.color  if not isinstance(k, str) else '#FFFFFF'} for k, v in result.items()
+             'color': k.color  if not isinstance(k, str) else '#CCCCCC'} for k, v in result.items()
         ]
         resultados = {'tabla': result,
                       'result_piechart': result_piechart,
                       'electores': electores,
                       'positivos': positivos,
                       'escrutados': total,
-                      'participacion': f'{total*100/electores:.2f}'} if electores else '-'
+                      'participacion': f'{total*100/electores:.2f}' if electores else '-'}
         return resultados
 
     def get_context_data(self, **kwargs):
@@ -391,7 +395,7 @@ class ResultadosEleccion(StaffOnlyMixing, TemplateView):
         return JsonResponse(d)
 
 
-class Resultados(StaffOnlyMixing, TemplateView):
+class Resultados(LoginRequiredMixin, TemplateView):
     template_name = "elecciones/resultados.html"
 
     @property
@@ -423,7 +427,7 @@ class Resultados(StaffOnlyMixing, TemplateView):
             context['para'] = get_text_list(list(self.filtros), " y ")
         else:
             context['para'] = 'Córdoba'
-        context['elecciones'] = Eleccion.objects.all().order_by('-id')
+        context['elecciones'] = Eleccion.objects.filter(id=3)
         context['secciones'] = Seccion.objects.all()
         context['menu_activo'] = self.menu_activo()
 
