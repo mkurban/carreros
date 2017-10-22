@@ -225,6 +225,11 @@ class Mesa(models.Model):
         pos = Mesa.ESTADOS_.index(self.estado)
         return Mesa.ESTADOS_[pos + 1]
 
+    @property
+    def grupo_tabla_proyecciones(self):
+        mi_circuito = self.lugar_votacion.circuito
+        return mi_circuito if mi_circuito.seccion.numero == 1 else mi_circuito.seccion
+
     def __str__(self):
         return f"Mesa {self.numero}"
 

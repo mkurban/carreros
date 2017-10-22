@@ -104,6 +104,17 @@ def resultados_oficiales(modeladmin, request, queryset):
 resultados_oficiales.short_description = "Ver Resultados Oficiales"
 
 
+def resultados_proyectados(modeladmin, request, queryset):
+
+    selected = request.POST.getlist(admin.ACTION_CHECKBOX_NAME)
+    name = modeladmin.model.__name__.lower()
+    url = reverse('proyecciones', args=(3,))
+    ids = "&".join(f'{name}={s}' for s in selected)
+    return HttpResponseRedirect(f'{url}?{ids}')
+
+resultados_proyectados.short_description = "Ver Resultados Proyectados"
+
+
 def resultados_reportados(modeladmin, request, queryset):
 
     selected = request.POST.getlist(admin.ACTION_CHECKBOX_NAME)
@@ -230,7 +241,7 @@ class CircuitoAdmin(admin.ModelAdmin):
     search_fields = (
         'nombre', 'numero',
     )
-    actions = ['asignar', resultados_oficiales]
+    actions = ['asignar', resultados_oficiales, resultados_proyectados]
 
     def asignar(self, request, queryset):
         selected = request.POST.getlist(admin.ACTION_CHECKBOX_NAME)
@@ -253,6 +264,9 @@ class VotoMesaReportadoAdmin(admin.ModelAdmin):
     #list_filter = ('eleccion', TieneFiscal)
     search_fields = ['mesa__numero', 'mesa__lugar_votacion__nombre', 'mesa__lugar_votacion__ciudad']
 
+class OpcionAdmin(admin.ModelAdmin):
+    list_display = ['nombre_corto', 'partido', 'nombre']
+
 
 admin.site.register(Seccion, SeccionAdmin)
 admin.site.register(Circuito, CircuitoAdmin)
@@ -260,8 +274,9 @@ admin.site.register(Partido, PartidoAdmin)
 admin.site.register(LugarVotacion, LugarVotacionAdmin)
 admin.site.register(Mesa, MesaAdmin)
 admin.site.register(VotoMesaReportado, VotoMesaReportadoAdmin)
+admin.site.register(Opcion, OpcionAdmin)
 
-for model in (Opcion, Eleccion):
+for model in [Eleccion]:
     admin.site.register(model)
 
 

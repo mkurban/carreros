@@ -32,14 +32,6 @@ class StaffOnlyMixing:
     def dispatch(self, *args, **kwargs):
         return super().dispatch(*args, **kwargs)
 
-#    def options(self, request, *args, **kwargs):
-#        response = super().options(request, *args, **kwargs)
-#        print("Holas...")
-#        print(response)
-#        response.content_type='text/plain'
-#        print(response)
-#        return response
-
 
 class LugaresVotacionGeoJSON(GeoJSONLayerView):
     model = LugarVotacion
@@ -78,7 +70,6 @@ class ResultadosOficialesGeoJSON(GeoJSONLayerView):
         return qs
 
 
-
 class EscuelaDetailView(StaffOnlyMixing, DetailView):
     template_name = "elecciones/detalle_escuela.html"
     model = LugarVotacion
@@ -111,8 +102,6 @@ class ResultadoEscuelaDetailView(StaffOnlyMixing, DetailView):
         return context
 
 
-
-# Create your views here.
 class Mapa(StaffOnlyMixing, TemplateView):
     template_name = "elecciones/mapa.html"
 
@@ -441,6 +430,115 @@ class Resultados(LoginRequiredMixin, TemplateView):
         context['elecciones'] = Eleccion.objects.filter(id=3)
         context['secciones'] = Seccion.objects.all()
         context['menu_activo'] = self.menu_activo()
+
+        return context
+
+
+class ResultadosProyectadosEleccion(StaffOnlyMixing, TemplateView):
+    template_name = "elecciones/proyecciones.html"
+
+    @property
+    @lru_cache(128)
+    def filtros(self):
+        pass
+
+    @property
+    @lru_cache(128)
+    def mesas(self):
+        return Mesa.objects.filter(eleccion_id=3).order_by("numero")
+
+    @property
+    @lru_cache(128)
+    def grupos(self):
+        secciones_no_capital = list(Seccion.objects.all().exclude(id=1).order_by("numero"))
+#        circuitos_capital= list(Circuito.objects.filter(seccion__id=1).order_by("numero"))
+        return secciones_no_capital # + circuitos_capital
+
+    def mesas_para_grupo(self, grupo):
+        return [mesa for mesa in self.mesas if mesa.grupo_tabla_proyecciones == grupo]
+
+    def resumen_mesa(self, mesa):
+        resultados = mesa.votomesareportado_set.all()
+        resumen = {}
+        resumen["mesa"] = str(mesa)
+        resumen["electores"] = mesa.electores
+        resumen["escrutada"] = False
+
+        def valor_resultado(nom_corto):
+            res = 0
+            try:
+                res = resultados.get(opcion__nombre_corto=nom_corto)
+            except:
+                pass
+            return res
+
+        resumen["Positivos"] = valor_resultado("Positivos")
+
+        if resumen["Positivos"] > 0:
+            resumen["escrutada"] = True
+
+            for nc in ["Total", "Cambiemos", "UPC", "FCC"]:
+                resumen[nc] = valor_resultado(nc)
+
+            resumen["Otros"] = resumen["Positivos"]\
+                               - (resumen["Cambiemos"] + resumen["UPC"] + resumen["FCC"])
+
+            for nc in ["Cambiemos", "UPC", "FCC", "Otros"]:
+                resumen[nc+"_porcentaje"] = 100.0 * (resumen[nc] / resumen["Positivos"])
+        else:
+            for nc in ["Total", "Cambiemos", "UPC", "FCC", "Otros"]:
+                resumen[nc] = 0
+
+        return resumen
+
+
+    def nombre_grupo(self, g):
+        return ("Seccion" if isinstance(g, Seccion) else "Circuito")+" No "+str(g.numero)
+
+    def resumen_grupo(self, grupo):
+        resumen = {}
+        resumen["grupo"] = self.nombre_grupo(grupo)
+        resumen["resumenes_mesas"] = [self.resumen_mesa(m) for m in self.mesas_para_grupo(grupo)]
+
+        for c in ["electores", "Total", "Positivos", "Cambiemos", "UPC", "FCC", "Otros"]:
+            resumen[c] = 0
+
+        for rm in resumen["resumenes_mesas"]:
+            for c in ["electores", "Total", "Positivos", "Cambiemos", "UPC", "FCC", "Otros"]:
+                resumen[c] += rm[c]
+
+        resumen["resumenes_mesas"] = [rm for rm in resumen["resumenes_mesas"] if rm["escrutada"]]
+        resumen["electores_escrutados"] = sum([rm["electores"] for rm in resumen["resumenes_mesas"]])
+
+        return resumen
+
+    @property
+    @lru_cache(128)
+    def filas_tabla(self):
+        return [self.resumen_grupo(g) for g in self.grupos]
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        context['para'] = 'Córdoba'
+        context['eleccion'] = Eleccion.objects.filter(id=3)
+        context['filas_tabla'] = self.filas_tabla
+
+        context['total_electores'] = sum([rg["electores"] for rg in context['filas_tabla']])
+        for rg in context['filas_tabla']:
+            rg["peso_escrutado"]= (rg["electores_escrutados"] / context['total_electores']) if context['total_electores'] > 0 else 0.0
+            for c in ["Positivos", "Cambiemos", "UPC", "FCC", "Otros"]:
+                rg[c+"_proy"] = len(rg["resumenes_mesas"]) * (rg[c] * rg["peso_escrutado"])
+
+        for c in ["Positivos", "Cambiemos", "UPC", "FCC", "Otros"]:
+            context[c + "_proy_total"] = 0
+        for rg in context['filas_tabla']:
+            for c in ["Positivos", "Cambiemos", "UPC", "FCC", "Otros"]:
+                context[c+ "_proy_total"] += rg[c+"_proy"]
+
+        if context["Positivos_proy_total"] > 0:
+            for c in ["Cambiemos", "UPC", "FCC", "Otros"]:
+                context[c + "_proy_total_proc"] =  context[c+ "_proy_total"] / context["Positivos_proy_total"]
 
         return context
 
