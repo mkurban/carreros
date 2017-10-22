@@ -42,6 +42,13 @@ def loaddata(fixture):
         run("/virtualenvs/carreros/bin/python manage.py loaddata fixtures/{}".format(fixture))
 
 
+def importar_actas():
+    run(f"source {VENV}bin/activate")
+    with cd('/projects/carreros'):
+        run(f"{VENV}bin/python manage.py importar_actas --include-seen --only-images")
+
+
+
 def deploy():
     run(f"source {VENV}bin/activate")
     with cd('/projects/carreros'):

@@ -357,12 +357,13 @@ class ResultadosEleccion(LoginRequiredMixin, TemplateView):
         result_opc = {k: v for k, v in result_opc.items() if v is not None}
 
 
-        positivos = result_opc[POSITIVOS]
-        total = result_opc[TOTAL]
-        result['Otros'] = total - positivos
+        positivos = result_opc.get(POSITIVOS, 0)
+        total = result_opc.get(TOTAL, 0)
+        result['Otros partidos'] = positivos - sum(result.values())
+        result['Blancos, impugnados, etc'] = total - positivos
 
 
-        result = {k: (v, f'{v*100/total:.2f}') for k, v in result.items()}
+        result = {k: (v, f'{v*100/total:.2f}', f'{v*100/positivos:.2f}' ) for k, v in result.items()}
         result_piechart = [
             {'key': str(k),
              'y': v[0],

@@ -5,5 +5,14 @@
             <td id="votos_{{ partido.id|default:partido|lower }}"> {{ votos.0 }}</td>
         {% endif %}
         <td> {{ votos.1 }}%</td>
+
+
+        <td>{% if partido != 'Blancos, impugnados, etc' %}
+         {{ votos.2 }}%
+        {% else %}
+            -
+        {% endif %}
+
+     </td>
     </tr>
 {% endfor %}
